@@ -1,0 +1,27 @@
+{
+  "start": {
+    "x": -4.2,
+    "y": -3.2,
+    "yaw": 0.0
+  },
+  "goal": {
+    "x": -4.2,
+    "y": -1.0
+  },
+  "steps": 900,
+  "controller": {
+    "lookahead": 0.55,
+    "waypoint_tolerance": 0.25,
+    "goal_tolerance": 0.28,
+    "max_linear_speed": 0.65,
+    "max_yaw_rate": 1.4
+  },
+  "locomotion": {
+    "mode": "kinematic",
+    "policy_path": "policies/g1/policy.onnx",
+    "observation_size": null,
+    "action_scale": 0.25,
+    "kp": 35.0,
+    "kd": 1.0
+  }
+}

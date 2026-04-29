@@ -1,0 +1,20 @@
+[project]
+name = "g1-slam"
+version = "0.1.0"
+description = "SLAM 2D y navegacion punto-a-punto para un humanoide Unitree G1 cinemático en MuJoCo."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "mujoco>=3.2.0",
+  "numpy>=1.26",
+  "onnxruntime>=1.17",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
