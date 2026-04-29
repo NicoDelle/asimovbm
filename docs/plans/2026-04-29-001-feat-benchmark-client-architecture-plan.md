@@ -1,52 +1,59 @@
 ---
-title: feat: Define Benchmark Client Architecture
+title: feat: Implement Benchmark Client Architecture
 type: feat
 status: active
 date: 2026-04-29
 origin: docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md
 ---
 
-# feat: Define Benchmark Client Architecture
+# feat: Implement Benchmark Client Architecture
 
 ## Summary
 
-Build the MVP around a hosted benchmark dashboard plus a local Python runner. The server owns MuJoCo simulation, validation, sensor generation, task execution, metrics, and final reporting; the local runner owns user ML dependencies, sensor-reading transformation, policy inference, and action transmission.
+Implement the client side of the black-box benchmark around a precise server-facing API contract, a local Python runner, robot-package submission, policy execution, and technical diagnostics. The server owns simulation, validation authority, scenario execution, metrics, reports, and visualization; this plan defines what the client needs from that server API and how the client should be structured to use it.
 
 ---
 
 ## Problem Frame
 
-Paper HRI needs a demoable black-box benchmark that proves external researchers or companies can evaluate proprietary robot policies without disclosing implementation details. The existing requirements document establishes the benchmark thesis and social-navigation MVP; this plan defines the client/server architecture needed to make that thesis usable in practice.
+Paper HRI needs a participant-facing client that can run private robot policy code locally while a benchmark server runs the authoritative evaluation. The client must preserve participant IP, speak a step-synchronous protocol, submit robot package data, receive raw named sensor streams plus structured task events, and return actions with enough telemetry for the backend to separate technical failures from behavioral failures.
+
+The backend context matters for client design. The benchmark should not rely on MuJoCo's visual output as the demo-quality rendering layer; the backend is expected to combine MuJoCo-like physics/simulation with a richer Unity-like graphics surface. The client does not render or display that graphics layer. It only needs to provide package metadata and protocol behavior that let the backend run the evaluation and, separately, produce high-quality visuals.
 
 ---
 
 ## Requirements
 
-- R1. Preserve policy IP by keeping user transformation and policy code outside the benchmark server, while still allowing the server to evaluate behavior through a remote protocol.
-- R2. Accept a participant-provided robot package at connection time: MuJoCo XML plus sensor, quality/frequency, action mapping, and robot metadata configuration.
-- R3. Server-to-runner data must be raw named sensor readings plus structured task events, not precomputed policy observations.
-- R4. The local runner must orchestrate user-defined Python dataflow: sensor readings to observations, observations to policy actions.
-- R5. The protocol must be step-synchronous and simulated-time based, carrying forward the origin requirement that control frequency is measured in simulated time.
-- R6. The MVP must support one social-navigation task with multiple difficulty levels, enough to exercise navigation and social interaction.
-- R7. The hosted dashboard must support the MVP demo loop: create run, display connection instructions/status, show validation errors, and visualize final metrics/results.
-- R8. Technical failures, invalid packages, invalid actions, timeouts, and policy/runner disconnects must be reported separately from behavioral failures.
+- R1. Preserve participant policy IP by running transformer code, policy code, model weights, and ML dependencies locally in the client process.
+- R2. Define the client-facing server API contract for session creation/connection, robot package submission, validation status, step-synchronous sensor/action exchange, telemetry, retry/failure signaling, and terminal report references.
+- R3. Support backend-to-client observations as raw named typed sensor streams plus structured task events, not precomputed policy observations.
+- R4. Support client-to-backend action messages using the origin joint-target action contract and declared robot action mapping.
+- R5. Support participant robot package submission with physics/simulation metadata, sensor declarations, action mapping, robot metadata, and optional visual asset references needed by the backend's MuJoCo+Unity pipeline.
+- R6. Keep the client headless: no dashboard, renderer, live visualization, replay viewer, or Unity integration runs inside the client.
+- R7. Preserve step-synchronous simulated-time semantics: wall-clock policy latency is telemetry, not a change to simulated control frequency.
+- R8. Classify and report client-side technical failures, invalid actions, timeouts, dependency/import errors, policy exceptions, and disconnects separately from robot behavioral outcomes.
+- R9. Provide a backend fake/stub so client implementation and tests can proceed before the real backend is complete, while keeping the fake aligned with the documented server API contract.
+- R10. Provide documentation and examples that let a participant run the sample client locally, understand the server API contract, and later connect to the real backend.
 
 ---
 
 ## Scope Boundaries
 
-- Server-side execution of arbitrary user Python/ML code is out of scope for MVP.
-- General server scalability for many simultaneous benchmark runs is out of scope for MVP.
-- Arbitrary custom MuJoCo sensor/plugin execution is out of scope for MVP.
-- Multiple benchmark tasks beyond the one social-navigation task are out of scope for MVP.
-- A full anti-cheating system is out of scope; hidden scenarios are useful, but participants necessarily receive runtime sensor readings.
-- Raw visual gesture recognition is out of scope; the server can expose structured task events for the MVP social interaction.
+- Backend implementation is out of scope. This includes API server code, package validation authority, MuJoCo simulation, Unity rendering, scenario orchestration, metrics, reports, persistence, hosted dashboard, deployment, and multi-run scheduling.
+- Client visualization is out of scope. The client does not show the benchmark, render Unity scenes, display MuJoCo output, or present result dashboards.
+- Server-side execution of arbitrary participant Python/ML code is out of scope.
+- Multi-language clients are out of scope for MVP.
+- Arbitrary custom sensor/plugin execution is out of scope for MVP.
+- Multiple benchmark tasks beyond the social-navigation MVP are out of scope for client implementation.
+- Full anti-cheating is out of scope. The client necessarily receives runtime observations, while hidden scenario state and scoring thresholds remain backend-owned.
 
 ### Deferred to Follow-Up Work
 
-- Drag-and-drop Python upload in the dashboard: defer unless the architecture later includes safe participant-side packaging rather than server-side execution.
-- Multi-language runners: defer until the Python runner and protocol prove the benchmark concept.
-- High-throughput multi-tenant scheduling: defer until after the MVP demonstrates value.
+- Backend implementation plan: owned separately, covering the actual server API, validation authority, MuJoCo+Unity orchestration, scenario tiers, metrics, reporting, dashboard, persistence, and deployment.
+- Graphics/rendering plan: owned separately, covering Unity scene state, asset import, camera behavior, live view, replay, and demo polish.
+- Real backend hardening: once the backend exists, add compatibility tests against the deployed or local server implementation.
+- Non-Python clients: defer until the Python runner validates the protocol.
+- Binary transport optimization: defer until representative camera/lidar payload sizes are known.
 
 ---
 
@@ -56,7 +63,7 @@ Paper HRI needs a demoable black-box benchmark that proves external researchers 
 
 - `AGENTS_SHARED.md` frames this repository as Paper HRI executable work with a benchmark MVP target by 2026-05-15.
 - `docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md` defines the black-box benchmark, social-navigation flagship scenario, metric categories, protocol expectations, and failure-reporting separation.
-- `README.md` currently describes a simple newline-delimited JSON TCP client, but the referenced `asimovbm` package files are not present in the repository. Treat it as an early stub/spec, not as an established implementation pattern.
+- `src/` exists, but no current Python package structure or README establishes a durable implementation pattern yet.
 
 ### Institutional Learnings
 
@@ -64,18 +71,35 @@ Paper HRI needs a demoable black-box benchmark that proves external researchers 
 
 ### External References
 
-- No external research was used for this plan. The plan is grounded in the local brainstorm document and current MVP decisions.
+- No external research was used for this targeted plan revision. MuJoCo+Unity is carried as backend context from the user request, not as a client implementation dependency.
+
+---
+
+## Server API Context
+
+The client should be designed against a documented server API contract, even though this plan does not implement the server. The contract should define these client-visible surfaces:
+
+- **Session bootstrap:** client connects with a run token or session identifier, protocol version, client capabilities, and participant metadata needed for diagnostics.
+- **Robot package submission:** client sends or references robot package contents, including simulation model metadata, sensor stream declarations, action mapping, robot metadata, and optional visual asset references for backend rendering.
+- **Validation response:** server accepts or rejects the package with structured errors. The client may do fast local checks, but server validation is authoritative.
+- **Control stream:** server sends simulated-step messages containing step id, simulated timestamp, control dt, named sensor readings, sensor freshness metadata, and structured task events.
+- **Action response:** client sends action vectors, action metadata, processing latency, optional local warnings, and invalid-action diagnostics.
+- **Failure signaling:** client reports setup failures, transformer/policy exceptions, timeout/retry outcomes, disconnects, redacted error summaries, and telemetry.
+- **Terminal state:** server sends completed, failed, invalid, or report-ready terminal messages with report references. The client does not compute final scores.
+
+For MVP planning, the transport can remain open. The implementation should make message schemas explicit before committing to WebSocket, gRPC, JSON-over-HTTP, newline-delimited JSON, or another transport.
 
 ---
 
 ## Key Technical Decisions
 
-- Hosted dashboard plus local runner: keeps the human-facing workflow simple while preserving the local execution boundary for proprietary policies and user-managed ML dependencies.
-- Connection-time robot package handshake: the runner sends XML/config during connection so the dashboard does not need to own participant files before a run starts.
-- Raw sensor readings as the protocol output: researchers can define their own observation extraction, which is central to the benchmark's extensibility goal.
-- Step-synchronous simulated-time loop: each action corresponds to a simulation control step, with wall-clock latency tracked as technical telemetry rather than changing simulated control frequency.
-- Protocol-first architecture: the dashboard and runner are MVP surfaces, but the stable contract is the session protocol between server and runner.
-- Python runner first: the MVP serves the most likely HRI/RL researcher workflow while allowing users to install their own ML libraries locally.
+- Single client plan: architecture and implementation details live together in this document so `ce-work` can execute one coherent client stream.
+- Server API as a client-owned contract artifact: the client team defines the API it needs and ships a fake/stub for tests, while backend implementation remains separate.
+- Backend remains authoritative: validation, simulation, hidden scenario state, metrics, final reports, and MuJoCo+Unity visuals are backend-owned.
+- Local runner remains the policy execution boundary: participant transformation code, policy code, weights, and dependencies stay local.
+- Headless client first: the client should run in terminal/automation contexts and never require a renderer or dashboard.
+- Protocol-first implementation: schemas, lifecycle states, and failure categories should be clear before the runner grows around them.
+- Python client first: the MVP serves the likely HRI/RL researcher workflow while leaving future non-Python clients possible.
 
 ---
 
@@ -83,38 +107,45 @@ Paper HRI needs a demoable black-box benchmark that proves external researchers 
 
 ### Resolved During Planning
 
-- Should user Python execute locally or on the server? Local runner execution is chosen to protect IP and avoid server-side dependency/sandboxing complexity.
-- Should XML/config be uploaded through the dashboard or sent by the runner? The runner sends them during connection.
-- Is one task with difficulty tiers enough for MVP? Yes; it proves the full benchmark loop while keeping scenario breadth realistic.
+- Should this be one plan or two? One plan. The separate client implementation plan is removed and merged here.
+- Should the client implement backend/server work? No. It defines and consumes the server API contract but does not build server code.
+- Should the client show benchmark graphics? No. MuJoCo+Unity is backend context only; the client remains headless.
+- Should the client depend on Unity? No. The client may submit visual asset references or metadata in the robot package, but Unity integration belongs to backend/rendering work.
+- Should client checks replace server validation? No. Client checks are for fast local feedback; server validation is authoritative.
 
 ### Deferred to Implementation
 
-- Exact wire format: choose the concrete JSON, binary, WebSocket, or streaming representation after considering the first simulator/runner integration.
-- Exact sensor payload representation: settle camera, lidar, proprioception, and event payload details while implementing the package validator and simulator adapter.
-- Exact timeout and retry constants: start with conservative defaults, then tune against the tester and local network behavior.
-- Exact dashboard framework: choose based on the existing server stack once that code exists or is selected.
+- Exact Python packaging/build tooling: choose when implementation begins based on the repo's preferred setup.
+- Exact transport: decide once the backend owner can align on realistic service constraints.
+- Exact sensor payload encoding: coordinate with backend when camera/lidar payload sizes and rates are known.
+- Exact timeout/retry constants: start from server API expectations and tune with fake-backend and real-backend tests.
+- Exact robot visual asset format: coordinate with backend MuJoCo+Unity package ingestion.
 
 ---
 
 ## Output Structure
 
-    asimovbm/
+    src/asimovbm_client/
+      __init__.py
+      cli.py
       protocol/
       runner/
-      server/
-      dashboard/
-      scenarios/
-      metrics/
+      robot_package/
+      telemetry/
+      testing/
+    docs/
+      protocol/
+      client/
     examples/
       policies/
       robot_packages/
     tests/
+      client/
       protocol/
       runner/
-      server/
-      dashboard/
+      robot_package/
 
-This layout is directional. If the implementation starts from a different server framework or package layout, preserve the boundaries even if paths change.
+This layout is directional. The implementer may adjust filenames to match the final Python toolchain, but the client/server/rendering responsibility split should remain intact.
 
 ---
 
@@ -125,260 +156,289 @@ This layout is directional. If the implementation starts from a different server
 ```mermaid
 sequenceDiagram
     participant User
-    participant Dashboard
-    participant Runner
-    participant Server
-    participant Simulator
+    participant CLI as Client CLI
+    participant Package as Package Loader
+    participant Runner as Local Runner
+    participant Policy as Transformer + Policy
+    participant API as Protocol Adapter
+    participant Server as Benchmark Server API
+    participant Render as Backend MuJoCo+Unity Context
 
-    User->>Dashboard: Create benchmark run
-    Dashboard->>User: Show run token and runner command
-    User->>Runner: Start with XML, config, transformer, policy
-    Runner->>Server: Connect and send robot package handshake
-    Server->>Server: Validate XML/config/action/sensor metadata
-    Server->>Dashboard: Publish validation status
+    User->>CLI: Start with run token, package, transformer, policy
+    CLI->>Package: Load package and local-check manifest
+    CLI->>Runner: Start session runtime
+    Runner->>API: Connect and submit package envelope
+    API->>Server: Session bootstrap + package submission
+    Server-->>API: Validation status and session settings
     loop each simulated control step
-        Simulator->>Server: Produce sensor readings and task events
-        Server->>Runner: Send sensor readings
-        Runner->>Runner: Transform readings to observations
-        Runner->>Runner: Infer action with user policy
-        Runner->>Server: Send action
-        Server->>Simulator: Apply action and advance simulated time
+        Server-->>API: Step sensors + task events
+        API-->>Runner: Parsed step message
+        Runner->>Policy: Transform sensors, infer action
+        Policy-->>Runner: Action vector
+        Runner->>API: Action + telemetry
+        API->>Server: Action response
+        Server-->>Render: Backend-only simulation/rendering state
     end
-    Server->>Server: Compute metrics and technical diagnostics
-    Server->>Dashboard: Publish final report
-    Dashboard->>User: Display results
+    Server-->>API: Terminal state + report reference
+    API-->>Runner: Stop loop
+    Runner-->>CLI: Local summary and diagnostics
 ```
 
 ---
 
 ## Implementation Units
 
-- U1. **Protocol Contract and Session Lifecycle**
+- U1. **Server API Contract and Protocol Models**
 
-**Goal:** Define the benchmark-runner session states and message categories before implementation fragments the contract.
+**Goal:** Define the client-facing server API contract and typed protocol models the rest of the client uses.
 
-**Requirements:** R1, R2, R3, R5, R8
+**Requirements:** R2, R3, R4, R7, R8, R9
 
-**Dependencies:** None
+**Dependencies:** Backend owner alignment on the minimum v0 lifecycle.
 
 **Files:**
-- Create: `asimovbm/protocol/`
+- Create: `src/asimovbm_client/protocol/`
+- Create: `src/asimovbm_client/testing/`
 - Create: `tests/protocol/`
-- Modify: `README.md`
+- Create: `docs/protocol/`
 
 **Approach:**
-- Model the lifecycle as run creation, runner connection, robot package handshake, validation result, control loop, episode completion, technical failure, and final report availability.
-- Include message categories for handshake, validation errors, sensor readings, task events, actions, acknowledgements, telemetry, and terminal states.
-- Keep the contract language-neutral enough that a future non-Python runner can implement it, while documenting Python runner behavior as the MVP reference.
+- Model session bootstrap, package submission, validation response, control-step observation, action response, telemetry, failure, and terminal-state messages.
+- Keep the models transport-neutral so WebSocket/gRPC/JSON transport can be selected later without changing runner behavior.
+- Document server-owned fields and client-owned fields explicitly.
+- Provide a fake backend/server API implementation for tests that follows the same message lifecycle.
+- Include protocol versioning and capability negotiation so backend and client can fail clearly when incompatible.
+
+**Execution note:** Start with protocol model tests and fake-backend lifecycle tests before implementing runner behavior.
 
 **Patterns to follow:**
-- Preserve the spirit of the existing `README.md` client loop, but expand it from ad hoc sensor/action JSON into an explicit session protocol.
+- Preserve the origin document's step-synchronous simulated-time policy loop and named typed stream contract.
 
 **Test scenarios:**
-- Happy path: a runner connects, sends a valid robot package handshake, receives accepted status, exchanges one sensor/action step, and reaches a completed episode state.
-- Error path: a runner sends malformed package metadata and receives structured validation failure without entering the control loop.
-- Error path: a runner disconnects during an episode and the server records a technical failure rather than a behavioral failure.
-- Edge case: a sensor stream arrives at a lower declared rate than the control loop and the protocol still identifies which readings are fresh versus carried forward.
+- Happy path: fake server accepts session bootstrap, accepts package envelope, sends one step, receives one action, and sends completed terminal state.
+- Error path: fake server returns package validation failure and the client-side protocol state never enters the control loop.
+- Error path: fake server sends an unsupported protocol version and the client reports a compatibility failure.
+- Error path: client sends invalid-action telemetry and fake server records it as technical/invalid-action data, not behavioral score data.
+- Edge case: sensor freshness metadata is preserved when one stream is carried forward from a previous step.
 
 **Verification:**
-- The protocol docs and tests make it clear which side owns each state transition and how failures are classified.
+- Protocol docs, models, and fake server describe the same lifecycle and can drive client tests without real backend code.
 
-- U2. **Robot Package Validation**
+- U2. **Client Package Skeleton and CLI Surface**
 
-**Goal:** Validate participant-provided MuJoCo XML and robot configuration before any benchmark episode runs.
+**Goal:** Establish the Python client package, test layout, and participant-facing CLI entry point.
 
-**Requirements:** R2, R3, R6, R8
+**Requirements:** R1, R2, R6, R10
 
 **Dependencies:** U1
 
 **Files:**
-- Create: `asimovbm/server/`
-- Create: `tests/server/`
-- Create: `examples/robot_packages/`
+- Create: `src/asimovbm_client/__init__.py`
+- Create: `src/asimovbm_client/cli.py`
+- Create: `tests/client/`
+- Create: `README.md`
 
 **Approach:**
-- Treat XML and config as untrusted inputs.
-- Validate that declared sensors, sensor frequencies, sensor quality/noise settings, action mappings, forward/sensor-facing direction, and required metadata are internally consistent.
-- Return actionable validation errors to both runner and dashboard.
-- Keep arbitrary custom sensor plugins out of MVP while allowing named typed streams declared in config.
+- Add a minimal package skeleton for client code under `src/asimovbm_client/`.
+- Add CLI arguments for server URL or transport target, run token/session id, robot package path, transformer reference, policy reference, and local diagnostics mode.
+- Keep the CLI headless and non-visual. It should emit local progress/diagnostics only, not show benchmark graphics or reports.
+- Delegate package loading, protocol behavior, runner execution, and telemetry to dedicated modules.
 
 **Patterns to follow:**
-- Use the origin document's morphology-agnostic robot package concept and named typed stream contract.
+- Follow a standard Python `src/` package layout unless implementation discovers an existing project toolchain that dictates otherwise.
 
 **Test scenarios:**
-- Happy path: a minimal valid package with required social-navigation metadata is accepted.
-- Error path: malformed XML is rejected before simulator creation.
-- Error path: config references a sensor or joint/action mapping absent from the XML and returns a targeted validation error.
-- Edge case: a package declares an unsupported sensor type and is rejected with a non-crashing validation response.
+- Happy path: importing `asimovbm_client` succeeds.
+- Happy path: CLI help displays connection, package, transformer, and policy options without backend connectivity.
+- Error path: missing required run/package/policy arguments exits with a clear local setup error.
+- Edge case: CLI accepts a fake-backend target for local development.
 
 **Verification:**
-- Invalid participant packages cannot start a run, and valid packages provide all metadata needed by the MVP task and protocol.
+- The client package imports cleanly and the CLI exposes the minimum participant workflow without any rendering dependency.
 
-- U3. **Local Python Runner Runtime**
+- U3. **Robot Package Loader and Submission Envelope**
 
-**Goal:** Build the participant-side process that owns user dependencies, receives sensor readings, invokes user Python classes, and returns actions.
+**Goal:** Load participant robot package files and serialize the package envelope expected by the server API.
 
-**Requirements:** R1, R3, R4, R5, R8
-
-**Dependencies:** U1
-
-**Files:**
-- Create: `asimovbm/runner/`
-- Create: `tests/runner/`
-- Create: `examples/policies/`
-- Modify: `README.md`
-
-**Approach:**
-- Provide a CLI that accepts server connection information, run token, XML path, config path, sensor-to-observation class, and policy class.
-- Load user classes from local Python modules so participants can manage their own ML libraries and private dependencies.
-- Orchestrate each control step as: receive sensor readings, call transformer, call policy, validate action shape locally enough to catch obvious errors, send action.
-- Keep the runner thin: it should not compute benchmark metrics or know hidden scenario internals.
-
-**Patterns to follow:**
-- The existing README's `module:ClassName` policy reference is a useful MVP convention to preserve and expand.
-
-**Test scenarios:**
-- Happy path: a runner loads a transformer and policy, receives a sample sensor payload, returns a valid action, and sends it through the protocol client.
-- Error path: transformer raises an exception and the runner reports a technical failure with enough context for the dashboard.
-- Error path: policy returns an invalid action shape and the runner/server classify the episode as technical or invalid-action failure, not behavioral failure.
-- Edge case: user policy depends on an installed third-party library and the runner does not attempt to vendor or manage that dependency.
-
-**Verification:**
-- A sample participant can run a local policy without exposing source code or dependencies to the server.
-
-- U4. **MuJoCo Social-Navigation Tester**
-
-**Goal:** Implement the smallest benchmark task that proves navigation plus social interaction across difficulty tiers.
-
-**Requirements:** R3, R5, R6, R8
+**Requirements:** R2, R5, R6, R9, R10
 
 **Dependencies:** U1, U2
 
 **Files:**
-- Create: `asimovbm/scenarios/`
-- Create: `tests/server/`
-- Create: `tests/protocol/`
-
-**Approach:**
-- Implement one social-navigation scenario with tiers such as empty room, static bystanders, and moving bystanders.
-- Emit raw sensor readings and structured task events, including the social signal needed for the robot to identify the target task.
-- Advance simulation in simulated time according to declared control frequency, independent of wall-clock runner latency.
-- Record per-step telemetry needed for metric computation and technical diagnostics.
-
-**Patterns to follow:**
-- Carry forward the origin scenario: target human gives a sign, robot acknowledges by orienting/moving toward the target, approaches, and stops in an acceptable zone.
-
-**Test scenarios:**
-- Happy path: a simple deterministic policy completes the easiest tier and produces a valid episode trace.
-- Integration: server sends a structured social task event and later records acknowledgement/approach telemetry.
-- Error path: runner timeout during a control step triggers retry/technical failure handling according to the protocol.
-- Edge case: moving bystander tier produces sensor updates without exposing hidden scoring thresholds to the runner.
-
-**Verification:**
-- The tester can run at least one complete episode through the same protocol used by the local runner.
-
-- U5. **Metrics and Technical Report Pipeline**
-
-**Goal:** Convert completed episode traces into MVP behavioral metrics and reliability diagnostics.
-
-**Requirements:** R6, R8
-
-**Dependencies:** U4
-
-**Files:**
-- Create: `asimovbm/metrics/`
-- Create: `tests/server/`
-- Create: `tests/dashboard/`
-
-**Approach:**
-- Compute the origin document's MVP metric families where feasible for the single task: dexterity, safety, social awareness, impression proxies, and technical reliability.
-- Keep technical failures separate from behavioral metrics.
-- Produce aggregate and per-tier results so difficulty progression is visible.
-- Surface insufficient-confidence states when too few valid episodes complete.
-
-**Patterns to follow:**
-- Use the metric categories and failure separation defined in the origin document.
-
-**Test scenarios:**
-- Happy path: valid episodes across tiers produce aggregate and per-tier report data.
-- Error path: timeout and invalid-action episodes appear in technical diagnostics without lowering behavioral scores for completed episodes.
-- Edge case: too few valid episodes marks the report as insufficient confidence.
-- Integration: episode traces from U4 feed the report pipeline without dashboard-specific assumptions.
-
-**Verification:**
-- The final report explains both robot behavior and whether the run itself was technically valid.
-
-- U6. **Hosted Dashboard MVP**
-
-**Goal:** Provide the demo-facing UI for run creation, connection guidance, live status, validation errors, and final results.
-
-**Requirements:** R7, R8
-
-**Dependencies:** U1, U2, U5
-
-**Files:**
-- Create: `asimovbm/dashboard/`
-- Create: `tests/dashboard/`
-- Modify: `README.md`
-
-**Approach:**
-- Let a user create a benchmark run and receive the run token/connection command for the local runner.
-- Show runner connection state, package validation status, episode progress, technical failures, and final report.
-- Keep Python code execution out of the dashboard.
-- Avoid making the dashboard responsible for XML/config upload in MVP; those are submitted by the runner during handshake.
-
-**Patterns to follow:**
-- Keep the dashboard aligned with the benchmark core rather than making it a separate product surface.
-
-**Test scenarios:**
-- Happy path: creating a run displays connection instructions and transitions through connected, running, completed, and report-ready states.
-- Error path: validation errors from U2 are visible in the dashboard without starting the benchmark.
-- Error path: runner disconnect is shown as a technical failure.
-- Integration: final report data from U5 renders in a way that distinguishes behavioral scores from technical reliability.
-
-**Verification:**
-- A demo user can understand what to run locally, see whether the benchmark is progressing, and inspect the final result without reading server logs.
-
-- U7. **Documentation and Example Archetype**
-
-**Goal:** Make the MVP approachable for researchers and companies by documenting the participant package and user-code archetype.
-
-**Requirements:** R1, R2, R3, R4, R7
-
-**Dependencies:** U1, U3, U6
-
-**Files:**
-- Modify: `README.md`
-- Create: `examples/policies/`
+- Create: `src/asimovbm_client/robot_package/`
+- Create: `tests/robot_package/`
 - Create: `examples/robot_packages/`
+- Create: `docs/client/robot-packages.md`
 
 **Approach:**
-- Document the end-to-end flow: create dashboard run, start local runner, send robot package, receive sensor readings, transform observations, infer actions, view results.
-- Provide a minimal robot package example and a minimal transformer/policy example.
-- Explain that participant ML dependencies are installed locally in the runner environment.
-- Clarify that the server receives XML/config/actions/telemetry but not user policy source or model weights.
+- Load package config, simulation model references/assets, named sensor stream declarations, sensor quality/frequency declarations, action mapping, robot metadata, and optional visual asset references.
+- Keep visual asset references as backend context only: the client packages or references them, but does not render or validate Unity compatibility.
+- Perform local structural checks for missing files, malformed config, duplicate sensor names, missing action mappings, and obvious schema errors.
+- Mark backend-only validation requirements clearly so local checks do not imply simulator acceptance.
+- Serialize the package envelope into the protocol models from U1.
 
 **Patterns to follow:**
-- Keep README examples executable and aligned with the actual runner CLI once implemented.
+- Use the origin document's morphology-agnostic package concept and named typed stream contract.
 
 **Test scenarios:**
-- Happy path: documented commands and examples match the implemented runner interface.
-- Error path: docs explain what users should do when package validation fails.
-- Edge case: docs explain how custom ML dependencies are handled locally without server installation.
+- Happy path: minimal valid example package serializes into a protocol-ready package submission.
+- Happy path: package with separate physics model reference and visual asset reference preserves both fields in the envelope.
+- Error path: missing package config fails with a targeted local error before network connection.
+- Error path: duplicate sensor stream names fail local structural validation.
+- Edge case: package omits visual asset references and remains valid for headless policy execution.
 
 **Verification:**
-- A new participant can follow the README to run the sample policy through the dashboard/server loop.
+- Example robot packages can be loaded locally and submitted to the fake server without the client claiming authoritative simulation validation.
+
+- U4. **Participant Code Loading Interface**
+
+**Goal:** Load participant transformer and policy classes from local Python references while preserving the IP boundary.
+
+**Requirements:** R1, R3, R4, R8, R10
+
+**Dependencies:** U2
+
+**Files:**
+- Create: `src/asimovbm_client/runner/`
+- Create: `tests/runner/`
+- Create: `examples/policies/`
+- Create: `docs/client/policy-interface.md`
+
+**Approach:**
+- Support module/class references for a sensor-to-observation transformer and policy.
+- Instantiate user classes locally without uploading source, inspecting model weights, or managing participant ML dependencies.
+- Define minimal interface expectations: transformer consumes raw sensor/task-event step data; policy consumes transformed observations and returns an action vector compatible with the declared package mapping.
+- Produce clear setup diagnostics for import errors, constructor failures, missing callables, and dependency failures.
+
+**Patterns to follow:**
+- Keep participant code and dependencies local, matching the origin black-box benchmark thesis.
+
+**Test scenarios:**
+- Happy path: sample transformer and policy load and can be invoked with a sample step message.
+- Error path: missing module reference produces a local setup diagnostic.
+- Error path: class lacks the expected callable interface and fails before connecting to the control loop.
+- Error path: constructor failure is reported without uploading local source details.
+- Edge case: policy imports a third-party dependency already installed in the participant environment and the client does not vendor or manage it.
+
+**Verification:**
+- Participant policy code executes locally through a documented interface and remains outside backend payloads.
+
+- U5. **Step-Synchronous Runner Loop**
+
+**Goal:** Connect server API messages, package submission, user-code execution, action validation, and telemetry into the client runtime loop.
+
+**Requirements:** R1, R2, R3, R4, R7, R8, R9
+
+**Dependencies:** U1, U3, U4
+
+**Files:**
+- Modify: `src/asimovbm_client/cli.py`
+- Modify: `src/asimovbm_client/runner/`
+- Create: `src/asimovbm_client/telemetry/`
+- Create: `tests/runner/`
+- Create: `tests/client/`
+
+**Approach:**
+- Start a session, submit the package envelope, wait for authoritative server validation, then enter the control loop.
+- For each simulated step, pass raw named sensor streams and structured task events to the transformer, pass observations to the policy, validate action shape/type/range enough to catch obvious local errors, and send the action response.
+- Track simulated step id, simulated timestamp, server control dt, client processing time, retry state, and local warnings.
+- Treat wall-clock latency as telemetry. The client must not advance simulated time or infer scenario state locally.
+- Stop cleanly on server terminal states and return a local diagnostic summary with any report reference supplied by the server.
+
+**Execution note:** Start with fake-server integration tests before wiring the CLI end to end.
+
+**Patterns to follow:**
+- Preserve failure separation and simulated-time semantics from the origin requirements.
+
+**Test scenarios:**
+- Happy path: CLI runs sample package and sample policy through the fake server to completion.
+- Happy path: runner processes named sensor streams plus a structured `come_here` task event and returns an action.
+- Error path: server validation failure stops before user policy execution.
+- Error path: transformer exception emits structured technical-failure telemetry.
+- Error path: invalid action shape emits invalid-action telemetry and stops or continues according to server contract.
+- Edge case: one transient timeout is retried according to fake-server settings and recorded as recovered telemetry.
+- Integration: action payload sent by the runner matches the protocol model consumed by the fake server.
+
+**Verification:**
+- A complete local client run works against the fake server without real backend services or rendering.
+
+- U6. **Diagnostics, Telemetry, and Redaction**
+
+**Goal:** Make client failures understandable and backend-compatible without leaking participant IP or secrets.
+
+**Requirements:** R1, R7, R8, R10
+
+**Dependencies:** U5
+
+**Files:**
+- Modify: `src/asimovbm_client/telemetry/`
+- Create: `tests/client/`
+- Modify: `README.md`
+- Create: `docs/client/diagnostics.md`
+
+**Approach:**
+- Structure diagnostics for setup errors, package local-check failures, server validation failures, transformer/policy exceptions, invalid actions, timeout/retry events, and disconnects.
+- Redact local absolute paths, source snippets, environment secrets, model identifiers, and suspicious token-like values by default.
+- Send backend-compatible technical telemetry while keeping local CLI messages useful for participants.
+- Keep final score/report interpretation out of the client.
+
+**Patterns to follow:**
+- Use the origin document's technical reliability diagnostics as the conceptual target while leaving final report generation backend-owned.
+
+**Test scenarios:**
+- Happy path: successful run emits non-sensitive latency, retry, and step-count telemetry.
+- Error path: policy exception message is summarized without source code.
+- Error path: secret-like environment value in an exception is redacted.
+- Error path: disconnect cause is represented as a technical failure diagnostic.
+- Edge case: local absolute paths are shortened or redacted in outbound telemetry.
+
+**Verification:**
+- Client diagnostics help participants fix local issues while preserving privacy and backend failure classification.
+
+- U7. **Documentation and Examples**
+
+**Goal:** Provide a usable client quickstart, server API contract docs, and sample participant assets.
+
+**Requirements:** R1, R2, R3, R4, R5, R6, R10
+
+**Dependencies:** U1, U3, U4, U5, U6
+
+**Files:**
+- Modify: `README.md`
+- Modify: `docs/protocol/`
+- Modify: `docs/client/`
+- Modify: `examples/policies/`
+- Modify: `examples/robot_packages/`
+
+**Approach:**
+- Document client installation/setup once package tooling is chosen.
+- Document the server API contract from the client's perspective, including message lifecycle, ownership, failure categories, and expected backend authority.
+- Document running the sample policy against the fake server and, later, real backend connection details.
+- Explain robot package structure, user-code loading, local dependency ownership, diagnostics, and headless operation.
+- Mention MuJoCo+Unity only as backend context: the client may submit visual references, but does not render or display anything.
+
+**Patterns to follow:**
+- Keep examples aligned with implemented CLI behavior and protocol docs.
+
+**Test scenarios:**
+- Happy path: README quickstart command matches the implemented CLI and sample files.
+- Happy path: protocol docs describe every message used by fake-server integration tests.
+- Error path: docs include validation-failure and policy-exception troubleshooting paths.
+- Edge case: docs explain that missing visual assets do not prevent headless client execution unless the server rejects the package.
+
+**Verification:**
+- A new participant can run the sample client flow locally against the fake server and understand what the real server must expose.
 
 ---
 
 ## System-Wide Impact
 
-- **Interaction graph:** Hosted dashboard, server session manager, simulator/scenario runner, local runner, participant transformer, participant policy, metrics/report pipeline.
-- **Error propagation:** Validation errors go to runner and dashboard; runtime runner/policy errors become technical failures; completed behavioral traces feed metrics.
-- **State lifecycle risks:** Runs must not enter the control loop until package validation passes; episode traces must preserve enough telemetry for both metrics and failure diagnostics.
-- **API surface parity:** The protocol must be documented independently from the Python runner so future runners can reuse the same contract.
-- **Integration coverage:** End-to-end tests should cover at least one sample package and sample policy through the complete server-runner-dashboard loop.
-- **Unchanged invariants:** Server remains the authority for simulation, hidden scenario state, metric computation, and final reporting.
+- **Interaction graph:** CLI, package loader, protocol adapter, fake/real server API, local runner, participant transformer, participant policy, telemetry reporter.
+- **Error propagation:** Local setup and policy errors become client diagnostics and technical telemetry; server validation and terminal states are surfaced as local diagnostics but remain server-authored.
+- **State lifecycle risks:** The runner must not execute user policy before server validation accepts the package; terminal states must stop the loop exactly once; retries must not double-submit or double-advance simulated steps.
+- **API surface parity:** Protocol docs, typed models, fake server, runner, CLI, and examples must describe the same lifecycle and message shapes.
+- **Integration coverage:** Fake-server integration tests are required until real backend services are available.
+- **Unchanged invariants:** The client does not implement backend validation, simulation, hidden scenario state, MuJoCo+Unity rendering, metrics, reports, dashboards, or run validity decisions.
 
 ---
 
@@ -386,20 +446,24 @@ sequenceDiagram
 
 | Risk | Mitigation |
 |------|------------|
-| Dashboard scope grows into server-side code execution | Keep runner-local execution as a key technical decision and document Python upload as out of scope. |
-| Protocol becomes too ad hoc for future participants | Define lifecycle and message categories before extending the README stub. |
-| Sensor payloads become too heavy for simple JSON transport | Start with clear message boundaries; defer binary optimization until image/lidar payloads are exercised. |
-| One task looks too small for a benchmark | Frame it as an MVP tester with difficulty tiers and full metric/report loop, not as final benchmark breadth. |
-| User package validation blocks progress because MuJoCo details are underdeveloped | Begin with the minimum metadata needed by the single social-navigation task and expand only when required. |
+| Server API contract changes after client work begins | Keep protocol models explicit, version the contract, and use the fake server as executable documentation. |
+| Client accidentally grows backend responsibilities | Keep validation authority, scenario state, metrics, reports, and rendering out of implementation units and docs. |
+| MuJoCo+Unity context causes client UI/rendering scope creep | State repeatedly that the client is headless and only submits package metadata/assets needed by the backend. |
+| Participant diagnostics leak private code or secrets | Redact aggressively by default and test redaction paths. |
+| Heavy sensor payloads make the first transport inadequate | Hide transport behind the protocol adapter and defer binary optimization until representative payloads exist. |
+| Dynamic user-code loading creates confusing setup failures | Provide explicit diagnostics for import, constructor, callable-interface, dependency, and runtime failures. |
+| Backend is unavailable during client implementation | Build against the fake server and align periodically with the backend owner. |
 
 ---
 
 ## Documentation / Operational Notes
 
-- Update `README.md` from a simple client stub into an architecture and quickstart document.
-- Document the trust boundary clearly: the server runs participant XML/config in MuJoCo after validation, but user Python policy code runs locally.
+- Create `README.md` because the repository currently has no README.
+- Document the trust boundary clearly: user Python policy code runs locally; server owns validation, simulation, scoring, rendering, and reporting.
+- Document the server API contract from the client's perspective before real backend integration.
 - Document that users install their own ML dependencies in the runner environment.
 - Document technical failure categories separately from behavioral metric categories.
+- Document that MuJoCo+Unity is backend context only; the client remains headless.
 
 ---
 
@@ -407,4 +471,3 @@ sequenceDiagram
 
 - **Origin document:** `docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md`
 - **Project guidance:** `AGENTS_SHARED.md`
-- **Current client stub:** `README.md`
