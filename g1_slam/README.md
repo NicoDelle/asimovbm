@@ -97,6 +97,32 @@ target_joint_angle = default_angle + action_scale * policy_action
 
 The current observation is intentionally generic: velocity command, placeholder base orientation terms, joint position offsets, joint velocities, and previous action. Real policies often require an exact observation layout, so update `src/g1_slam/locomotion.py` to match the policy you use.
 
+## RoboJuDo Locomotion
+
+RoboJuDo can also run as the MuJoCo locomotion backend, without ROS:
+
+```bash
+PYTHONPATH=src python -m g1_slam --locomotion robojudo
+```
+
+By default this uses:
+
+```text
+third_party/RoboJuDo
+g1_asap_loco
+```
+
+You can override them:
+
+```bash
+PYTHONPATH=src python -m g1_slam \
+  --locomotion robojudo \
+  --robojudo-repo third_party/RoboJuDo \
+  --robojudo-config g1_asap_loco
+```
+
+This mode lets RoboJuDo own the MuJoCo simulation and replaces its joystick controller with a virtual joystick fed by the SLAM navigation command.
+
 ## Navigation Config
 
 The start pose, goal position, and default number of steps live in:

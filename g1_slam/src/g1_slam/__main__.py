@@ -19,9 +19,11 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=Path("runs"))
     parser.add_argument("--mujoco", action="store_true", help="usa MuJoCo como visualizacion")
     parser.add_argument("--robot", choices=("kinematic", "official_g1"), default="kinematic")
-    parser.add_argument("--locomotion", choices=("kinematic", "policy"), help="sobrescribe locomotion.mode del config")
+    parser.add_argument("--locomotion", choices=("kinematic", "policy", "robojudo"), help="sobrescribe locomotion.mode del config")
     parser.add_argument("--policy-path", type=Path, help="sobrescribe locomotion.policy_path del config")
     parser.add_argument("--model-path", type=Path, help="ruta opcional a un XML/MJCF de MuJoCo")
+    parser.add_argument("--robojudo-repo", type=Path, default=Path("third_party/RoboJuDo"))
+    parser.add_argument("--robojudo-config", default="g1_asap_loco")
     parser.add_argument("--render", action="store_true", help="abre el viewer de MuJoCo")
     args = parser.parse_args()
 
@@ -49,6 +51,25 @@ def main() -> None:
             kp=locomotion_config.kp,
             kd=locomotion_config.kd,
         )
+
+    if locomotion_config.mode == "robojudo":
+        from .robojudo_backend import RoboJuDoBackendConfig, run_robojudo_navigation
+
+        run_robojudo_navigation(
+            world,
+            start=start,
+            goal=goal,
+            steps=steps,
+            controller_config=nav_config.controller,
+            backend_config=RoboJuDoBackendConfig(
+                repo_path=args.robojudo_repo,
+                config_name=args.robojudo_config,
+                max_vx=nav_config.controller.max_linear_speed,
+                max_vy=nav_config.controller.max_linear_speed,
+                max_yaw_rate=nav_config.controller.max_yaw_rate,
+            ),
+        )
+        return
 
     if args.mujoco:
         run_mujoco_navigation(

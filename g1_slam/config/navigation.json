@@ -1,14 +1,14 @@
 {
   "start": {
-    "x": -4.2,
-    "y": -3.2,
+    "x": -4.0,
+    "y": 0.0,
     "yaw": 0.0
   },
   "goal": {
-    "x": -4.2,
-    "y": -1.0
+    "x": 0.0,
+    "y": -2.0
   },
-  "steps": 900,
+  "steps": 1200,
   "controller": {
     "lookahead": 0.55,
     "waypoint_tolerance": 0.25,

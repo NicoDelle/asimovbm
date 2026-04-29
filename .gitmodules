@@ -1,3 +1,6 @@
 [submodule "g1_slam/third_party/unitree_mujoco"]
 	path = g1_slam/third_party/unitree_mujoco
 	url = https://github.com/unitreerobotics/unitree_mujoco.git
+[submodule "g1_slam/third_party/RoboJuDo"]
+	path = g1_slam/third_party/RoboJuDo
+	url = https://github.com/HansZ8/RoboJuDo
