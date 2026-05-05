@@ -1,7 +1,7 @@
 ---
 title: feat: Implement Benchmark Client Architecture
 type: feat
-status: active
+status: completed
 date: 2026-04-29
 origin: docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md
 ---

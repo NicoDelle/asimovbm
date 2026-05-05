@@ -1,0 +1,27 @@
+{
+  "name": "minimal-mobile-base",
+  "model": {
+    "format": "mjcf",
+    "path": "robot.xml"
+  },
+  "sensors": [
+    {
+      "name": "proprioception",
+      "kind": "robot_state",
+      "frequency_hz": 40
+    },
+    {
+      "name": "lidar_front",
+      "kind": "lidar",
+      "frequency_hz": 10
+    }
+  ],
+  "action_mapping": {
+    "mode": "joint_target",
+    "joints": ["left_wheel", "right_wheel"]
+  },
+  "robot_metadata": {
+    "forward_axis": "x+",
+    "body_class": "mobile_base"
+  }
+}
