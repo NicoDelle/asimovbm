@@ -1,12 +1,50 @@
 """Shared benchmark client/server message contract.
 
-This package owns the on-the-wire message types. The client re-exports them
-from ``asimovbm_client.protocol`` for backwards compatibility.
+The dataclasses in :mod:`asimovbm_protocol.models` are the single source of
+truth for the on-the-wire message lifecycle. They are re-exported from
+``asimovbm_client.protocol`` for backwards compatibility.
 
-Real content lands in Unit 1; this stub only reserves the import surface so
-Unit 0 import gates pass.
+Use :mod:`asimovbm_protocol.adapters` for runtime validation at external
+boundaries (HTTP/WebSocket payloads). Use :mod:`asimovbm_protocol.schema` for
+JSON Schema generation.
 """
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from .models import (
+    PROTOCOL_VERSION,
+    ActionMessage,
+    ClientCapabilities,
+    FailureCategory,
+    FailureMessage,
+    PackageSubmission,
+    ProtocolError,
+    SensorReading,
+    SessionBootstrap,
+    StepMessage,
+    TaskEvent,
+    TerminalMessage,
+    TerminalStatus,
+    ValidationResponse,
+    ValidationStatus,
+    to_payload,
+)
+
+__all__ = [
+    "ActionMessage",
+    "ClientCapabilities",
+    "FailureCategory",
+    "FailureMessage",
+    "PROTOCOL_VERSION",
+    "PackageSubmission",
+    "ProtocolError",
+    "SensorReading",
+    "SessionBootstrap",
+    "StepMessage",
+    "TaskEvent",
+    "TerminalMessage",
+    "TerminalStatus",
+    "ValidationResponse",
+    "ValidationStatus",
+    "to_payload",
+]
