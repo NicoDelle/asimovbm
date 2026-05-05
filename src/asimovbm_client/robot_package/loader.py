@@ -30,7 +30,7 @@ def load_robot_package(path: str | Path) -> PackageSubmission:
     if "path" in model:
         _require_relative_file(config_path.parent, model["path"], "model.path")
 
-    sensors = [dict(sensor) for sensor in config["sensors"]]
+    sensors = [_copy_mapping(sensor, "sensors[]") for sensor in config["sensors"]]
     seen_names: set[str] = set()
     for sensor in sensors:
         name = sensor.get("name")
@@ -48,7 +48,10 @@ def load_robot_package(path: str | Path) -> PackageSubmission:
     if not isinstance(joints, list) or not joints:
         raise PackageLoadError("action_mapping.joints must be a non-empty list")
 
-    visual_assets = [dict(asset) for asset in config.get("visual_assets", [])]
+    visual_assets_config = config.get("visual_assets", [])
+    if not isinstance(visual_assets_config, list):
+        raise PackageLoadError("visual_assets must be a list when provided")
+    visual_assets = [_copy_mapping(asset, "visual_assets[]") for asset in visual_assets_config]
     for asset in visual_assets:
         if "path" in asset:
             _require_relative_file(config_path.parent, asset["path"], "visual_assets.path")
@@ -58,7 +61,7 @@ def load_robot_package(path: str | Path) -> PackageSubmission:
         model=model,
         sensors=sensors,
         action_mapping=action_mapping,
-        robot_metadata=dict(config.get("robot_metadata", {})),
+        robot_metadata=_copy_mapping(config.get("robot_metadata", {}), "robot_metadata"),
         visual_assets=visual_assets,
     )
 
@@ -71,6 +74,12 @@ def _require_mapping(config: dict[str, Any], key: str, config_path: Path) -> Non
 def _require_list(config: dict[str, Any], key: str, config_path: Path) -> None:
     if not isinstance(config.get(key), list):
         raise PackageLoadError(f"{config_path} must define list field {key!r}")
+
+
+def _copy_mapping(value: object, field: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise PackageLoadError(f"{field} must be an object")
+    return dict(value)
 
 
 def _require_relative_file(root: Path, raw_path: object, field: str) -> None:

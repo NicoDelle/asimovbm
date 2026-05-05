@@ -4,9 +4,10 @@ import argparse
 import sys
 from pathlib import Path
 
-from asimovbm_client.protocol import FakeBenchmarkServer, FakeServerScript, SensorReading, StepMessage, TaskEvent
+from asimovbm_client.protocol import SensorReading, StepMessage, TaskEvent, TerminalStatus
 from asimovbm_client.robot_package import PackageLoadError, load_robot_package
 from asimovbm_client.runner import ParticipantCodeError, RunnerConfig, StepSynchronousRunner, load_callable
+from asimovbm_client.testing import FakeBenchmarkServer, FakeServerScript
 from asimovbm_client.telemetry import summarize_failures
 
 
@@ -55,6 +56,9 @@ def main(argv: list[str] | None = None) -> int:
             print(line)
     if result.terminal is None:
         print("client run failed before terminal state", file=sys.stderr)
+        return 1
+    if result.terminal.status not in {TerminalStatus.COMPLETED, TerminalStatus.REPORT_READY}:
+        print(f"client run ended with {result.terminal.status.value}", file=sys.stderr)
         return 1
     print(f"completed {result.steps_completed} step(s); report={result.terminal.report_ref}")
     return 0

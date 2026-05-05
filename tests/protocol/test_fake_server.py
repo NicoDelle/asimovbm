@@ -2,8 +2,6 @@ import unittest
 
 from asimovbm_client.protocol import (
     ActionMessage,
-    FakeBenchmarkServer,
-    FakeServerScript,
     FailureCategory,
     PackageSubmission,
     PROTOCOL_VERSION,
@@ -14,6 +12,7 @@ from asimovbm_client.protocol import (
     TerminalMessage,
     ValidationStatus,
 )
+from asimovbm_client.testing import FakeBenchmarkServer, FakeServerScript
 
 
 def package():
@@ -49,6 +48,8 @@ class FakeServerTests(unittest.TestCase):
 
         self.assertEqual(response.status, ValidationStatus.REJECTED)
         self.assertEqual(response.errors, ["bad package"])
+        with self.assertRaisesRegex(ProtocolError, "Package validation"):
+            server.next_step()
 
     def test_rejects_unsupported_protocol_version(self):
         server = FakeBenchmarkServer(FakeServerScript([step()], supported_protocol_version=PROTOCOL_VERSION))
@@ -60,10 +61,31 @@ class FakeServerTests(unittest.TestCase):
         server = FakeBenchmarkServer(FakeServerScript([step()]))
         server.connect(SessionBootstrap("run-1"))
         server.submit_package(package())
+        server.next_step()
 
         server.submit_action(ActionMessage(1, [], 0.1, invalid_reason="wrong shape"))
 
         self.assertEqual(server.failures[0].category, FailureCategory.INVALID_ACTION)
+
+    def test_rejects_next_step_before_pending_action(self):
+        server = FakeBenchmarkServer(FakeServerScript([step()]))
+        server.connect(SessionBootstrap("run-1"))
+        server.submit_package(package())
+
+        server.next_step()
+
+        with self.assertRaisesRegex(ProtocolError, "must be submitted"):
+            server.next_step()
+
+    def test_rejects_action_after_terminal(self):
+        server = FakeBenchmarkServer(FakeServerScript([]))
+        server.connect(SessionBootstrap("run-1"))
+        server.submit_package(package())
+
+        self.assertIsInstance(server.next_step(), TerminalMessage)
+
+        with self.assertRaisesRegex(ProtocolError, "after terminal"):
+            server.submit_action(ActionMessage(1, [0.0], 1.2))
 
     def test_sensor_freshness_metadata_is_preserved(self):
         stale = SensorReading("camera", "rgb", {"uri": "frame-1"}, fresh=False, metadata={"carried_from": 1})

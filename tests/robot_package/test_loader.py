@@ -99,3 +99,22 @@ class RobotPackageLoaderTests(unittest.TestCase):
 
             with self.assertRaisesRegex(PackageLoadError, "within the package directory"):
                 load_robot_package(root)
+
+    def test_rejects_malformed_element_shapes_with_package_error(self):
+        from tempfile import TemporaryDirectory
+        from pathlib import Path
+
+        bad_configs = [
+            ("sensors", ["not an object"], "sensors"),
+            ("visual_assets", ["not an object"], "visual_assets"),
+            ("robot_metadata", ["not an object"], "robot_metadata"),
+        ]
+        for field, value, message in bad_configs:
+            with self.subTest(field=field), TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                config = base_config()
+                config[field] = value
+                write_package(root, config)
+
+                with self.assertRaisesRegex(PackageLoadError, message):
+                    load_robot_package(root)

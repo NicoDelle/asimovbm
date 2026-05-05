@@ -1,6 +1,5 @@
 """Transport-neutral benchmark client protocol models."""
 
-from .fake import FakeBenchmarkServer, FakeServerScript
 from .models import (
     ActionMessage,
     ClientCapabilities,
@@ -24,8 +23,6 @@ __all__ = [
     "ClientCapabilities",
     "FailureCategory",
     "FailureMessage",
-    "FakeBenchmarkServer",
-    "FakeServerScript",
     "PackageSubmission",
     "PROTOCOL_VERSION",
     "ProtocolError",

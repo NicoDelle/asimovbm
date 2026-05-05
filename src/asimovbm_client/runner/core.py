@@ -13,6 +13,8 @@ from asimovbm_client.protocol import (
     SessionBootstrap,
     StepMessage,
     TerminalMessage,
+    TerminalStatus,
+    ValidationResponse,
     ValidationStatus,
 )
 from asimovbm_client.telemetry import redact_text
@@ -20,7 +22,7 @@ from asimovbm_client.telemetry import redact_text
 
 class BenchmarkServer(Protocol):
     def connect(self, bootstrap: SessionBootstrap) -> None: ...
-    def submit_package(self, package: PackageSubmission): ...
+    def submit_package(self, package: PackageSubmission) -> ValidationResponse: ...
     def next_step(self) -> StepMessage | TerminalMessage: ...
     def submit_action(self, action: ActionMessage) -> None: ...
     def record_failure(self, failure: FailureMessage) -> None: ...
@@ -44,7 +46,11 @@ class ClientRunResult:
 
     @property
     def ok(self) -> bool:
-        return self.terminal is not None and not self.failures
+        return (
+            self.terminal is not None
+            and self.terminal.status in {TerminalStatus.COMPLETED, TerminalStatus.REPORT_READY}
+            and not self.failures
+        )
 
 
 class StepSynchronousRunner:
@@ -100,7 +106,16 @@ class StepSynchronousRunner:
                 result.terminal = message
                 return result
 
-            action = self._run_step(message, result)
+            if not isinstance(message, StepMessage):
+                raise ProtocolError(f"server returned unexpected message: {type(message).__name__}")
+
+            action_or_failure = self._run_step(message)
+            if isinstance(action_or_failure, FailureMessage):
+                self.server.record_failure(action_or_failure)
+                result.failures.append(action_or_failure)
+                return result
+
+            action = action_or_failure
             self.server.submit_action(action)
             result.actions_sent += 1
             if not action.valid:
@@ -123,13 +138,6 @@ class StepSynchronousRunner:
                 if attempts >= self.config.retry_timeouts:
                     raise
                 attempts += 1
-                self.server.record_failure(
-                    FailureMessage(
-                        FailureCategory.TIMEOUT,
-                        redact_text(str(exc)),
-                        retry_count=attempts,
-                    )
-                )
                 result.telemetry.append(
                     FailureMessage(
                         FailureCategory.TIMEOUT,
@@ -138,25 +146,19 @@ class StepSynchronousRunner:
                     )
                 )
 
-    def _run_step(self, step: StepMessage, result: ClientRunResult) -> ActionMessage:
+    def _run_step(self, step: StepMessage) -> ActionMessage | FailureMessage:
         started = perf_counter()
         try:
             observation = self.transformer(step)
         except Exception as exc:
             reason = redact_text(str(exc) or exc.__class__.__name__)
-            result.failures.append(
-                FailureMessage(FailureCategory.TRANSFORMER_EXCEPTION, reason, step.step_id)
-            )
-            return ActionMessage(step.step_id, [], 0.0, invalid_reason=reason)
+            return FailureMessage(FailureCategory.TRANSFORMER_EXCEPTION, reason, step.step_id)
 
         try:
             action = self.policy(observation)
         except Exception as exc:
             reason = redact_text(str(exc) or exc.__class__.__name__)
-            result.failures.append(
-                FailureMessage(FailureCategory.POLICY_EXCEPTION, reason, step.step_id)
-            )
-            return ActionMessage(step.step_id, [], 0.0, invalid_reason=reason)
+            return FailureMessage(FailureCategory.POLICY_EXCEPTION, reason, step.step_id)
 
         latency_ms = (perf_counter() - started) * 1000
         action_vector, invalid_reason = self._coerce_action(action)

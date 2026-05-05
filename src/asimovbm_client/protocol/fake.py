@@ -44,6 +44,8 @@ class FakeBenchmarkServer:
         self._validated = False
         self._next_step_index = 0
         self._failed_once = False
+        self._awaiting_action_step_id: int | None = None
+        self._terminal_sent = False
 
     def connect(self, bootstrap: SessionBootstrap) -> None:
         if bootstrap.protocol_version != self.script.supported_protocol_version:
@@ -56,12 +58,12 @@ class FakeBenchmarkServer:
     def submit_package(self, package: PackageSubmission) -> ValidationResponse:
         self._require_connected()
         self.package = package
-        self._validated = True
         if self.script.validation_errors:
             return ValidationResponse(
                 ValidationStatus.REJECTED,
                 errors=list(self.script.validation_errors),
             )
+        self._validated = True
         return ValidationResponse(
             ValidationStatus.ACCEPTED,
             settings={"control_dt": self.script.steps[0].control_dt if self.script.steps else 0.025},
@@ -69,7 +71,14 @@ class FakeBenchmarkServer:
 
     def next_step(self) -> StepMessage | TerminalMessage:
         self._require_validated()
+        if self._terminal_sent:
+            raise ProtocolError("Terminal state has already been emitted")
+        if self._awaiting_action_step_id is not None:
+            raise ProtocolError(
+                f"Action for step {self._awaiting_action_step_id} must be submitted before next_step"
+            )
         if self._next_step_index >= len(self.script.steps):
+            self._terminal_sent = True
             return TerminalMessage(
                 self.script.terminal_status,
                 report_ref=self.script.report_ref,
@@ -85,10 +94,20 @@ class FakeBenchmarkServer:
             raise TimeoutError(f"Transient fake timeout at step {step.step_id}")
 
         self._next_step_index += 1
+        self._awaiting_action_step_id = step.step_id
         return step
 
     def submit_action(self, action: ActionMessage) -> None:
         self._require_validated()
+        if self._terminal_sent:
+            raise ProtocolError("Cannot submit action after terminal state")
+        if self._awaiting_action_step_id is None:
+            raise ProtocolError("A step must be issued before submitting an action")
+        if action.step_id != self._awaiting_action_step_id:
+            raise ProtocolError(
+                f"Action step_id {action.step_id} does not match pending step "
+                f"{self._awaiting_action_step_id}"
+            )
         if not action.valid:
             self.failures.append(
                 FailureMessage(
@@ -99,6 +118,7 @@ class FakeBenchmarkServer:
                 )
             )
         self.actions.append(action)
+        self._awaiting_action_step_id = None
 
     def record_failure(self, failure: FailureMessage) -> None:
         self.failures.append(failure)

@@ -1,14 +1,15 @@
 import unittest
 
 from asimovbm_client.protocol import (
-    FakeBenchmarkServer,
-    FakeServerScript,
+    FailureCategory,
     PackageSubmission,
     SensorReading,
     StepMessage,
     TaskEvent,
+    TerminalStatus,
 )
 from asimovbm_client.runner import RunnerConfig, StepSynchronousRunner
+from asimovbm_client.testing import FakeBenchmarkServer, FakeServerScript
 
 
 def package(action_size=2):
@@ -89,7 +90,28 @@ class RunnerTests(unittest.TestCase):
         ).run()
 
         self.assertTrue(result.failures)
+        self.assertEqual(result.failures[0].category, FailureCategory.TRANSFORMER_EXCEPTION)
         self.assertIn("<redacted>", result.failures[0].summary)
+        self.assertFalse(server.actions)
+        self.assertEqual(server.failures[0].category, FailureCategory.TRANSFORMER_EXCEPTION)
+
+    def test_policy_exception_emits_failure_without_submitting_action(self):
+        server = FakeBenchmarkServer(FakeServerScript([step()]))
+
+        def policy(_observation):
+            raise RuntimeError("policy failed")
+
+        result = StepSynchronousRunner(
+            server,
+            package(),
+            lambda message: message,
+            policy,
+            RunnerConfig("run-1", action_size=2),
+        ).run()
+
+        self.assertEqual(result.failures[0].category, FailureCategory.POLICY_EXCEPTION)
+        self.assertFalse(server.actions)
+        self.assertEqual(server.failures[0].category, FailureCategory.POLICY_EXCEPTION)
 
     def test_invalid_action_shape_stops_as_invalid_action(self):
         server = FakeBenchmarkServer(FakeServerScript([step()]))
@@ -118,3 +140,18 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue(any(item.category.value == "timeout" for item in result.telemetry))
         self.assertFalse(result.failures)
         self.assertEqual(result.steps_completed, 1)
+
+    def test_failed_terminal_status_is_not_ok(self):
+        server = FakeBenchmarkServer(
+            FakeServerScript([step()], terminal_status=TerminalStatus.FAILED)
+        )
+        result = StepSynchronousRunner(
+            server,
+            package(),
+            lambda message: message,
+            lambda _observation: [0.0, 0.0],
+            RunnerConfig("run-1", action_size=2),
+        ).run()
+
+        self.assertIsNotNone(result.terminal)
+        self.assertFalse(result.ok)
