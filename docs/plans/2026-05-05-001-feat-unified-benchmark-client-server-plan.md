@@ -839,7 +839,7 @@ later benchmark scenario task.
 - Server runner can complete fake and `g1_slam` smoke runs without client code
   changes.
 
-- [ ] **Unit 7: Freeze metric spec before metric engine work**
+- [x] **Unit 7: Freeze metric spec before metric engine work**
 
 **Goal:** Prevent implementation from inventing benchmark formulas during
 coding.
