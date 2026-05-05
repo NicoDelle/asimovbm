@@ -734,7 +734,7 @@ transport tests.
 **Verification:**
 - Same runner works against `FakeBenchmarkServer` and real server transport.
 
-- [ ] **Unit 5: Wrap `g1_slam` as first real simulation smoke adapter**
+- [x] **Unit 5: Wrap `g1_slam` as first real simulation smoke adapter**
 
 **Goal:** Add a server simulation adapter that runs the real pure-Python
 `g1_slam` navigation loop and emits benchmark-compatible telemetry fixtures.
