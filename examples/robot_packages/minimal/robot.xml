@@ -1,0 +1,5 @@
+<mujoco model="minimal-mobile-base">
+  <worldbody>
+    <body name="base"/>
+  </worldbody>
+</mujoco>

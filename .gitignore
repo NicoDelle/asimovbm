@@ -1,1 +1,5 @@
-AGENTS.md
+*.md
+!AGENTS_SHARED.md
+!README.md
+!docs/**/*.md
+.obsidian
