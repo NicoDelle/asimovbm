@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import sys
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -127,6 +128,18 @@ def test_unknown_action_mode_rejected() -> None:
     )
     assert not result.accepted
     assert any("action_mapping.mode" in err for err in result.errors)
+
+
+def test_mobile_base_velocity_action_mode_is_accepted() -> None:
+    result = validate_remote_manifest(
+        _minimal_submission(
+            action_mapping={
+                "mode": "mobile_base_velocity",
+                "joints": ["linear_velocity", "yaw_rate"],
+            }
+        )
+    )
+    assert result.accepted
 
 
 def test_empty_joints_rejected() -> None:
@@ -270,5 +283,5 @@ def test_remote_validation_does_not_read_client_paths(tmp_path, monkeypatch) -> 
 
 def test_validation_result_is_immutable_dataclass() -> None:
     result = PackageValidationResult(accepted=True)
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         result.accepted = False  # type: ignore[misc]

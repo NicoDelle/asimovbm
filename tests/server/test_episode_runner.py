@@ -6,10 +6,6 @@ from asimovbm_protocol import ActionMessage, FailureCategory, TerminalStatus
 from asimovbm_server.runner import EpisodeRunner, EpisodeRunnerConfig
 from asimovbm_server.simulation import (
     FakeSmokeSimulation,
-    G1SlamBatchAdapter,
-    G1SlamBatchConfig,
-    G1SlamStepper,
-    G1SlamStepperConfig,
     fake_step,
 )
 
@@ -36,38 +32,6 @@ def test_episode_runner_completes_fake_policy_in_loop_episode() -> None:
     }
     assert result.smoke_results[0].maturity == "fake_protocol"
     assert result.smoke_results[0].steps == 2
-
-
-def test_episode_runner_runs_g1_batch_without_websocket() -> None:
-    runner = EpisodeRunner(EpisodeRunnerConfig(max_attempts=1))
-
-    result = runner.run_batch(
-        lambda: G1SlamBatchAdapter(G1SlamBatchConfig(steps=6))
-    )
-
-    assert result.ok
-    assert result.smoke_results[0].maturity == "g1_slam_batch_smoke"
-    assert result.smoke_results[0].trajectory_summary["points"] == 7
-
-
-def test_episode_runner_runs_g1_policy_in_loop_without_websocket() -> None:
-    runner = EpisodeRunner(EpisodeRunnerConfig(max_attempts=1))
-
-    def policy(step):
-        plan = next(sensor for sensor in step.sensors if sensor.name == "navigation_plan")
-        command = plan.data["recommended_command"]
-        return ActionMessage(step.step_id, [command["linear"], command["yaw_rate"]], 1.0)
-
-    result = runner.run_policy_in_loop(
-        lambda: G1SlamStepper.from_config(
-            G1SlamStepperConfig(max_steps=1, lidar_rays=9)
-        ),
-        policy,
-    )
-
-    assert result.ok
-    assert result.smoke_results[0].maturity == "g1_slam_policy_in_loop_smoke"
-    assert result.smoke_results[0].steps == 1
 
 
 def test_technical_failure_consumes_attempt_then_retries() -> None:

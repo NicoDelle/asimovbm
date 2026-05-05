@@ -7,6 +7,7 @@ from .lifecycle import (
     validate_action_payload,
     validate_raw_action_payload,
 )
+from .mujoco_lifecycle import MuJoCoLifecycleOrchestrator
 from .telemetry import (
     TechnicalDiagnostic,
     TelemetryValidationError,
@@ -19,6 +20,7 @@ __all__ = [
     "EpisodeRunnerConfig",
     "EpisodeRunResult",
     "LifecycleResult",
+    "MuJoCoLifecycleOrchestrator",
     "ScriptedLifecycleOrchestrator",
     "TechnicalDiagnostic",
     "TelemetryValidationError",

@@ -10,6 +10,7 @@ independently of any simulation backend.
 from __future__ import annotations
 
 import asyncio
+import json
 import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
@@ -124,6 +125,7 @@ class ScriptedLifecycleOrchestrator:
         report_factory: Callable[[Session], dict[str, Any]] | None = None,
         delay_before_step_id: dict[int, float] | None = None,
         joint_bounds: Sequence[tuple[float, float]] | None = None,
+        trace_messages: bool = False,
     ):
         self._manager = manager
         self._steps = list(steps)
@@ -137,6 +139,7 @@ class ScriptedLifecycleOrchestrator:
         )
         self._delay_before_step_id = dict(delay_before_step_id or {})
         self._joint_bounds = joint_bounds
+        self._trace_messages = trace_messages
         # Last-run telemetry, exposed for tests.
         self.last_result: LifecycleResult | None = None
 
@@ -149,6 +152,7 @@ class ScriptedLifecycleOrchestrator:
             first = await websocket.receive_json()
         except WebSocketDisconnect:
             return
+        self._trace("<-", first)
         if first.get("type") != "bootstrap":
             await self._fatal(websocket, "compatibility", "expected bootstrap message")
             return
@@ -166,11 +170,12 @@ class ScriptedLifecycleOrchestrator:
                 f"unsupported protocol_version {bootstrap.protocol_version!r}",
             )
             return
-        await websocket.send_json(
+        await self._send_json(
+            websocket,
             {
                 "type": "bootstrap_ack",
                 "data": {"protocol_version": PROTOCOL_VERSION},
-            }
+            },
         )
 
         # 2. control loop -------------------------------------------------
@@ -179,7 +184,8 @@ class ScriptedLifecycleOrchestrator:
             delay = self._delay_before_step_id.get(step.step_id)
             if delay:
                 await asyncio.sleep(delay)
-            await websocket.send_json({"type": "step", "data": to_payload(step)})
+            self._trace_step(step)
+            await self._send_json(websocket, {"type": "step", "data": to_payload(step)})
 
             try:
                 accepted = await self._receive_action_with_resync(
@@ -210,7 +216,9 @@ class ScriptedLifecycleOrchestrator:
             failures=list(result.failures),
         )
         result.terminal = terminal
-        await websocket.send_json({"type": "terminal", "data": to_payload(terminal)})
+        await self._send_json(
+            websocket, {"type": "terminal", "data": to_payload(terminal)}
+        )
 
     # --- helpers --------------------------------------------------------
 
@@ -218,11 +226,49 @@ class ScriptedLifecycleOrchestrator:
         self, websocket: WebSocket, category: str, summary: str
     ) -> None:
         try:
-            await websocket.send_json(
-                {"type": "error", "category": category, "summary": summary}
+            await self._send_json(
+                websocket,
+                {"type": "error", "category": category, "summary": summary},
             )
         finally:
             await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
+
+    async def _send_json(self, websocket: WebSocket, message: dict[str, Any]) -> None:
+        self._trace("->", message)
+        await websocket.send_json(message)
+
+    def _trace(self, direction: str, message: dict[str, Any]) -> None:
+        if not self._trace_messages:
+            return
+        print(
+            f"[server {direction}] "
+            f"{json.dumps(message, default=str, separators=(',', ':'))}",
+            flush=True,
+        )
+
+    def _trace_step(self, step: StepMessage) -> None:
+        if not self._trace_messages:
+            return
+        pose = next(
+            (sensor.data for sensor in step.sensors if sensor.name == "pose"),
+            None,
+        )
+        sensors = ",".join(sensor.name for sensor in step.sensors)
+        events = ",".join(event.name for event in step.task_events) or "-"
+        print(
+            f"[sim step] id={step.step_id} t={step.sim_time:.3f} "
+            f"pose={pose} sensors={sensors} events={events}",
+            flush=True,
+        )
+
+    def _trace_action(self, action: ActionMessage) -> None:
+        if not self._trace_messages:
+            return
+        print(
+            f"[sim action] step={action.step_id} valid={action.valid} "
+            f"action={list(action.action)}",
+            flush=True,
+        )
 
     def _action_size(self, session: Session) -> int | None:
         if session.package is None:
@@ -249,6 +295,7 @@ class ScriptedLifecycleOrchestrator:
                 msg = await websocket.receive_json()
             except WebSocketDisconnect:
                 raise
+            self._trace("<-", msg)
 
             kind = msg.get("type")
             if kind == "failure":
@@ -278,18 +325,23 @@ class ScriptedLifecycleOrchestrator:
             raw_data = msg.get("data", {})
             raw_invalid_reason = validate_raw_action_payload(raw_data)
             if raw_invalid_reason is not None:
-                await websocket.send_json(
+                await self._send_json(
+                    websocket,
                     {
                         "type": "action_rejected",
-                        "step_id": raw_data.get("step_id") if isinstance(raw_data, dict) else None,
+                        "step_id": (
+                            raw_data.get("step_id") if isinstance(raw_data, dict) else None
+                        ),
                         "reason": raw_invalid_reason,
-                    }
+                    },
                 )
                 result.failures.append(
                     FailureMessage(
                         category=FailureCategory.INVALID_ACTION,
                         summary=raw_invalid_reason,
-                        step_id=raw_data.get("step_id") if isinstance(raw_data, dict) else None,
+                        step_id=(
+                            raw_data.get("step_id") if isinstance(raw_data, dict) else None
+                        ),
                     )
                 )
                 count = self._manager.record_invalid_message(session)
@@ -317,12 +369,13 @@ class ScriptedLifecycleOrchestrator:
                 joint_bounds=self._joint_bounds,
             )
             if invalid_reason is not None:
-                await websocket.send_json(
+                await self._send_json(
+                    websocket,
                     {
                         "type": "action_rejected",
                         "step_id": action.step_id,
                         "reason": invalid_reason,
-                    }
+                    },
                 )
                 result.failures.append(
                     FailureMessage(
@@ -349,9 +402,11 @@ class ScriptedLifecycleOrchestrator:
                     )
                 )
                 result.actions_received.append(action)
+                self._trace_action(action)
                 return _CLIENT_FAILURE_SENTINEL
 
             result.actions_received.append(action)
+            self._trace_action(action)
             return action
 
     async def _record_invalid(
@@ -362,8 +417,9 @@ class ScriptedLifecycleOrchestrator:
         *,
         category: str = "compatibility",
     ) -> bool:
-        await websocket.send_json(
-            {"type": "error", "category": category, "summary": summary}
+        await self._send_json(
+            websocket,
+            {"type": "error", "category": category, "summary": summary},
         )
         count = self._manager.record_invalid_message(session)
         if count >= self._manager.config.max_invalid_messages:

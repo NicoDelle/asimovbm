@@ -45,11 +45,19 @@ def build_parser() -> argparse.ArgumentParser:
         default=10.0,
         help="Per-message receive timeout (real transport only)",
     )
+    parser.add_argument(
+        "--trace-messages",
+        action="store_true",
+        help="Print each real-transport WebSocket message as it is sent or received.",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    cwd = str(Path.cwd())
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
 
     is_real = args.server != "fake://local"
     if is_real and not args.run_token and not args.bootstrap_token:
@@ -85,6 +93,7 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=args.run_id,
                 bootstrap_token=args.bootstrap_token,
                 receive_timeout_s=args.receive_timeout_s,
+                trace_messages=args.trace_messages,
             )
         )
         # The transport handles SessionBootstrap construction in connect();

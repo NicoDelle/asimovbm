@@ -64,6 +64,7 @@ class TransportConfig:
     bootstrap_token: str | None = None
     receive_timeout_s: float = 10.0
     max_message_bytes: int = 1_048_576
+    trace_messages: bool = False
 
 
 class TransportError(RuntimeError):
@@ -240,7 +241,9 @@ class WebSocketBenchmarkServer:
         if self._ws is None:
             raise ProtocolError("control stream is not connected")
         try:
-            self._ws.send(json.dumps(message))
+            raw = json.dumps(message)
+            self._trace("->", message)
+            self._ws.send(raw)
         except (ConnectionClosed, OSError) as exc:
             raise DisconnectError(f"connection closed during send: {exc}") from exc
 
@@ -261,4 +264,14 @@ class WebSocketBenchmarkServer:
             raise ProtocolError(f"malformed server message: {exc}") from exc
         if not isinstance(parsed, dict):
             raise ProtocolError("server message must be a JSON object")
+        self._trace("<-", parsed)
         return parsed
+
+    def _trace(self, direction: str, message: dict[str, Any]) -> None:
+        if self._config.trace_messages:
+            print(
+                "[client "
+                f"{direction}] "
+                f"{json.dumps(message, default=str, separators=(',', ':'))}",
+                flush=True,
+            )

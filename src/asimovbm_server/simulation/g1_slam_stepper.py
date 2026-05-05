@@ -1,4 +1,8 @@
-"""Policy-in-loop stepper around the pure-Python ``g1_slam`` pieces."""
+"""Legacy policy-in-loop stepper around pure-Python ``g1_slam`` pieces.
+
+This is retained as old smoke scaffolding only. G1 navigation/policy logic now
+lives on the client side; server-owned benchmark simulation should use MuJoCo.
+"""
 
 from __future__ import annotations
 

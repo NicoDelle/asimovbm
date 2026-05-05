@@ -17,8 +17,8 @@
     }
   ],
   "action_mapping": {
-    "mode": "joint_target",
-    "joints": ["left_wheel", "right_wheel"]
+    "mode": "mobile_base_velocity",
+    "joints": ["linear_velocity", "yaw_rate"]
   },
   "robot_metadata": {
     "forward_axis": "x+",

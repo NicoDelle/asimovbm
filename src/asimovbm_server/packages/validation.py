@@ -60,7 +60,7 @@ KNOWN_SENSOR_KINDS: frozenset[str] = frozenset(
     }
 )
 
-KNOWN_ACTION_MODES: frozenset[str] = frozenset({"joint_target"})
+KNOWN_ACTION_MODES: frozenset[str] = frozenset({"joint_target", "mobile_base_velocity"})
 
 
 class PackageValidationError(ValueError):
