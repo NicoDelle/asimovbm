@@ -421,7 +421,7 @@ sequenceDiagram
 
 ## Implementation Units
 
-- [ ] **Unit 0: Align root tooling and import strategy**
+- [x] **Unit 0: Align root tooling and import strategy**
 
 **Goal:** Make planned server dependencies and `g1_slam` smoke imports
 available from the root project without forcing heavy optional robotics
@@ -465,7 +465,7 @@ dependencies into every install.
 - Implementer can run root tests against current client and `g1_slam` smoke
   modules without manual `PYTHONPATH` guesswork.
 
-- [ ] **Unit 1: Freeze current client protocol baseline**
+- [x] **Unit 1: Freeze current client protocol baseline**
 
 **Goal:** Make the merged client message lifecycle the explicit shared
 contract before adding server code.
@@ -530,7 +530,7 @@ fixtures before moving any model imports.
 - Client tests that import `asimovbm_client.protocol` still pass.
 - Server code has a stable shared import surface.
 
-- [ ] **Unit 2: Align robot package validation with current client format**
+- [x] **Unit 2: Align robot package validation with current client format**
 
 **Goal:** Use current `robot_package.json` directory packages as the MVP
 package contract and add server-authoritative validation around it.
@@ -591,7 +591,7 @@ package contract and add server-authoritative validation around it.
 **Verification:**
 - Current package loader behavior remains compatible with server validation.
 
-- [ ] **Unit 3: Build server API shell around current lifecycle**
+- [x] **Unit 3: Build server API shell around current lifecycle**
 
 **Goal:** Add a minimal server API that speaks the current message lifecycle
 and owns auth, validation, session state, terminal report refs, and report
@@ -660,7 +660,7 @@ retrieval.
 **Verification:**
 - Server can run locally and speak current lifecycle without real simulation.
 
-- [ ] **Unit 4: Add real transport adapter without changing runner semantics**
+- [x] **Unit 4: Add real transport adapter without changing runner semantics**
 
 **Goal:** Implement a client transport object that satisfies current
 `BenchmarkServer` protocol over the server WebSocket/API.

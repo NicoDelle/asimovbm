@@ -33,3 +33,19 @@ class CliTests(unittest.TestCase):
         )
 
         self.assertEqual(code, 0)
+
+    def test_real_server_requires_run_or_bootstrap_token(self):
+        code = main(
+            [
+                "--server",
+                "http://127.0.0.1:8000",
+                "--robot-package",
+                "examples/robot_packages/minimal",
+                "--transformer",
+                "examples.policies.sample_policy:SampleTransformer",
+                "--policy",
+                "examples.policies.sample_policy:SamplePolicy",
+            ]
+        )
+
+        self.assertEqual(code, 2)

@@ -15,22 +15,46 @@ that does not match its supported version with a compatibility failure.
 
 ## Lifecycle
 
-1. **Bootstrap.** Client sends `SessionBootstrap` with run token, protocol
-   version, optional participant id, and `ClientCapabilities`.
-2. **Package submission.** Client sends `PackageSubmission` with model
-   metadata, sensor declarations, action mapping, robot metadata, and optional
-   visual asset references.
-3. **Validation.** Server returns `ValidationResponse`. Server validation is
+1. **Session creation.** A local-dev or bootstrap-authenticated HTTP request
+   creates a run session and returns an opaque `run_id` plus per-run
+   `run_token`. Callers that already hold both values can skip this step.
+2. **Bootstrap.** Client opens
+   `WS /sessions/{run_id}/control?run_token=...` and sends
+   `SessionBootstrap` with the protocol version, optional participant id, and
+   `ClientCapabilities`. The server replies with `bootstrap_ack` when the
+   protocol version is supported.
+3. **Package submission.** Client posts `PackageSubmission` to
+   `POST /sessions/{run_id}/package` with model metadata, sensor declarations,
+   action mapping, robot metadata, and optional visual asset references.
+4. **Validation.** Server returns `ValidationResponse`. Server validation is
    authoritative; rejection prevents the control loop from starting.
-4. **Step.** Server sends a `StepMessage` with step id, simulated time, control
+5. **Step.** Server sends a `StepMessage` with step id, simulated time, control
    dt, named `SensorReading` streams (freshness metadata included), and
    structured `TaskEvent` values such as `come_here`.
-5. **Action.** Client sends an `ActionMessage` with the matching `step_id`,
+6. **Action.** Client sends an `ActionMessage` with the matching `step_id`,
    joint-target action vector, wall-clock latency telemetry, warnings, and an
    optional `invalid_reason`.
-6. **Terminal.** When the episode ends, the server sends a `TerminalMessage`
+7. **Terminal.** When the episode ends, the server sends a `TerminalMessage`
    with the terminal status and an opaque `report_ref`. Full reports are
    retrieved separately through the authenticated report surface.
+
+## Real transport envelope
+
+HTTP is used for session creation, package validation, session status, and
+report retrieval. WebSocket is used only for the control stream. The WebSocket
+envelope has a small `type` plus `data` wrapper:
+
+- client to server: `bootstrap`, `action`, `failure`
+- server to client: `bootstrap_ack`, `step`, `terminal`, `action_rejected`,
+  `error`
+
+The `data` object is always one of the shared protocol dataclasses serialized
+with the stable field names from `asimovbm_protocol`.
+
+Server-side action validation runs before simulation advances. It rejects
+stale or wrong `step_id`, non-array actions, non-number values such as strings
+or booleans, NaN/infinity, wrong action length, and configured bounds
+violations. Rejections are technical failures, not behavioral outcomes.
 
 ## Failure categories
 

@@ -20,6 +20,25 @@ from asimovbm_client.protocol import (
 from asimovbm_client.telemetry import redact_text
 
 
+def _disconnect_error_class() -> type[Exception]:
+    """Resolve transport.DisconnectError lazily to avoid an import cycle.
+
+    The transport module imports from this module, so a top-level import of
+    ``DisconnectError`` here would be circular. We resolve it once on first
+    use and fall back to ``ConnectionError`` if the transport extra is not
+    installed (in which case the runner only ever sees the fake backend).
+    """
+    try:
+        from asimovbm_client.transport import DisconnectError
+
+        return DisconnectError
+    except Exception:  # pragma: no cover - websockets extra not installed
+        return ConnectionError
+
+
+_DisconnectErrorClass = _disconnect_error_class()
+
+
 class BenchmarkServer(Protocol):
     def connect(self, bootstrap: SessionBootstrap) -> None: ...
     def submit_package(self, package: PackageSubmission) -> ValidationResponse: ...
@@ -101,6 +120,24 @@ class StepSynchronousRunner:
                 self.server.record_failure(failure)
                 result.failures.append(failure)
                 return result
+            except ProtocolError as exc:
+                # Real transport surfaces server-side action rejection and
+                # other protocol mismatches as ProtocolError. Map to the
+                # closest technical-failure category.
+                category = (
+                    FailureCategory.INVALID_ACTION
+                    if "action" in str(exc).lower() or "step_id" in str(exc).lower()
+                    else FailureCategory.COMPATIBILITY
+                )
+                failure = FailureMessage(category, str(exc))
+                self.server.record_failure(failure)
+                result.failures.append(failure)
+                return result
+            except _DisconnectErrorClass as exc:
+                failure = FailureMessage(FailureCategory.DISCONNECT, str(exc))
+                self.server.record_failure(failure)
+                result.failures.append(failure)
+                return result
 
             if isinstance(message, TerminalMessage):
                 result.terminal = message
@@ -134,7 +171,7 @@ class StepSynchronousRunner:
         while True:
             try:
                 return self.server.next_step()
-            except TimeoutError as exc:
+            except TimeoutError:
                 if attempts >= self.config.retry_timeouts:
                     raise
                 attempts += 1
