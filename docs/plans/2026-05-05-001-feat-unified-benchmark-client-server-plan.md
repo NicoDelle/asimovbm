@@ -3,1141 +3,1170 @@ title: "feat: Build unified benchmark client/server architecture"
 type: feat
 status: active
 date: 2026-05-05
+updated: 2026-05-05
 origin: docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md
 supersedes:
   - docs/plans/2026-04-29-001-feat-black-box-benchmark-core-plan.md
   - docs/plans/2026-04-29-001-feat-benchmark-client-architecture-plan.md
+merged_context:
+  - origin/feat/benchmark-client
 ---
 
 # feat: Build unified benchmark client/server architecture
 
 ## Overview
 
-Build one compatible Paper HRI benchmark architecture that combines the
-benchmark core plan with the participant client architecture plan.
+Build the server side around the client code currently merged from
+`origin/feat/benchmark-client` and the real `g1_slam` navigation demo already
+in the repo.
 
-The server/backend owns authoritative simulation, robot package validation,
-scenario execution, telemetry, metric computation, report generation, and any
-future rendering integration. The participant client owns local private policy
-execution, local package loading checks, action production, and client-side
-technical diagnostics. Both sides share one versioned protocol package so the
-contract stays executable, documented, and testable from both directions.
+The benchmark remains server-authoritative for simulation, validation, episode
+state, telemetry, metrics, and reports. The participant client remains
+headless, runs policy code locally, and exchanges step/action messages with the
+server. The immediate server work must not invent a second protocol. It must
+honor the current client message lifecycle and then harden it into a shared
+contract.
 
-This plan intentionally corrects the old integration mismatch. The old core
-plan described the server calling participant-hosted policy endpoints. The
-active client architecture instead has a participant client connect to a
-server-facing API, run policy code locally, receive step-synchronous
-observations, and send action responses. This combined plan treats the client
-as the remote black-box policy interface while preserving the origin
-requirement that participants do not disclose code, weights, or internal
-architecture.
+This plan replaces the stale old-core assumption that the server calls
+participant-hosted HTTP policy endpoints. The black-box boundary is now the
+client-connected message lifecycle.
 
 ## Problem Frame
 
 Paper HRI needs a credible benchmark MVP by 2026-05-15. The benchmark must
 evaluate proprietary robot policies as black boxes, support morphology-aware
 robot packages, run a social-navigation scenario in simulated time, and produce
-a four-axis behavioral report (see origin:
-`docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md`).
+a four-axis behavioral report.
 
-The immediate risk is contract drift. One teammate is building the participant
-client from `docs/plans/2026-04-29-001-feat-benchmark-client-architecture-plan.md`,
-while the old benchmark core plan still assumes a different endpoint topology.
-The highest-leverage move is therefore a unified implementation plan that
-defines the shared protocol first, then builds server and client against that
-same contract.
+Two local realities now matter:
 
-## Compatibility Contract With the Existing Client Plan
+- The client branch already implements a message-based local runner under
+  `src/asimovbm_client/`.
+- `g1_slam/` is not only inspiration. It contains an executable pure-Python
+  navigation demo, optional MuJoCo visualization, and tests. Server planning
+  must treat it as the first real simulation smoke path.
 
-This plan preserves the client architecture your colleague is building:
+The plan goal is therefore not greenfield scaffolding. It is contract
+alignment: keep the client interface stable, add server pieces around it, and
+bridge the benchmark runner to `g1_slam` before claiming a real demo.
 
-- The participant client remains headless and connects outward to the benchmark
-  server.
-- Policy code, model weights, transformers, and participant-only ML
-  dependencies stay local to the client.
-- The client receives step-synchronous observations, runs local inference, and
-  sends action responses over the shared control channel.
-- The client does not compute scores, validate runs authoritatively, render the
-  benchmark, or own final reports.
-- The client's internal module names may differ from this plan if the public
-  message lifecycle, CLI workflow, and policy interface remain compatible with
-  `asimovbm_protocol`.
+## Current Client Contract
 
-This plan preserves the useful parts of the old core plan:
+The current client implementation defines this v0 interface:
 
-- Server-owned simulation, scenario execution, telemetry, metrics, and report
-  generation remain the benchmark authority.
-- Technical failures remain separate from behavioral failures.
-- The social-navigation v0 scenario and the four-axis metric/report structure
-  remain the MVP target.
-- The stale assumption that the server calls participant-hosted policy HTTP
-  endpoints is removed. The equivalent black-box boundary is now the
-  client-connected control stream.
+- Protocol module: `src/asimovbm_client/protocol/models.py`
+- Protocol version: `asimovbm.client.v0`
+- Message structs: `SessionBootstrap`, `ClientCapabilities`,
+  `PackageSubmission`, `ValidationResponse`, `StepMessage`, `ActionMessage`,
+  `FailureMessage`, and `TerminalMessage`
+- Enums: `ValidationStatus`, `TerminalStatus`, and `FailureCategory`
+- Serialization helper: `to_payload()`, backed by `dataclasses.asdict()`
+- Fake server lifecycle:
+  - `connect(SessionBootstrap)`
+  - `submit_package(PackageSubmission) -> ValidationResponse`
+  - `next_step() -> StepMessage | TerminalMessage`
+  - `submit_action(ActionMessage)`
+  - `record_failure(FailureMessage)`
+- Runner entry point: `StepSynchronousRunner`
+- CLI entry point: `asimovbm-client`
+- CLI flags: `--server`, `--run-token`, `--participant-id`,
+  `--robot-package`, `--transformer`, `--policy`, `--diagnostics`
+- Current transport: `fake://local` only
+- Package format: directory containing `robot_package.json`
+- Participant code reference format: `module:attribute`
+
+Compatibility rules:
+
+- Server implementation must preserve this message lifecycle first.
+- Server may add transport envelopes, auth, and validation adapters, but it
+  must not rename the client-facing message concepts without a compatibility
+  shim.
+- Terminal control messages carry `TerminalMessage.report_ref`; full report
+  payloads stay server-owned and are retrieved separately.
+- Current CLI imports and constructs transformer/policy before server package
+  validation. That is acceptable for MVP setup diagnostics. Policy inference
+  must still not run before server validation accepts the package.
+
+## G1 SLAM Demo Contract
+
+`g1_slam/` provides the first real executable demo path:
+
+- Pure-Python navigation:
+  `g1_slam/src/g1_slam/simulation.py`
+- CLI:
+  `g1_slam/src/g1_slam/__main__.py`
+- Default navigation config:
+  `g1_slam/config/navigation.json`
+- Pure-Python test coverage:
+  `g1_slam/tests/test_navigation.py`
+- Optional MuJoCo visualization:
+  `g1_slam/src/g1_slam/mujoco_runner.py`
+- Optional official G1/ONNX locomotion hooks:
+  `g1_slam/src/g1_slam/locomotion.py`
+
+MVP server work should use `g1_slam` in two explicit ways:
+
+- Batch telemetry smoke: call pure-Python `g1_slam.run_navigation()` to prove
+  the server can ingest real navigation output and produce report artifacts.
+- Policy-in-loop smoke: extract a small stepper around the same pure-Python
+  navigation pieces so the server can emit one real `StepMessage`, accept one
+  client `ActionMessage`, apply it, advance simulated time, and record the
+  effect.
+
+Only the policy-in-loop smoke proves the real server/client/simulation handoff.
+Optional MuJoCo paths remain integration targets once local dependencies and
+assets are available.
 
 ## Requirements Trace
 
-- R1. Preserve participant IP: policy source, model weights, transformers, and
-  ML dependencies run locally in the participant client and are never uploaded
-  to the benchmark server.
-- R2. Keep the server authoritative for simulation, package validation,
-  scenario state, metric computation, final reports, and run validity.
-- R3. Use one versioned shared protocol for session bootstrap, package
-  submission, validation status, control-step observations, action responses,
-  technical failures, terminal states, and report references.
-- R4. Preserve step-synchronous simulated-time semantics: wall-clock client
+### Trust and Ownership
+
+- R1. Participant policy source, model weights, transformers, and ML
+  dependencies run locally in the client and are never uploaded to the server.
+- R2. Server owns authoritative simulation, package validation, episode state,
+  metrics, reports, and run validity.
+- R3. Client setup/import failures, package validation failures, policy
+  exceptions, invalid actions, timeouts, disconnects, and protocol mismatch are
+  technical failures, not behavioral failures.
+- R4. Robot packages, client messages, action vectors, diagnostics, and asset
+  references are untrusted input.
+- R5. Client remains headless and score-free.
+
+### Protocol and Control Loop
+
+- R6. Preserve the current client lifecycle and message names from
+  `src/asimovbm_client/protocol/models.py`.
+- R7. Preserve step-synchronous simulated-time semantics: client wall-clock
   latency is telemetry and never advances simulated time by itself.
-- R5. Use joint target vectors interpreted through the robot package's declared
-  action mapping.
-- R6. Expose observations as named typed sensor streams plus structured task
-  events, including the v0 `come_here` event.
-- R7. Treat robot packages, client messages, actions, uploaded assets, and
-  diagnostics as untrusted input.
-- R8. Classify technical failures separately from behavioral failures,
-  including invalid actions, timeouts, disconnects, package validation errors,
-  dependency/import failures, and policy exceptions.
-- R9. Implement the social-navigation v0 scenario contract with three tiers,
-  morphology-neutral acknowledgement, two-zone stop/safety rules, and N valid
-  episodes with max attempts.
-- R10. Produce aggregate and per-tier reports with the four macro indicators
-  and exactly 12 v0 sub-indicators from the origin requirements.
-- R11. Keep the participant client headless. No renderer, dashboard, replay
-  viewer, Unity runtime, or score computation belongs in the client.
-- R12. Provide fake/in-memory server and simulation adapters so server and
-  client work can proceed before the real MuJoCo environment and deployment
-  target are ready.
-- R13. Use the easiest mature open-source stack that current official docs
-  support: standard Python packaging, Pydantic v2 schemas, FastAPI/Uvicorn for
-  ASGI HTTP/WebSocket surfaces, official MuJoCo Python bindings, pytest, and
-  Ruff.
+- R8. Use joint-target action vectors interpreted through declared
+  `action_mapping.joints`.
+- R9. Expose observations as named `SensorReading` streams plus structured
+  `TaskEvent` values, including the v0 `come_here` event.
+- R10. MVP payloads are inline JSON-compatible data inside `SensorReading.data`;
+  payload references/blob fetch are deferred.
+
+### Scenario and Reporting
+
+- R11. Use `g1_slam` as the first real simulation smoke path before claiming a
+  benchmark demo beyond fake protocol tests.
+- R12. Preserve the social-navigation v0 scenario contract as the full
+  benchmark target, but keep three-tier MuJoCo/social behavior out of this
+  branch until the `g1_slam` policy-in-loop smoke passes.
+- R13. Produce report envelopes, technical diagnostics, and smoke-context
+  trajectory/reliability output now; produce populated four-macro/12-submetric
+  benchmark reports only after social-navigation telemetry and metric freeze.
+- R14. Freeze metric formulas before implementing metric engines beyond schema
+  and report scaffolding.
+
+### Implementation Stack
+
+- R15. Use the easiest mature open-source stack supported by current official
+  docs and local code: stdlib dataclasses for current message structs,
+  Pydantic v2 validation adapters at external boundaries, FastAPI/Uvicorn for
+  ASGI HTTP/WebSocket surfaces, official MuJoCo Python bindings when MuJoCo is
+  needed, pytest/unittest-compatible tests, and Ruff.
 
 ## Scope Boundaries
 
-- This plan does not implement a web dashboard, hosted UI, replay viewer, or
-  Unity rendering.
-- This plan does not implement the full MuJoCo social-navigation world owned by
-  the simulation teammate. It defines the server adapter boundary that their
-  work plugs into.
+- This plan does not implement a web dashboard, replay viewer, hosted portal,
+  or Unity rendering.
+- This plan does not replace `g1_slam`; it wraps it as a smoke simulation
+  adapter and then adds benchmark-specific server ownership around it.
 - This plan does not execute arbitrary participant Python on the server.
-- This plan does not implement multi-language clients for MVP.
-- This plan does not implement arbitrary custom sensor plugins or executable
-  robot package hooks.
-- This plan does not implement raw torque or low-level actuator command mode.
+- This plan does not implement multi-language clients.
+- This plan does not implement executable robot package hooks or custom sensor
+  plugins.
+- This plan does not implement raw torque mode for generic participants.
 - This plan does not add human-subject ratings for Impression.
-- This plan does not solve full adversarial anti-cheating. Hidden scenario
-  state and scoring thresholds remain server-owned, but runtime observations
-  are necessarily sent to the client.
+- This plan does not claim calibrated public benchmark validity before metric
+  formulas and thresholds are frozen.
 
 ### Deferred to Separate Tasks
 
-- Demo-quality rendering: separate graphics/rendering plan for Unity-like
-  visuals or another rendering layer.
-- Production deployment: separate task once the local MVP control loop and
-  report path are stable.
-- Real MuJoCo scenario integration: separate implementation pass after the
-  teammate's simulation API is ready.
-- Binary sensor transport optimization: defer until representative camera,
-  depth, and lidar payload sizes are known.
-- Long-term participant portal/dashboard: defer until the server/client
-  protocol and report contract are stable.
+- Zip/package upload: defer archive upload, extraction, storage hardening, and
+  zip-bomb fixtures unless remote package transfer becomes mandatory before
+  2026-05-15.
+- Payload references/blob transport: defer until real camera/depth payload
+  sizes are measured.
+- WebSocket reconnect/resume: for MVP, mid-step disconnect is a technical
+  failure. Add reconnect/resume only after basic transport is stable.
+- Production deployment: defer TLS termination, durable persistence, run
+  scheduling, participant identity, and retention automation.
+- Full social-navigation MuJoCo tiers: build after the `g1_slam` smoke adapter
+  proves the server/message boundary. Current branch may create adapter-neutral
+  scenario placeholders, but not full three-tier behavior.
 
 ## Context & Research
 
 ### Relevant Code and Patterns
 
-- `AGENTS_SHARED.md` sets the target date at 2026-05-15 and asks agents to keep
-  benchmark specifications, metric formulas, implementation artifacts, and
-  generated outputs distinct.
-- `docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md`
-  defines the benchmark thesis, remote black-box contract, social-navigation
-  tiers, technical failure separation, and report sub-indicators.
-- `docs/plans/2026-04-29-001-feat-black-box-benchmark-core-plan.md` contains
-  the original server-side metric, telemetry, scenario, and report work, but its
-  policy endpoint boundary is stale relative to the client plan.
-- `docs/plans/2026-04-29-001-feat-benchmark-client-architecture-plan.md`
-  defines the participant client as a headless local policy runner that connects
-  to a server API and leaves validation, simulation, metrics, reports, and
-  rendering on the backend.
-- `g1_slam/` is a local prototype area with Python `src/` packaging,
-  `argparse` CLI patterns, MuJoCo runner code, and navigation/simulation
-  primitives that may inform fake simulation adapters. It should not be treated
-  as the final benchmark package layout.
-- The Notion `Paper HRI` page confirms the 2026-05-15 deadline, the minimum
-  goal of benchmark specs, and the target of a benchmark MVP.
+- `src/asimovbm_client/protocol/models.py` is the current client message
+  contract. It uses frozen stdlib dataclasses and `StrEnum`.
+- `src/asimovbm_client/protocol/fake.py` defines `FakeBenchmarkServer`, which
+  already validates lifecycle order and records actions/failures.
+- `src/asimovbm_client/runner/core.py` defines `BenchmarkServer`,
+  `RunnerConfig`, `ClientRunResult`, and `StepSynchronousRunner`.
+- `src/asimovbm_client/robot_package/loader.py` loads `robot_package.json`,
+  validates required fields, checks duplicate sensor names, and rejects
+  absolute or escaping asset paths.
+- `src/asimovbm_client/cli.py` implements the current `asimovbm-client`
+  workflow and only supports `fake://local` transport.
+- `docs/protocol/client-server-api.md`, `docs/client/policy-interface.md`, and
+  `docs/client/robot-packages.md` document the current client surface.
+- `examples/policies/sample_policy.py` and
+  `examples/robot_packages/minimal/robot_package.json` are current examples.
+- `g1_slam/src/g1_slam/simulation.py` provides a pure-Python navigation loop
+  that returns `SimulationResult`.
+- `g1_slam/src/g1_slam/simulation.py` currently owns planning/control
+  internally; policy-in-loop proof requires extracting a stepper boundary from
+  its `Pose2D`, lidar, occupancy grid, planner, and controller pieces.
+- `g1_slam/src/g1_slam/mujoco_runner.py` keeps MuJoCo imports inside optional
+  paths and supports kinematic and official G1 visualization modes.
+- `g1_slam/src/g1_slam/locomotion.py` defines official G1 joint order and ONNX
+  policy locomotion for later low-level integration.
+- `g1_slam/tests/test_navigation.py` proves config loading, lidar, planning,
+  official G1 scene generation, and default goal reachability.
 
 ### Institutional Learnings
 
-- No `docs/solutions/` directory currently exists, so there are no prior
-  institutional solution notes to apply.
+- No `docs/solutions/` directory exists yet.
 
 ### External References
 
-- Python Packaging User Guide: `pyproject.toml` is the standard configuration
-  surface for build metadata, optional dependencies, scripts, and tool config.
-- uv official docs: uv manages Python projects defined by `pyproject.toml` and
-  creates a lock file for reproducible project commands.
-- Pydantic v2 docs: models support nested schema validation, serialization, and
-  JSON Schema generation; Pydantic Settings supports environment-driven typed
-  configuration.
-- FastAPI official docs: FastAPI supports WebSocket endpoints, JSON messages,
-  WebSocket dependencies, `UploadFile` file upload handling, and WebSocket
-  testing through `TestClient`.
-- websockets official docs: the Python client exposes keepalive, timeout,
-  message-size, and queue-size controls for client-side WebSocket connections.
-- Uvicorn official docs: Uvicorn is an ASGI server for Python that currently
-  supports HTTP/1.1 and WebSockets and exposes WebSocket size/ping settings.
-- MuJoCo official Python docs: the `mujoco` package is the official PyPI
-  package for Python bindings and includes the MuJoCo library.
-- OWASP WebSocket Security and Logging cheat sheets: use WSS in production,
-  token-based authentication, origin allowlists when relevant, message size and
-  rate limits, input validation, and log redaction for tokens/message contents.
-- OWASP File Upload and Python `zipfile` docs: file/package uploads require
-  allowlisted types, size limits, safe filenames, storage outside executable
-  paths, and archive inspection before extraction.
-- Ruff official docs: Ruff provides a fast Python linter and formatter, with
-  safe fixes distinguished from unsafe fixes.
+- Python dataclasses docs: `dataclasses.asdict()` recursively converts
+  dataclass instances to dictionaries, matching the current `to_payload()`
+  approach.
+- Pydantic v2 docs: `TypeAdapter` validates, serializes, and generates JSON
+  Schema for types that do not expose `BaseModel` methods; Pydantic dataclasses
+  are available when stronger runtime validation is needed.
+- FastAPI WebSocket docs: WebSocket routes can receive/send messages, use
+  dependencies for token validation, and raise WebSocket-specific exceptions.
+- websockets 16.0 sync client docs: the threading client exposes blocking
+  `send()`/`recv(timeout=...)`, keepalive, close timeout, queue, and max-size
+  controls, which fits the current synchronous runner.
+- OWASP WebSocket, File Upload, and Logging cheat sheets remain relevant for
+  token handling, message limits, upload hardening, and diagnostic redaction.
+- MuJoCo Python docs remain relevant for optional official MuJoCo adapter work.
 
 ## Key Technical Decisions
 
 | Decision | Choice | Why |
 |---|---|---|
-| Authoritative topology | Server-authoritative benchmark with a headless participant client | Aligns with the active client plan and preserves the black-box IP thesis without server-side execution of participant code. |
-| Shared contract | Create `asimovbm_protocol` as the first implementation surface | Prevents server/client drift and lets docs, JSON schemas, fake adapters, and tests all use the same models. |
-| Transport | REST for session/package/report surfaces; WebSocket for the step/action control stream | REST is simplest for one-shot resources, while WebSocket fits step-synchronous bidirectional exchange over one connection. FastAPI/Uvicorn support both in one ASGI app. |
-| Web framework | FastAPI on Uvicorn for the server API | Mature open-source Python ASGI stack, direct Pydantic integration, built-in testing support, and first-class WebSocket examples in current docs. |
-| Client WebSocket library | `websockets` for the real client transport, plus in-memory/fake transports for tests | It is a focused open-source Python WebSocket client with documented timeout, keepalive, max message size, and queue controls. |
-| Schema validation | Pydantic v2 models for all protocol, package, telemetry, action, report, and diagnostic payloads | Provides typed validation for untrusted data and can emit JSON Schema for documentation. |
-| Project management | One root `pyproject.toml`, managed with uv, with optional extras for `client`, `server`, `mujoco`, and `dev` | Keeps the repo simple while preventing participant-client installs from requiring heavy server/MuJoCo dependencies. |
-| Package layout | Three top-level import packages: `asimovbm_protocol`, `asimovbm_server`, and `asimovbm_client` | Clear ownership boundaries without multiple repositories or nested project metadata. |
-| CLI implementation | Use standard-library `argparse` initially | Matches the local `g1_slam` pattern and avoids adding CLI dependencies before the workflow is stable. |
-| Robot package submission | Manifest-first package contract; MVP supports local directory packages and optional zip upload through FastAPI `UploadFile` | Easiest participant workflow while keeping server validation authoritative. Uploaded archives must be inspected before extraction. |
-| Retry semantics | Retry the same control step once with the same `step_id` and incremented attempt number; do not advance simulation between attempts | Preserves the origin one-retry requirement in the client-connected model and avoids mixing infrastructure failures with behavior. |
-| Large sensor payloads | JSON message envelope with inline small payloads and payload references for large camera/depth data | Keeps v0 simple while leaving room for binary/blob transport after payload sizes are measured. |
-| Metrics | Pure deterministic functions over copied telemetry snapshots | Keeps metrics independent from FastAPI, WebSockets, and MuJoCo internals. |
-| Security posture | Bearer run tokens, WSS in production, explicit max sizes/timeouts, origin checks when browser clients are introduced, and redacted diagnostics | Follows current OWASP WebSocket, logging, and upload guidance without building a full auth platform for MVP. |
+| Client compatibility | Treat `src/asimovbm_client/protocol/models.py` as v0 source material | Client work exists and uses these messages. Server must converge on it, not replace it blindly. |
+| Shared protocol ownership | Extract or alias current dataclasses into `asimovbm_protocol`, while preserving `asimovbm_client.protocol` imports | Gives server/client one source of truth without breaking colleague's current client imports. |
+| Validation | Keep dataclass message structs for client compatibility; add Pydantic v2 `TypeAdapter` or Pydantic dataclass validation at server/API boundaries | Easiest path from current code while still giving JSON validation/schema generation for untrusted network input. |
+| Transport | Preserve fake/in-process `BenchmarkServer` lifecycle first; add FastAPI/Uvicorn WebSocket adapter that carries the same messages | Current client is transport-neutral. WebSocket becomes an adapter, not a new protocol. |
+| Client WebSocket adapter | Use `websockets.sync.client` for the first real client transport | Current runner is synchronous. websockets 16.0 documents a threading/sync client with `send()`, `recv(timeout=...)`, keepalive, and size limits, so no async runner refactor is needed for MVP. |
+| Retry semantics | MVP retries transient `next_step`/server-step timeout once while the session remains connected; mid-step disconnect is technical failure | Matches current fake runner behavior and avoids inventing reconnect state too early. |
+| Payload strategy | Inline JSON-compatible sensor data for v0 | Current `SensorReading.data` expects direct data. Blob fetch would be a second transport problem. |
+| Package format | Use current `robot_package.json` directory package locally; remote MVP sends manifest metadata only unless asset transfer is explicitly enabled | Current `PackageSubmission` carries metadata, not bytes or package root. Client owns local file-existence/path checks; server owns manifest semantics and benchmark compatibility. |
+| Policy load order | CLI may import/construct participant callables during setup; policy `__call__` must not execute before server validation succeeds | Matches current code and tests while preserving IP/safety boundary. |
+| Report delivery | Terminal message sends `report_ref`; full report retrieved from authenticated server report surface | Matches current `TerminalMessage` and avoids sending full reports through control loop. |
+| Real demo proof | Add both batch `g1_slam` smoke and policy-in-loop `g1_slam` smoke before claiming real handoff success | Batch telemetry proves ingestion; policy-in-loop proves black-box client action path against real simulation state. |
+| Metrics | Freeze `docs/specs/social-navigation-metrics.md` with non-placeholder formulas before metric engine implementation | Prevents implementation code from inventing paper-level formulas. |
 
 ## Open Questions
 
 ### Resolved During Planning
 
-- **Should the benchmark server call participant-hosted endpoints?** No. The
-  active integration path is a participant client connected to the benchmark
-  server. The old endpoint wording is reinterpreted as the client's black-box
-  action channel.
-- **Should transport remain completely undecided?** No. For implementation
-  clarity, MVP uses REST plus WebSocket through FastAPI/Uvicorn. The protocol
-  models remain transport-aware but not transport-coupled so binary transport
-  can be added later.
-- **Should server and client use separate repos?** No. For the May MVP, one
-  repo with shared protocol, server, and client packages is easier to keep
-  consistent. Optional dependencies prevent unnecessary installs.
-- **Should the client compute scores?** No. The client receives terminal state
-  and report references only. Server owns scoring and final interpretation.
-- **Should package validation live in the client?** Client checks are local
-  convenience only. Server validation is authoritative.
-- **How does retry work over WebSocket?** The server repeats the same
-  unadvanced control step once. A late or duplicate action for an old attempt is
-  technical telemetry, not behavioral robot state.
-- **What are the demo run defaults?** Preserve the origin demo defaults: 3
-  valid episodes per tier and up to 5 attempts per tier unless implementation
-  reveals that the demo timeline requires smaller fixture defaults.
+- **Should the server call participant-hosted endpoints?** No. Client connects
+  outward and runs policy locally.
+- **Should WebSocket replace the current fake lifecycle?** No. WebSocket wraps
+  the same lifecycle.
+- **Should v0 keep payload references?** No. Inline JSON-compatible payloads
+  for MVP; references deferred.
+- **Should disconnect be retryable now?** No. Current client only proves
+  transient timeout retry. Disconnect becomes technical failure for MVP.
+- **Should zip upload stay in May MVP?** No, unless remote transfer becomes a
+  hard demo requirement.
+- **How does remote package validation work without upload?** Remote MVP
+  validates manifest metadata and benchmark compatibility only. Client-local
+  loader validates referenced files. Server-side directory validation is
+  local-demo-only under configured fixture roots.
+- **Can policy import happen before validation?** Yes for setup diagnostics;
+  policy inference must wait until server validation succeeds.
+- **Is the demo only fake?** No. `g1_slam` provides real pure-Python and
+  optional MuJoCo demo paths. Real handoff proof requires policy-in-loop
+  stepper smoke, not only batch `run_navigation()` ingestion.
+- **How is first session token obtained?** Local dev server creates a session
+  through a loopback-only dev endpoint or an admin/bootstrap token and returns
+  the per-run token. All later session/package/WebSocket/report calls require
+  the run token.
 
 ### Deferred to Implementation
 
-- Exact protocol field names may evolve while implementing the shared Pydantic
-  models, but the message lifecycle must remain stable.
+- Exact shared-package extraction mechanics: implementer may either move
+  models into `asimovbm_protocol` and re-export from `asimovbm_client.protocol`,
+  or keep a compatibility alias while server code lands.
+- Exact `g1_slam` observation mapping: define from batch smoke telemetry first,
+  then from policy-in-loop stepper data before full benchmark work.
 - Exact social-navigation thresholds, normalization constants, and morphology
-  rubric weights should be finalized from project metric context and sample
-  telemetry, not guessed in this plan.
-- Exact asset formats for the future MuJoCo+Unity rendering pipeline require
-  coordination with the rendering/simulation owner.
-- Exact binary/blob strategy for high-rate camera/depth payloads should wait
-  until payload sizes are measured.
-- Production deployment topology, TLS termination, persistence, and multi-run
-  scheduling are intentionally outside this MVP plan.
+  rubric weights: freeze in `docs/specs/social-navigation-metrics.md` before
+  metric implementation.
+- Production participant identity, hosted retention automation, and long-term
+  artifact policy remain separate. MVP still documents local token and
+  artifact lifecycle.
 
 ## Output Structure
 
-This tree declares the intended initial shape. The implementer may adjust file
-names when implementation reveals a cleaner local pattern, but the same
-responsibilities should remain covered.
+Existing current-client paths are kept. New server/protocol paths are added
+around them.
 
 ```text
 pyproject.toml
-.python-version
-uv.lock
 README.md
 docs/
-  protocol/
-    client_server_api.md
-    message_lifecycle.md
-    robot_package.md
-  specs/
-    social_navigation_metrics.md
   client/
-    quickstart.md
-    policy_interface.md
     diagnostics.md
+    policy-interface.md
+    robot-packages.md
+  protocol/
+    client-server-api.md
+    message-lifecycle.md
+    robot-package.md
   server/
-    simulation_adapter.md
+    g1-slam-adapter.md
     operations.md
-  examples/
-    robot_packages/
-    policies/
+    simulation-adapter.md
+  specs/
+    social-navigation-metrics.md
+examples/
+  policies/
+    sample_policy.py
+  robot_packages/
+    minimal/
+      robot_package.json
+      robot.xml
+g1_slam/
 src/
+  asimovbm_client/
+    protocol/
+      models.py
+      fake.py
+    robot_package/
+      loader.py
+    runner/
+      core.py
+      loading.py
+    telemetry/
+      diagnostics.py
   asimovbm_protocol/
     __init__.py
-    actions.py
-    diagnostics.py
-    messages.py
-    observations.py
-    reports.py
-    robot_package.py
-    versioning.py
+    adapters.py
+    schema.py
   asimovbm_server/
-    __init__.py
     app.py
     cli.py
     config.py
     api/
-      __init__.py
       package_routes.py
       report_routes.py
       session_routes.py
       websocket_routes.py
     packages/
-      __init__.py
       validation.py
-      storage.py
     runner/
-      __init__.py
       episode_runner.py
-      simulation_adapter.py
       telemetry.py
-    scenarios/
-      __init__.py
-      social_navigation.py
+    simulation/
+      base.py
+      fake.py
+      g1_slam_adapter.py
+      g1_slam_stepper.py
     metrics/
-      __init__.py
-      aggregate.py
-      dexterity.py
-      impression.py
-      safety.py
-      social_awareness.py
     reports/
-      __init__.py
-      json_report.py
-    testing/
-      __init__.py
-      fake_simulation.py
-  asimovbm_client/
-    __init__.py
-    cli.py
-    config.py
-    policy_loader.py
-    package_loader.py
-    transport.py
-    runner.py
-    telemetry.py
-    testing/
-      __init__.py
-      fake_server.py
 tests/
-  protocol/
-  server/
   client/
+  protocol/
+  robot_package/
+  runner/
+  server/
   integration/
 ```
 
 ## High-Level Technical Design
 
-> *This illustrates the intended approach and is directional guidance for
-> review, not implementation specification. The implementing agent should treat
-> it as context, not code to reproduce.*
+> *This illustrates intended approach and is directional guidance for review,
+> not implementation specification. Implementer should treat it as context, not
+> code to reproduce.*
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Client as Headless Participant Client
-    participant Policy as Local Transformer + Policy
-    participant API as Server API
-    participant Run as Server Episode Runner
-    participant Sim as Simulation Adapter
-    participant Metrics as Metrics + Report Builder
+    participant CLI as asimovbm-client
+    participant Runner as StepSynchronousRunner
+    participant Transport as BenchmarkServer Adapter
+    participant Server as Server API / Session
+    participant Sim as g1_slam or Fake Adapter
+    participant Metrics as Metrics + Report
 
-    User->>Client: Start with server URL, run token, package, policy refs
-    Client->>Client: Load package and policy locally
-    Client->>API: Create/connect session
-    Client->>API: Submit package manifest/assets
-    API->>API: Authoritative validation
-    API-->>Client: Accepted or structured validation errors
-    Run->>Sim: Reset tier/seed
-    Client->>API: Open authenticated control WebSocket
-    loop each simulated control step
-        Run->>Sim: Read state, sensor streams, task events
-        API-->>Client: ControlStep(step_id, sim_time, dt, observations)
-        Client->>Policy: Transform raw streams and infer action locally
-        Policy-->>Client: Joint target vector
-        Client->>API: ActionResponse(step_id, action, latency, diagnostics)
-        API->>API: Validate action and telemetry
-        Run->>Sim: Apply joint targets and advance simulated time
-        Run->>Run: Copy telemetry snapshot
+    CLI->>CLI: Load robot_package.json, transformer, policy
+    CLI->>Runner: package + callables + RunnerConfig
+    Runner->>Transport: SessionBootstrap
+    Transport->>Server: authenticate + protocol check
+    Runner->>Transport: PackageSubmission
+    Server->>Server: authoritative validation
+    Transport-->>Runner: ValidationResponse
+    loop each accepted step
+        Server->>Sim: read state / generate sensors + task events
+        Transport-->>Runner: StepMessage
+        Runner->>CLI: transformer(step)
+        CLI->>CLI: policy(observation)
+        Runner->>Transport: ActionMessage
+        Server->>Sim: apply accepted action / advance simulated time
+        Server->>Server: copy telemetry
     end
-    Run->>Metrics: Compute per-tier and aggregate scores
-    Metrics-->>API: JSON report and reliability diagnostics
-    API-->>Client: Terminal state + report reference
+    Server->>Metrics: compute report from telemetry
+    Transport-->>Runner: TerminalMessage(report_ref)
 ```
 
 ## Implementation Units
 
-- [ ] **Unit 1: Scaffold unified Python workspace**
+- [ ] **Unit 0: Align root tooling and import strategy**
 
-**Goal:** Establish the root package metadata, dependency groups, CLI entry
-points, and quality tools for protocol, server, and client work.
+**Goal:** Make planned server dependencies and `g1_slam` smoke imports
+available from the root project without forcing heavy optional robotics
+dependencies into every install.
 
-**Requirements:** R1, R2, R3, R11, R13
+**Requirements:** R11, R15
 
 **Dependencies:** None
 
 **Files:**
-- Create: `pyproject.toml`
-- Create: `.python-version`
+- Modify: `pyproject.toml`
 - Create/Update: `uv.lock`
-- Create: `README.md`
-- Create: `src/asimovbm_protocol/__init__.py`
-- Create: `src/asimovbm_server/__init__.py`
-- Create: `src/asimovbm_client/__init__.py`
-- Create: `tests/test_package_imports.py`
+- Modify: `README.md`
+- Test: `tests/test_package_imports.py`
 
 **Approach:**
-- Use one root `pyproject.toml` with `src/` layout and Python packaging
-  metadata.
-- Keep base dependencies minimal. Put heavy or role-specific dependencies in
-  extras such as `client`, `server`, `mujoco`, and `dev`.
-- Use uv for environment and lockfile management because current uv docs
-  support `pyproject.toml` project workflows and lock files.
-- Use Ruff for lint/format configuration in `pyproject.toml`; keep static type
-  checking optional until protocol models stabilize.
-- Expose separate console scripts for the server and participant client.
-- Use `argparse` for initial CLIs to match `g1_slam/src/g1_slam/__main__.py`
-  and minimize dependencies.
+- Keep base dependencies minimal.
+- Add optional extras for server, transport, validation, and dev tooling:
+  FastAPI, Uvicorn, Pydantic, websockets, pytest, and Ruff.
+- Add `asimovbm-server` console script.
+- Make `g1_slam/src` importable for local smoke tests without installing
+  `g1_slam` heavy dependencies as mandatory root deps.
+- Document that `g1_slam` MuJoCo/ONNX paths are optional and dependency-gated.
+- If `g1_slam` packaging is touched later, split its MuJoCo, NumPy, and
+  ONNXRuntime dependencies into extras so pure-Python smoke remains light.
 
 **Patterns to follow:**
-- `g1_slam/pyproject.toml` for simple `src/` packaging and pytest config.
-- `g1_slam/src/g1_slam/__main__.py` for lightweight `argparse` CLI style.
-- Python Packaging User Guide `pyproject.toml` guidance for project metadata,
-  optional dependencies, and scripts.
+- Current root `pyproject.toml`
+- `g1_slam/pyproject.toml`
+- `g1_slam/src/g1_slam/mujoco_runner.py` optional import pattern.
 
 **Test scenarios:**
-- Happy path: importing `asimovbm_protocol`, `asimovbm_server`, and
-  `asimovbm_client` succeeds from an editable install.
-- Happy path: server and client CLI help commands initialize without importing
-  MuJoCo or loading participant policy code.
-- Error path: importing the client package does not require server-only
-  dependencies such as MuJoCo.
-- Error path: importing the protocol package has no FastAPI, WebSocket, or
-  MuJoCo dependency.
+- Happy path: `asimovbm_client`, planned `asimovbm_server`, and
+  `asimovbm_protocol` imports work from root test environment.
+- Happy path: pure-Python `g1_slam` modules import in smoke tests without
+  importing MuJoCo, NumPy, or ONNXRuntime.
+- Error path: importing optional MuJoCo/ONNX paths without dependencies fails
+  with clear setup diagnostic, not import-time crash in base server tests.
 
 **Verification:**
-- The repo has one reproducible Python project baseline and the three package
-  boundaries import independently.
+- Implementer can run root tests against current client and `g1_slam` smoke
+  modules without manual `PYTHONPATH` guesswork.
 
-- [ ] **Unit 2: Define shared protocol and schema contracts**
+- [ ] **Unit 1: Freeze current client protocol baseline**
 
-**Goal:** Create versioned Pydantic models for every server/client message and
-for all shared robot package, observation, action, diagnostic, and report
-payloads.
+**Goal:** Make the merged client message lifecycle the explicit shared
+contract before adding server code.
 
-**Requirements:** R1, R3, R4, R5, R6, R7, R8, R10, R13
+**Requirements:** R1-R10, R15
 
-**Dependencies:** Unit 1
+**Dependencies:** Unit 0
 
 **Files:**
-- Create: `src/asimovbm_protocol/versioning.py`
-- Create: `src/asimovbm_protocol/messages.py`
-- Create: `src/asimovbm_protocol/robot_package.py`
-- Create: `src/asimovbm_protocol/observations.py`
-- Create: `src/asimovbm_protocol/actions.py`
-- Create: `src/asimovbm_protocol/diagnostics.py`
-- Create: `src/asimovbm_protocol/reports.py`
-- Modify: `src/asimovbm_protocol/__init__.py`
-- Create: `docs/protocol/client_server_api.md`
-- Create: `docs/protocol/message_lifecycle.md`
-- Create: `docs/protocol/robot_package.md`
+- Modify: `src/asimovbm_client/protocol/models.py`
+- Modify: `src/asimovbm_client/protocol/__init__.py`
+- Create: `src/asimovbm_protocol/__init__.py`
+- Create: `src/asimovbm_protocol/adapters.py`
+- Create: `src/asimovbm_protocol/schema.py`
+- Modify: `docs/protocol/client-server-api.md`
+- Create: `docs/protocol/message-lifecycle.md`
+- Create: `tests/protocol/golden_lifecycles.py`
 - Test: `tests/protocol/test_message_models.py`
-- Test: `tests/protocol/test_robot_package_models.py`
-- Test: `tests/protocol/test_json_schema_exports.py`
+- Test: `tests/protocol/test_schema_exports.py`
 
 **Approach:**
-- Model the lifecycle explicitly: session bootstrap, package submission,
-  validation response, control step, action response, technical failure,
-  terminal state, and report reference.
-- Include protocol version, run/session id, step id, attempt number, simulated
-  timestamp, control dt, and ownership metadata in the relevant messages.
-- Represent observations as named typed streams, not hardcoded camera/lidar
-  fields. Include stream metadata, freshness metadata, payload size metadata,
-  and structured task events.
-- Represent actions as normalized joint target vectors mapped to declared joint
-  ids. Reject wrong length, unknown joint id, NaN/inf, and out-of-range values.
-- Represent diagnostic categories as finite enums so both sides classify
-  technical failures consistently.
-- Generate or document JSON Schema from the Pydantic models so docs and tests
-  use the same source of truth.
+- Preserve current client imports from `asimovbm_client.protocol`.
+- Either move dataclasses into `asimovbm_protocol` and re-export them from
+  `asimovbm_client.protocol`, or add an alias layer that makes server imports
+  use the same classes.
+- Keep existing names: `SessionBootstrap`, `PackageSubmission`,
+  `ValidationResponse`, `StepMessage`, `ActionMessage`, `FailureMessage`,
+  `TerminalMessage`.
+- Keep `PROTOCOL_VERSION = "asimovbm.client.v0"` unless client owner approves a
+  version bump.
+- Add schema/validation helpers around current dataclasses. Use Pydantic
+  `TypeAdapter` where it fits; keep stdlib dataclass compatibility.
+- Document message lifecycle and terminal/report semantics.
+- Add checked-in golden lifecycle fixtures for successful fake run, validation
+  rejection, transformer exception, policy exception, invalid action, timeout
+  retry, and terminal report ref.
 
-**Execution note:** Start with protocol model tests and JSON Schema snapshots
-before server or client code depends on the models.
+**Execution note:** Start with compatibility tests around current client
+fixtures before moving any model imports.
 
 **Patterns to follow:**
-- Origin requirements R5-R13 and R19-R25.
-- Pydantic v2 nested models and schema generation.
+- `src/asimovbm_client/protocol/models.py`
+- `src/asimovbm_client/protocol/fake.py`
+- `docs/protocol/client-server-api.md`
+- Pydantic v2 `TypeAdapter` docs for validation/schema generation.
+- Python dataclasses docs for `asdict()`.
 
 **Test scenarios:**
-- Happy path: a complete session bootstrap plus package validation lifecycle
-  validates and serializes to JSON.
-- Happy path: a control step containing proprioception, stereo camera payload
-  references, lidar readings, sensor freshness, and a `come_here` event
-  validates.
-- Happy path: an action response with matching joint ids, normalized targets,
-  latency, and local warnings validates.
-- Happy path: JSON Schema export includes every public message type used by the
-  docs.
-- Edge case: a carried-forward sensor stream marks freshness without changing
-  simulated timestamp semantics.
-- Edge case: a robot package with no optional visual assets remains valid for
-  headless execution.
-- Error path: unsupported protocol version produces a compatibility failure.
-- Error path: action vectors with NaN/inf, wrong length, duplicate joint ids, or
-  out-of-range values fail validation.
-- Error path: package manifests containing absolute paths, parent-directory
-  traversal, executable hooks, plugin declarations, or unsupported stream types
-  fail validation.
+- Happy path: current fake server lifecycle serializes every public message
+  through `to_payload()` without changing field names.
+- Happy path: existing imports from `asimovbm_client.protocol` still work after
+  shared protocol extraction/aliasing.
+- Happy path: schema export includes all current public message structs and
+  enums.
+- Happy path: server transport tests can replay golden lifecycle fixtures
+  without changing message order or terminal semantics.
+- Error path: unsupported `protocol_version` still raises compatibility
+  failure.
+- Error path: invalid action length still becomes `invalid_action`.
 
 **Verification:**
-- Server, client, docs, and tests can all import the same protocol models
-  without depending on implementation modules.
+- Client tests that import `asimovbm_client.protocol` still pass.
+- Server code has a stable shared import surface.
 
-- [ ] **Unit 3: Implement server API shell and session lifecycle**
+- [ ] **Unit 2: Align robot package validation with current client format**
 
-**Goal:** Build the authoritative benchmark server API skeleton with REST
-session/package/report surfaces and a WebSocket control endpoint that is wired
-to shared protocol models.
+**Goal:** Use current `robot_package.json` directory packages as the MVP
+package contract and add server-authoritative validation around it.
 
-**Requirements:** R2, R3, R4, R7, R8, R11, R12, R13
+**Requirements:** R2, R4, R8, R10, R15
 
-**Dependencies:** Units 1-2
+**Dependencies:** Units 0-1
+
+**Files:**
+- Modify: `src/asimovbm_client/robot_package/loader.py`
+- Create: `src/asimovbm_server/packages/validation.py`
+- Modify: `docs/client/robot-packages.md`
+- Create: `docs/protocol/robot-package.md`
+- Modify: `examples/robot_packages/minimal/robot_package.json`
+- Test: `tests/robot_package/test_loader.py`
+- Test: `tests/server/test_package_validation.py`
+
+**Approach:**
+- Keep current local package directory contract:
+  `robot_package.json` plus relative assets.
+- Split package modes:
+  - local demo mode: server may validate files under configured fixture roots
+  - remote mode: client sends `PackageSubmission` manifest metadata only; no
+    participant-local path is interpreted as a server filesystem path
+- Mirror client structural checks where server has actual package material.
+  For remote metadata-only mode, validate manifest semantics and benchmark
+  compatibility, not file existence.
+- Keep local client checks convenience-only. Server validation remains
+  authoritative.
+- Keep zip upload out of MVP unless remote transfer becomes mandatory.
+- Preserve current path safety behavior client-side: model/asset paths must be
+  relative and stay inside package directory. Server-side path checks apply
+  only to server-owned fixture roots or future uploaded package material.
+- Keep executable hooks/plugins out of package schema.
+
+**Patterns to follow:**
+- `src/asimovbm_client/robot_package/loader.py`
+- `examples/robot_packages/minimal/robot_package.json`
+- OWASP File Upload guidance for future archive work.
+
+**Test scenarios:**
+- Happy path: current minimal package validates locally and as remote
+  manifest metadata.
+- Happy path: server-local fixture package validates files under configured
+  fixture root.
+- Happy path: package with optional `visual_assets` preserves backend metadata.
+- Error path: missing `robot_package.json` fails as setup diagnostic.
+- Error path: malformed JSON fails with package-local-check diagnostic.
+- Error path: duplicate sensor names fail locally.
+- Error path: remote `PackageSubmission` never causes server filesystem reads
+  from client-provided paths.
+- Error path: server-local fixture path with absolute model path, parent
+  traversal, symlink escape, missing referenced asset, executable hook field,
+  or empty `action_mapping.joints` fails server-side.
+- Integration: server returns `ValidationResponse(REJECTED)` and runner does
+  not call policy when package validation fails.
+
+**Verification:**
+- Current package loader behavior remains compatible with server validation.
+
+- [ ] **Unit 3: Build server API shell around current lifecycle**
+
+**Goal:** Add a minimal server API that speaks the current message lifecycle
+and owns auth, validation, session state, terminal report refs, and report
+retrieval.
+
+**Requirements:** R2-R7, R13, R15
+
+**Dependencies:** Units 0-2
 
 **Files:**
 - Create: `src/asimovbm_server/app.py`
 - Create: `src/asimovbm_server/cli.py`
 - Create: `src/asimovbm_server/config.py`
-- Create: `src/asimovbm_server/api/__init__.py`
-- Create: `src/asimovbm_server/api/session_routes.py`
 - Create: `src/asimovbm_server/api/package_routes.py`
+- Create: `src/asimovbm_server/api/session_routes.py`
 - Create: `src/asimovbm_server/api/report_routes.py`
 - Create: `src/asimovbm_server/api/websocket_routes.py`
-- Create: `tests/server/test_app_factory.py`
-- Create: `tests/server/test_session_routes.py`
-- Create: `tests/server/test_websocket_auth_and_limits.py`
+- Create: `docs/server/operations.md`
+- Test: `tests/server/test_app_factory.py`
+- Test: `tests/server/test_package_routes.py`
+- Test: `tests/server/test_session_routes.py`
+- Test: `tests/server/test_report_routes.py`
+- Test: `tests/server/test_websocket_auth_and_limits.py`
 
 **Approach:**
-- Use FastAPI for the server API and Uvicorn for local serving.
-- Use Pydantic Settings for server configuration such as token settings,
-  payload size limits, upload limits, timeout defaults, and local storage paths.
-- Define REST endpoints for session creation/connection, package upload/status,
-  and report retrieval/reference.
-- Define a WebSocket endpoint for the control loop. It should validate
-  protocol version, run token, and session state before accepting control
-  messages.
-- Keep session state in an in-memory store for MVP and document that durable
-  persistence is a separate production task.
-- Configure explicit message-size and timeout limits. Keep production WSS/TLS
-  termination as an operational requirement, not local development machinery.
+- Use FastAPI/Uvicorn for HTTP and WebSocket surfaces.
+- Keep in-memory session store for MVP.
+- Create run sessions through either a loopback-only local-dev endpoint or a
+  configured admin/bootstrap token. Session creation returns a server-generated
+  per-run token.
+- Use cryptographically random per-run tokens with at least 128 bits of
+  entropy, process-memory storage for MVP, run-scoped authorization,
+  constant-time comparison, and redacted diagnostics.
+- Expire run tokens at terminal state after a short local report-retrieval
+  grace window. Static configured run tokens are dev/fake-only.
+- Require run token for package, WebSocket, and report endpoints after session
+  creation.
+- Use opaque high-entropy `report_ref` values. Do not expose filesystem paths.
+- Add basic quotas: one active control stream per run token, bounded message
+  size, bounded invalid-message count, bounded session count in memory.
+- Add local artifact lifecycle rules: per-run artifact directory with
+  restrictive permissions, configurable retention window, cleanup command, and
+  report refs that never expose filesystem paths.
+- Keep full report retrieval separate from `TerminalMessage`.
 
 **Patterns to follow:**
-- FastAPI WebSocket and WebSocket dependency docs.
-- FastAPI `UploadFile` docs for package upload surfaces.
-- Uvicorn ASGI and WebSocket settings docs.
-- OWASP WebSocket Security guidance for authentication, size limits, and
-  validation.
+- `src/asimovbm_client/protocol/fake.py` lifecycle order.
+- FastAPI WebSocket docs for dependencies, message receive/send, and
+  disconnect handling.
+- OWASP WebSocket and Logging guidance.
 
 **Test scenarios:**
-- Happy path: server app factory returns an ASGI app with health/session/package
-  and WebSocket routes registered.
-- Happy path: creating a local session returns a session id, protocol version,
-  and opaque run token or accepts a configured local token.
-- Happy path: WebSocket connection with a valid token and protocol version is
-  accepted.
-- Error path: missing, malformed, or wrong run token rejects session/package and
-  WebSocket access without logging the token.
-- Error path: unsupported protocol version returns a structured compatibility
-  failure.
-- Error path: oversized WebSocket message or package upload is rejected as a
-  technical failure, not as behavior.
-- Integration: FastAPI `TestClient` can exercise the WebSocket handshake and a
-  minimal terminal-state exchange without a real network server.
+- Happy path: app factory registers health/session/report/WebSocket routes.
+- Happy path: local-dev/bootstrap session creation returns a run token.
+- Happy path: valid run token opens package, report, and control surfaces.
+- Happy path: terminal state includes `report_ref`; report route requires auth.
+- Error path: missing/wrong/expired token rejects package, WebSocket, and
+  report access without logging token.
+- Error path: configured static run token is rejected outside documented
+  local-dev/fake mode.
+- Error path: second active WebSocket for same run token is rejected.
+- Error path: oversized or malformed message is recorded as technical failure.
+- Error path: too many invalid messages closes connection as technical failure.
+- Error path: report refs never reveal filesystem paths.
 
 **Verification:**
-- The server API can be run locally, tested without external services, and
-  expresses the same lifecycle as `docs/protocol/client_server_api.md`.
+- Server can run locally and speak current lifecycle without real simulation.
 
-- [ ] **Unit 4: Implement robot package loading, upload, and authoritative validation**
+- [ ] **Unit 4: Add real transport adapter without changing runner semantics**
 
-**Goal:** Provide client-side package loading for participant convenience and
-server-side package validation for authoritative acceptance/rejection.
+**Goal:** Implement a client transport object that satisfies current
+`BenchmarkServer` protocol over the server WebSocket/API.
 
-**Requirements:** R2, R3, R5, R6, R7, R11, R12, R13
+**Requirements:** R1-R10, R15
 
-**Dependencies:** Units 2-3
-
-**Files:**
-- Create: `src/asimovbm_client/package_loader.py`
-- Create: `src/asimovbm_server/packages/__init__.py`
-- Create: `src/asimovbm_server/packages/validation.py`
-- Create: `src/asimovbm_server/packages/storage.py`
-- Create: `docs/client/quickstart.md`
-- Modify: `docs/protocol/robot_package.md`
-- Create: `docs/examples/robot_packages/minimal/manifest.json`
-- Test: `tests/client/test_package_loader.py`
-- Test: `tests/server/test_package_validation.py`
-- Test: `tests/server/test_package_upload_security.py`
-- Test: `tests/integration/test_package_submission.py`
-
-**Approach:**
-- Support local directory packages for fastest local demo iteration.
-- Support optional zip upload for participant/server separation, but inspect
-  archives before extraction. Reject absolute paths, parent traversal, hidden
-  path tricks, unsupported file extensions, oversized archives, oversized
-  decompressed content, symlinks, and executable hook declarations.
-- Store accepted uploads under generated server-owned run directories, never
-  under user-controlled paths and never in executable package import paths.
-- Validate package manifest structure with shared Pydantic models on both
-  sides, but make server validation authoritative.
-- Keep visual asset references as backend/rendering metadata only; the client
-  never renders them and the server does not execute them.
-- Keep MuJoCo model loading separate from package manifest validation so users
-  receive clear package errors before scenario execution.
-
-**Patterns to follow:**
-- OWASP File Upload guidance for allowlists, size limits, filename safety, and
-  storage outside executable paths.
-- Python `zipfile` warning to inspect untrusted archives before extraction.
-- Existing `g1_slam/assets/` only as sample MuJoCo asset context, not as final
-  package format.
-
-**Test scenarios:**
-- Happy path: a minimal directory package with proprioception, stereo camera,
-  lidar, joint mapping, forward/sensor direction, and capability tags loads
-  locally and submits to the server.
-- Happy path: a package with separate physics model and optional visual asset
-  references preserves both fields in the package envelope.
-- Happy path: client local validation catches duplicate sensor stream names
-  before network submission.
-- Error path: missing manifest fails locally with a setup diagnostic.
-- Error path: server rejects package paths with absolute paths, `..`, leading
-  dots where disallowed, symlinks, executable hook fields, or unsupported
-  extensions.
-- Error path: zip archive with decompressed size over the configured limit is
-  rejected before extraction.
-- Error path: client accepts a structurally plausible package that server later
-  rejects for authoritative simulator/package reasons, and the client reports
-  the server validation status without executing policy code.
-- Integration: package submission route stores accepted assets under a
-  generated run directory and returns structured validation status.
-
-**Verification:**
-- A participant can prepare a package locally, receive fast local feedback, and
-  still rely on server validation as the single authority.
-
-- [ ] **Unit 5: Implement participant client CLI and local policy interface**
-
-**Goal:** Build the headless client runner that loads participant code locally,
-connects to the server API, and never uploads policy internals.
-
-**Requirements:** R1, R3, R4, R5, R6, R8, R11, R12
-
-**Dependencies:** Units 1-4
-
-**Files:**
-- Create: `src/asimovbm_client/cli.py`
-- Create: `src/asimovbm_client/config.py`
-- Create: `src/asimovbm_client/policy_loader.py`
-- Create: `src/asimovbm_client/runner.py`
-- Create: `src/asimovbm_client/telemetry.py`
-- Create: `docs/client/policy_interface.md`
-- Create: `docs/client/diagnostics.md`
-- Create: `docs/examples/policies/minimal_policy.py`
-- Test: `tests/client/test_cli.py`
-- Test: `tests/client/test_policy_loader.py`
-- Test: `tests/client/test_runner_diagnostics.py`
-
-**Approach:**
-- Use `argparse` for options such as server URL, run token/session id, package
-  path, transformer reference, policy reference, local diagnostics mode, and
-  fake-server mode.
-- Load participant transformer and policy classes by Python module reference
-  using standard local import mechanisms.
-- Define minimal local interfaces: transformer consumes raw named streams and
-  task events; policy consumes transformed observations and returns joint target
-  actions compatible with the package mapping.
-- Report import errors, constructor errors, missing callables, dependency
-  failures, policy exceptions, invalid actions, and disconnects as structured
-  technical diagnostics.
-- Redact local absolute paths, source snippets, environment secrets, tokens,
-  model identifiers when configured, and suspicious token-like values from
-  outbound telemetry by default.
-- Keep final scores and report interpretation out of the client.
-
-**Patterns to follow:**
-- `g1_slam/src/g1_slam/__main__.py` for simple CLI style.
-- Client architecture plan's headless participant workflow.
-- OWASP Logging guidance for excluding access tokens, source code, sensitive
-  paths, and other sensitive values from logs.
-
-**Test scenarios:**
-- Happy path: CLI help displays server, run token, package, transformer, policy,
-  and fake-server options without connecting to a backend.
-- Happy path: sample transformer and sample policy load locally and produce a
-  valid action for a sample control step.
-- Happy path: local diagnostics include latency, step count, retry count, and
-  warnings but not policy source or model weights.
-- Error path: missing module reference produces a setup diagnostic before
-  opening the control WebSocket.
-- Error path: class lacks the expected callable interface and fails before the
-  control loop.
-- Error path: constructor or dependency import failure is redacted and reported
-  without uploading local source details.
-- Error path: secret-like environment values and local absolute paths are
-  redacted from outbound telemetry.
-- Edge case: policy imports a third-party dependency already installed in the
-  participant environment and the client does not vendor or manage it.
-
-**Verification:**
-- Participant policy code executes locally through a documented interface and
-  never appears in package uploads or server telemetry.
-
-- [ ] **Unit 6: Implement WebSocket control channel and retry semantics**
-
-**Goal:** Connect the server episode runner and participant client through the
-shared WebSocket control protocol, including timeout, retry, duplicate, and
-disconnect behavior.
-
-**Requirements:** R1, R3, R4, R5, R6, R7, R8, R11, R12, R13
-
-**Dependencies:** Units 2-5
+**Dependencies:** Units 0-3
 
 **Files:**
 - Create: `src/asimovbm_client/transport.py`
-- Modify: `src/asimovbm_client/runner.py`
-- Modify: `src/asimovbm_server/api/websocket_routes.py`
-- Create: `src/asimovbm_server/runner/episode_runner.py`
-- Create: `src/asimovbm_server/testing/fake_simulation.py`
-- Create: `src/asimovbm_client/testing/fake_server.py`
+- Modify: `src/asimovbm_client/cli.py`
+- Modify: `src/asimovbm_client/runner/core.py`
+- Modify: `docs/client/diagnostics.md`
+- Modify: `docs/protocol/client-server-api.md`
 - Test: `tests/client/test_transport.py`
-- Test: `tests/server/test_control_channel.py`
-- Test: `tests/integration/test_control_loop_fake_server.py`
+- Test: `tests/integration/test_client_server_transport.py`
 - Test: `tests/integration/test_control_loop_timeout_retry.py`
 
 **Approach:**
-- Use the `websockets` client library for real client connections and configure
-  open timeout, ping interval, ping timeout, close timeout, max message size,
-  and queue limits from client settings.
-- Keep an in-memory/fake transport for fast tests and colleague-client
-  alignment before real server deployment.
-- Server sends one `ControlStep` per simulated control step and waits for a
-  valid `ActionResponse`.
-- On first timeout, invalid transport response, or recoverable disconnect before
-  action acceptance, server resends the same step once with the same `step_id`,
-  same simulated timestamp, and incremented attempt number.
-- Server does not advance the simulation until a valid action for the current
-  step is accepted.
-- If retry fails, mark the episode as technical failure and exclude it from
-  behavioral metrics while preserving reliability diagnostics.
-- Late, duplicate, stale-step, or wrong-attempt actions are recorded as
-  technical diagnostics and must not be applied to simulation state.
-- Disable compression or document why it is enabled if secret-bearing messages
-  ever share frames with attacker-controlled content.
+- Keep `StepSynchronousRunner` mostly unchanged.
+- Implement synchronous transport using `websockets.sync.client` so current
+  `StepSynchronousRunner` can stay synchronous.
+- Implement transport that maps:
+  - `connect()` to session/bootstrap API
+  - `submit_package()` to package validation API
+  - `next_step()` to next server control message
+  - `submit_action()` to action response message
+  - `record_failure()` to client failure telemetry
+- Use current message names and dataclass payloads.
+- Retry one transient timeout while connection remains active.
+- Treat mid-step disconnect as technical failure for MVP. Do not implement
+  reconnect/resume yet.
+- Define transport error mapping:
+  - auth/protocol mismatch -> `FailureCategory.COMPATIBILITY`
+  - receive timeout -> `FailureCategory.TIMEOUT`
+  - disconnect -> `FailureCategory.DISCONNECT`
+  - malformed server message -> `FailureCategory.COMPATIBILITY`
+  - stale/wrong step rejection -> `FailureCategory.INVALID_ACTION`
+  - server validation rejection -> `FailureCategory.SERVER_VALIDATION`
+- Validate action payloads server-side before simulation: strict JSON numbers,
+  finite values, exact length from `action_mapping.joints`, configured
+  per-joint bounds or explicit safe clipping policy, max payload size/depth,
+  and stale `step_id` rejection.
+- Keep compression disabled or explicitly documented if enabled later.
 
-**Execution note:** Implement the timeout/retry and duplicate-action tests
-before wiring the real WebSocket client.
+**Execution note:** Keep existing fake transport tests passing while adding real
+transport tests.
 
 **Patterns to follow:**
-- FastAPI WebSocket docs for server endpoint behavior.
-- websockets client docs for timeout, keepalive, max message size, and queue
-  settings.
-- OWASP WebSocket Security guidance for message validation, size limits, DoS
-  protection, and token handling.
+- `src/asimovbm_client/runner/core.py`
+- `tests/runner/test_runner.py`
+- FastAPI WebSocket tests.
+- websockets sync client docs for blocking `send()`, `recv(timeout=...)`,
+  keepalive, and max-size controls.
 
 **Test scenarios:**
-- Happy path: server sends a control step, client returns a valid action, server
-  validates it, applies it, and advances exactly one simulated step.
-- Happy path: client records processing latency and sends it with the action
-  response.
-- Edge case: first timeout triggers one retry of the same `step_id` without
-  advancing simulated time; a valid retry action completes the step.
-- Edge case: client receives a duplicate step and does not run policy twice if
-  it already has a valid action for that `step_id`.
-- Error path: two timeouts mark the episode as technical failure.
-- Error path: invalid JSON, unsupported message type, wrong protocol version,
-  wrong step id, or invalid action vector produces technical failure handling.
-- Error path: late action from attempt 1 after attempt 2 completes is ignored
-  and recorded as stale/duplicate telemetry.
-- Error path: connection closes mid-step and retry policy is applied exactly
-  once.
-- Integration: real client transport and FastAPI WebSocket route complete a
-  one-step fake simulation run.
+- Happy path: real transport completes one server-issued `StepMessage` and
+  returns `ActionMessage`.
+- Happy path: CLI rejects non-fake server only after real transport is
+  configured.
+- Edge case: one transient server timeout is retried once and recorded in
+  telemetry.
+- Error path: disconnect during a step returns `FailureCategory.DISCONNECT`.
+- Error path: stale or wrong `step_id` action is ignored server-side and
+  recorded as technical failure.
+- Error path: policy exception sends `FailureMessage(POLICY_EXCEPTION)` and no
+  action.
+- Error path: NaN, infinity, string values, oversized action arrays,
+  out-of-range values, and stale `step_id` are rejected before simulation.
 
 **Verification:**
-- Both server and client agree on step ownership, retry semantics, and failure
-  classification under normal, slow, invalid, and disconnected conditions.
+- Same runner works against `FakeBenchmarkServer` and real server transport.
 
-- [ ] **Unit 7: Implement simulation adapter, episode policy, and server telemetry**
+- [ ] **Unit 5: Wrap `g1_slam` as first real simulation smoke adapter**
 
-**Goal:** Build the server-side benchmark runner around a minimal simulation
-adapter boundary and immutable telemetry snapshots.
+**Goal:** Add a server simulation adapter that runs the real pure-Python
+`g1_slam` navigation loop and emits benchmark-compatible telemetry fixtures.
 
-**Requirements:** R2, R4, R5, R6, R8, R9, R12
+**Requirements:** R2, R7, R9, R11, R12, R15
 
-**Dependencies:** Units 2, 3, 6
+**Dependencies:** Units 0-4
 
 **Files:**
-- Create: `src/asimovbm_server/runner/simulation_adapter.py`
-- Modify: `src/asimovbm_server/runner/episode_runner.py`
-- Create: `src/asimovbm_server/runner/telemetry.py`
-- Create: `src/asimovbm_server/scenarios/__init__.py`
-- Create: `src/asimovbm_server/scenarios/social_navigation.py`
-- Create: `docs/server/simulation_adapter.md`
-- Test: `tests/server/test_simulation_adapter_contract.py`
-- Test: `tests/server/test_episode_runner.py`
-- Test: `tests/server/test_telemetry.py`
-- Test: `tests/server/test_social_navigation_config.py`
+- Create: `src/asimovbm_server/simulation/base.py`
+- Create: `src/asimovbm_server/simulation/g1_slam_adapter.py`
+- Create: `src/asimovbm_server/simulation/g1_slam_stepper.py`
+- Create: `docs/server/g1-slam-adapter.md`
+- Modify: `docs/server/simulation-adapter.md`
+- Test: `tests/server/test_g1_slam_adapter.py`
+- Test: `tests/server/test_g1_slam_stepper.py`
+- Test: `tests/integration/test_g1_slam_smoke_run.py`
 
 **Approach:**
-- Define a small adapter protocol: reset tier/seed/package, expose current
-  observation streams and task events, apply joint target action, advance one
-  simulated control step, and return completion/failure status.
-- Keep the adapter independent of FastAPI and WebSockets so fake and real
-  simulation adapters can share the same runner tests.
-- Preserve simulated time as the source of truth for control frequency and
-  task timing.
-- Implement run policy per tier: attempt episodes until N valid behavioral
-  episodes complete or max attempts is reached. Technical failures consume
-  attempts and reliability budget but not behavioral scores.
-- Copy telemetry snapshots before simulator state mutates again. Avoid storing
-  full raw image/depth payloads by default; store references, summaries, or
-  configured excerpts.
-- Keep `g1_slam` as optional inspiration for fake navigation and MuJoCo
-  integration, not as a dependency direction from benchmark server to prototype.
+- Implement two explicit `g1_slam` paths:
+  - batch telemetry adapter: call `run_navigation()` and convert
+    `SimulationResult` into reached goal, step count, trajectory, final pose,
+    last path, and grid/map summaries
+  - policy-in-loop stepper: extract a small step boundary from `g1_slam`
+    pieces that can observe, accept one `ActionMessage`, apply it, advance
+    simulated time, and record action effect
+- Emit minimal `SensorReading` values compatible with current client models:
+  proprioception/pose summary, lidar summary, and task events.
+- Keep optional MuJoCo adapter behind a dependency check and separate tests
+  that skip when assets/dependencies are absent.
+- Do not pretend batch telemetry proves server/client/simulation handoff. Only
+  the policy-in-loop stepper can satisfy that proof.
+- Do not pretend either `g1_slam` path is the full three-tier
+  social-navigation benchmark.
 
 **Patterns to follow:**
-- MuJoCo Python docs for official bindings and stateful `MjModel`/`MjData`
-  usage.
-- Existing `g1_slam/src/g1_slam/mujoco_runner.py` pattern of isolating MuJoCo
-  imports inside MuJoCo-specific code paths.
-- Original core plan telemetry-before-metrics decision.
+- `g1_slam/src/g1_slam/simulation.py`
+- `g1_slam/tests/test_navigation.py`
+- `g1_slam/src/g1_slam/mujoco_runner.py` optional import pattern.
 
 **Test scenarios:**
-- Happy path: one tier with three valid fake episodes returns three completed
-  episode records.
-- Happy path: empty-room, static-bystander, and moving-bystander tiers preserve
-  tier labels, seeds, and run metadata.
-- Happy path: telemetry snapshots are independent copies and do not change when
-  source simulator state mutates later.
-- Edge case: technical failure on one attempt retries at the episode level
-  until N valid episodes complete or max attempts is reached.
-- Edge case: no bystanders still records target-human data and an empty
-  bystander list.
-- Error path: simulation adapter behavioral failure is classified as behavior,
-  not technical failure.
-- Error path: fewer than N valid behavioral episodes after max attempts marks
-  the tier insufficient-confidence.
-- Error path: missing required pose or timestamp data fails before metrics run.
-- Integration: policy-channel technical failure propagates to episode technical
-  status and skips metric computation for that episode.
+- Happy path: batch adapter runs default world and reaches or reports final
+  navigation status with deterministic telemetry.
+- Happy path: policy-in-loop stepper emits one `StepMessage`, receives one
+  client `ActionMessage`, applies it, advances simulated time, and records
+  action effect.
+- Happy path: telemetry includes simulated step count, trajectory summary, and
+  accepted action metadata.
+- Edge case: no MuJoCo installed does not fail pure-Python adapter tests.
+- Error path: invalid config path produces technical setup failure.
+- Integration: server run can produce a `TerminalMessage(report_ref)` after
+  batch and policy-in-loop `g1_slam` smoke episodes.
 
 **Verification:**
-- The server runner can complete a fake social-navigation run before the real
-  MuJoCo adapter exists.
+- Real local demo path proves both telemetry ingestion and one client-in-loop
+  simulation step before metrics/report claims.
 
-- [ ] **Unit 8: Implement metric engines, aggregation, and report generation**
+- [ ] **Unit 6: Implement benchmark episode runner on top of adapters**
 
-**Goal:** Compute the 12 v0 sub-indicators and four macro indicators from
-server telemetry and emit the report payload consumed by clients and future UI.
+**Goal:** Build server-owned episode lifecycle that can use fake and `g1_slam`
+smoke adapters, while leaving full social-navigation tier behavior to the
+later benchmark scenario task.
 
-**Requirements:** R2, R8, R9, R10, R12
+**Requirements:** R2, R3, R7, R11-R13
 
-**Dependencies:** Units 2 and 7
+**Dependencies:** Units 0-5
 
 **Files:**
+- Create: `src/asimovbm_server/runner/episode_runner.py`
+- Create: `src/asimovbm_server/runner/telemetry.py`
+- Create: `src/asimovbm_server/simulation/fake.py`
+- Test: `tests/server/test_episode_runner.py`
+- Test: `tests/server/test_telemetry.py`
+
+**Approach:**
+- Keep runner independent of FastAPI and WebSockets.
+- Server advances simulated time only after accepted action.
+- Copy telemetry before adapter state mutates again.
+- Technical failures consume attempts and reliability budget, but not
+  behavioral metric scores.
+- Implement adapter-neutral attempt accounting, terminal states, and technical
+  failure handling.
+- Keep `g1_slam` smoke status separate from full benchmark tier confidence.
+- Document full N-valid-episodes-with-max-attempts social-navigation policy as
+  a later scenario unit, not current implementation scope.
+
+**Patterns to follow:**
+- `src/asimovbm_client/protocol/fake.py` lifecycle enforcement.
+- `g1_slam/src/g1_slam/simulation.py` result shape.
+- Original requirements R14-R18.
+
+**Test scenarios:**
+- Happy path: fake adapter completes one or more smoke episodes with valid
+  terminal states.
+- Happy path: `g1_slam` adapter produces smoke telemetry without WebSocket.
+- Edge case: technical failure retries episode until max attempts.
+- Error path: missing pose/timestamp data fails before metrics.
+- Error path: policy-channel technical failure consumes attempt and records
+  reliability diagnostics without behavioral scoring.
+
+**Verification:**
+- Server runner can complete fake and `g1_slam` smoke runs without client code
+  changes.
+
+- [ ] **Unit 7: Freeze metric spec before metric engine work**
+
+**Goal:** Prevent implementation from inventing benchmark formulas during
+coding.
+
+**Requirements:** R13-R14
+
+**Dependencies:** Unit 6
+
+**Files:**
+- Create: `docs/specs/social-navigation-metrics.md`
 - Create: `src/asimovbm_server/metrics/__init__.py`
+- Create: `src/asimovbm_server/reports/__init__.py`
+- Create: `src/asimovbm_server/reports/json_report.py`
+- Test: `tests/server/test_metric_spec_contract.py`
+
+**Approach:**
+- Document every v0 sub-indicator before full engine work:
+  raw inputs, formula, thresholds, normalization, confidence behavior, and
+  source rationale.
+- Do not allow placeholder formulas to satisfy freeze. Placeholder or
+  speculative formulas keep Unit 7 incomplete.
+- Require each sub-indicator to cite canonical project/literature source
+  material and record the human owner who approved the freeze.
+- Keep calibration status separate from formula existence. A formula can be
+  frozen while calibration remains prototype-only, but it cannot be blank.
+- Mark normalized score output as prototype diagnostics until formulas and
+  thresholds are project-approved.
+- Keep schema/report scaffolding allowed before formula freeze; block
+  behavioral scoring beyond fixtures until freeze completes.
+
+**Patterns to follow:**
+- Origin requirements R19-R25.
+- `AGENTS_SHARED.md` metric separation requirement.
+- Known metric topics in `AGENTS_SHARED.md`: Human-Robot Distance,
+  Interaction Ratio, Task Success Rate, Path Efficiency, Proxemic Intrusion.
+
+**Test scenarios:**
+- Happy path: metric spec names exactly four macro indicators and 12
+  sub-indicators.
+- Happy path: each sub-indicator has raw inputs, final non-placeholder formula,
+  thresholds, normalization, confidence behavior, source rationale, and owner
+  approval.
+- Error path: any placeholder formula marks metric freeze incomplete.
+- Error path: report builder refuses calibrated-score mode when formula freeze
+  flag is absent.
+
+**Verification:**
+- Unit 8 implementer has formulas to implement instead of product decisions to
+  guess.
+
+- [ ] **Unit 8: Implement metric engines from frozen spec**
+
+**Goal:** Implement metric functions from the frozen spec without mixing in
+report routing or demo documentation.
+
+**Requirements:** R13-R14
+
+**Dependencies:** Units 0-7
+
+**Files:**
 - Create: `src/asimovbm_server/metrics/dexterity.py`
 - Create: `src/asimovbm_server/metrics/safety.py`
 - Create: `src/asimovbm_server/metrics/social_awareness.py`
 - Create: `src/asimovbm_server/metrics/impression.py`
 - Create: `src/asimovbm_server/metrics/aggregate.py`
-- Create: `src/asimovbm_server/reports/__init__.py`
-- Create: `src/asimovbm_server/reports/json_report.py`
-- Modify: `src/asimovbm_protocol/reports.py`
-- Create: `docs/specs/social_navigation_metrics.md`
 - Test: `tests/server/test_dexterity_metrics.py`
 - Test: `tests/server/test_safety_metrics.py`
 - Test: `tests/server/test_social_awareness_metrics.py`
 - Test: `tests/server/test_impression_metrics.py`
-- Test: `tests/server/test_aggregate_metrics.py`
-- Test: `tests/server/test_json_report.py`
 
 **Approach:**
-- Compute metrics only from validated telemetry fixtures and scenario config.
-- Perceived Dexterity: task success, completion time, path efficiency.
-- Perceived Safety: minimum human distance, proxemic intrusion, speed near
-  humans.
-- Perceived Social Awareness: gesture response success, acknowledgement
-  clarity, human-aware approach.
-- Impression: motion smoothness, stability/controlledness,
-  morphology-task fit.
-- Normalize each sub-indicator to a documented 0-1 scale while retaining raw
-  values and confidence flags.
-- Compute per-tier values first, then aggregate across tiers with equal tier
-  weighting for v0 unless later calibration provides a project-grounded reason
-  to change.
-- Include technical reliability diagnostics in the report but keep them
-  separate from behavioral metric blocks.
-
-**Execution note:** Implement metric tests from synthetic telemetry fixtures
-before connecting report generation to the episode runner.
+- Implement metrics only from frozen spec and validated telemetry.
+- Keep technical reliability diagnostics separate from behavioral metric
+  blocks.
+- Include raw values and confidence flags.
+- For fake and `g1_slam` smoke contexts, return `not_applicable` or
+  `insufficient_evidence` for social sub-indicators that lack real
+  social-navigation telemetry.
+- Do not produce populated 12-subindicator benchmark scores from smoke-only
+  data.
 
 **Patterns to follow:**
-- Origin requirements R19-R25 for exact macro and sub-indicator shape.
-- `AGENTS_SHARED.md` requirement to distinguish metric formulas from
-  implementation artifacts and generated outputs.
+- `docs/specs/social-navigation-metrics.md`
+- Origin requirements R19-R25
 
 **Test scenarios:**
-- Happy path: perfect synthetic episode scores high across task success,
-  completion time, path efficiency, stop distance, and acknowledgement.
-- Happy path: aggregate report contains all four macro indicators and exactly
-  12 sub-indicators.
-- Happy path: per-tier report blocks show empty-room, static-bystander, and
-  moving-bystander results separately.
-- Edge case: no valid behavioral episodes in a tier yields
-  insufficient-confidence instead of a misleading zero behavior score.
-- Edge case: no bystanders leaves bystander-specific penalties neutral where
-  documented.
-- Error path: non-monotonic simulated time is rejected or marked invalid before
-  metric normalization.
-- Error path: missing capability tags for morphology-task fit produces a
-  documented low-confidence/failing rubric result.
-- Integration: technical failures appear in reliability diagnostics and are not
-  counted as behavioral failures.
+- Happy path: each frozen formula computes expected raw and normalized values
+  from synthetic telemetry.
+- Happy path: aggregate handles four macro indicators and 12 sub-indicators
+  when required telemetry exists.
+- Happy path: smoke-context telemetry marks unavailable social indicators as
+  `not_applicable` or `insufficient_evidence`.
+- Edge case: no valid behavioral episodes yields insufficient-confidence, not
+  zero score.
+- Error path: uncalibrated metric mode labels scores as prototype diagnostics.
 
 **Verification:**
-- Reports are reproducible from telemetry fixtures and documented in
-  `docs/specs/social_navigation_metrics.md`.
+- Metric engines cannot pass with placeholder formulas or smoke-only social
+  evidence.
 
-- [ ] **Unit 9: Ship end-to-end fake demo, docs, and compatibility checks**
+- [ ] **Unit 9: Complete JSON reports and report retrieval**
 
-**Goal:** Provide a local fake benchmark run that exercises participant client,
-server API, shared protocol, fake simulation, metrics, and report generation
-before real MuJoCo integration.
+**Goal:** Turn metric/reliability outputs into authenticated report artifacts
+referenced by `TerminalMessage.report_ref`.
 
-**Requirements:** R1-R13
+**Requirements:** R2-R5, R13-R15
 
-**Dependencies:** Units 1-8
+**Dependencies:** Units 0-8
+
+**Files:**
+- Modify: `src/asimovbm_server/reports/json_report.py`
+- Modify: `src/asimovbm_server/api/report_routes.py`
+- Test: `tests/server/test_json_report.py`
+- Test: `tests/server/test_report_routes.py`
+
+**Approach:**
+- Produce report refs through terminal messages.
+- Retrieve full reports through authenticated report route.
+- Keep report refs opaque and independent from filesystem paths.
+- Include report maturity level:
+  - `fake_protocol`
+  - `g1_slam_batch_smoke`
+  - `g1_slam_policy_in_loop_smoke`
+  - `full_social_navigation_benchmark`
+- For fake and smoke reports, include reliability/trajectory diagnostics and
+  mark unavailable social metrics as `not_applicable` or
+  `insufficient_evidence`.
+
+**Patterns to follow:**
+- `TerminalMessage.report_ref` in `src/asimovbm_client/protocol/models.py`
+- Unit 3 auth/report route rules.
+
+**Test scenarios:**
+- Happy path: terminal report ref retrieves full report with valid run token.
+- Happy path: smoke report includes maturity level and does not overclaim full
+  benchmark evidence.
+- Error path: wrong/expired token cannot retrieve report.
+- Error path: report ref never exposes filesystem path.
+
+**Verification:**
+- Reports are retrievable, authenticated, and honest about maturity.
+
+- [ ] **Unit 10: Ship fake and `g1_slam` demos with docs**
+
+**Goal:** Prove executable demos and document what each demo proves.
+
+**Requirements:** R1-R15
+
+**Dependencies:** Units 0-9
 
 **Files:**
 - Modify: `README.md`
-- Modify: `docs/client/quickstart.md`
-- Modify: `docs/client/policy_interface.md`
 - Modify: `docs/client/diagnostics.md`
-- Create: `docs/server/operations.md`
-- Modify: `docs/server/simulation_adapter.md`
-- Modify: `docs/protocol/client_server_api.md`
-- Modify: `docs/protocol/message_lifecycle.md`
-- Modify: `docs/examples/robot_packages/minimal/manifest.json`
-- Modify: `docs/examples/policies/minimal_policy.py`
+- Modify: `docs/protocol/client-server-api.md`
+- Modify: `docs/server/operations.md`
 - Test: `tests/integration/test_fake_benchmark_run.py`
-- Test: `tests/integration/test_protocol_compatibility_server_client.py`
-- Test: `tests/integration/test_cli_fake_run.py`
+- Test: `tests/integration/test_g1_slam_batch_smoke.py`
+- Test: `tests/integration/test_g1_slam_policy_in_loop_smoke.py`
 
 **Approach:**
-- Document how to run the fake server/client loop locally using the package
-  extras and sample assets.
-- Provide one minimal robot package and one minimal deterministic policy that
-  demonstrate the protocol without depending on the real simulation.
-- Add compatibility tests that prove client messages and server messages are
-  parsed by the same shared models.
-- Add a fake end-to-end run that produces a report reference and JSON report.
-- Document the integration contract for the simulation teammate: what the real
-  MuJoCo adapter must provide and what it must not own.
-- Document operational guardrails: no token logging, no raw sensor payload logs
-  by default, message size limits, upload limits, and local-only fake settings.
+- Document three demo labels:
+  - fake protocol demo: proves lifecycle and compatibility
+  - `g1_slam` batch smoke: proves real navigation telemetry ingestion
+  - `g1_slam` policy-in-loop smoke: proves server/client/simulation handoff
+- Do not claim full benchmark validity until social-navigation tiers and metric
+  calibration are complete.
 
 **Patterns to follow:**
-- Client architecture plan's fake backend requirement.
-- FastAPI WebSocket testing docs for server tests.
-- OWASP WebSocket and Logging guidance for operational guardrails.
+- `tests/runner/test_runner.py` for failure semantics.
+- `g1_slam/tests/test_navigation.py` for real demo expectations.
+- `docs/protocol/client-server-api.md` current lifecycle docs.
 
 **Test scenarios:**
-- Happy path: participant client runs the minimal package and policy against
-  the fake server to terminal report-ready state.
-- Happy path: fake run exercises package validation, WebSocket control,
-  retry-free action exchange, telemetry, metrics, and report generation.
-- Happy path: README and docs example commands correspond to implemented CLI
-  options and sample paths.
-- Error path: fake run with an invalid action reports technical failure and no
-  behavioral metric computation for that failed episode.
-- Error path: fake run with package validation rejection stops before policy
-  execution.
-- Edge case: fake server can run in-process for tests and as a local process for
-  manual demos without changing protocol messages.
-- Integration: server and client compatibility tests fail if either side changes
-  a public message shape without updating the shared protocol model.
+- Happy path: fake protocol demo reaches terminal state with report ref.
+- Happy path: `g1_slam` batch smoke reaches terminal/report-ready state.
+- Happy path: `g1_slam` policy-in-loop smoke emits one observation, accepts one
+  client action, advances simulated time, and returns report ref.
+- Error path: package validation rejection stops before policy inference.
+- Error path: invalid action records technical failure and skips behavioral
+  metrics for that episode.
 
 **Verification:**
-- A teammate can run the fake benchmark path, inspect a report, and use the same
-  protocol docs to implement or adjust the real client/server integration.
+- Teammate can run current client against fake and server paths.
+- Server can produce report refs from fake, `g1_slam` batch, and `g1_slam`
+  policy-in-loop smoke paths.
 
 ## System-Wide Impact
 
-- **Interaction graph:** protocol models -> server API/client runner -> control
-  channel -> server episode runner -> telemetry -> metrics -> report reference.
-  The client depends on protocol models and local policy interfaces, not on
-  server internals.
-- **Contract ownership:** `asimovbm_protocol` is the source of truth. Docs and
-  fake adapters must be generated from or tested against it rather than
-  retyping incompatible shapes.
-- **Error propagation:** Client setup errors, policy exceptions, invalid
-  actions, timeout retries, disconnects, upload failures, and protocol
-  violations produce technical diagnostics. Simulation task failures produce
-  behavioral episode outcomes. Insufficient valid episodes produce confidence
-  flags.
-- **State lifecycle risks:** The server must not advance simulated time until a
-  valid action for the current step is accepted. Retry attempts must preserve
-  step id and simulated timestamp. Late/duplicate actions must not mutate
-  simulation state.
-- **Security surfaces:** WebSocket messages, uploaded robot packages, returned
-  actions, diagnostics, asset filenames, and package manifests are untrusted.
-  Tokens and raw payloads must be redacted from logs by default.
-- **Integration coverage:** Unit tests are not enough. Fake end-to-end tests
-  must cover package submission, control exchange, timeout/retry, telemetry,
-  metrics, and report generation.
-- **Unchanged invariants:** v0 remains step-synchronous, simulated-time based,
-  joint-target-only, gesture-event-based, headless on the client, and
-  server-authoritative for validation/scoring/reporting.
+- **Interaction graph:** current client protocol -> transport adapter -> server
+  session -> simulation adapter -> telemetry -> metrics -> report ref.
+- **Contract ownership:** current client messages are compatibility baseline;
+  shared protocol extraction must preserve imports and field names.
+- **Error propagation:** setup/import, package validation, policy exception,
+  invalid action, timeout, disconnect, and protocol mismatch stay technical.
+  Simulation task outcomes stay behavioral.
+- **State lifecycle risks:** server must not advance simulated time until a
+  valid action for current step is accepted. Mid-step disconnect is technical
+  failure for MVP.
+- **Security surfaces:** run tokens, report refs, WebSocket messages, package
+  manifests, asset paths, action vectors, diagnostics, reports, and telemetry.
+- **Demo taxonomy:** fake protocol demo proves message contract; `g1_slam`
+  batch smoke proves real telemetry ingestion; `g1_slam` policy-in-loop smoke
+  proves one live server/client/simulation step; full benchmark demo requires
+  social-navigation tier + metric freeze.
 
 ## Risks & Dependencies
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---:|---:|---|
-| Client work already in progress diverges from this unified package layout | Medium | High | Treat shared protocol messages and lifecycle as mandatory; allow file/module names to adapt if the colleague already has compatible client structure. |
-| REST + WebSocket is more infrastructure than direct HTTP policy calls | Medium | Medium | FastAPI/Uvicorn supports both in one ASGI app, and the topology matches the active client plan. Keep fake transports for low-friction tests. |
-| WebSocket retry semantics are ambiguous under late actions | Medium | High | Encode `step_id` and `attempt` in every control/action message and test late, duplicate, stale, and wrong-attempt actions explicitly. |
-| Package uploads introduce path traversal or zip bomb risk | Medium | High | Inspect archives before extraction, enforce path and size limits, store files outside executable import paths, and test malicious package fixtures. |
-| Sensor payloads exceed JSON/WebSocket comfort | Medium | Medium | Use payload references for large streams, enforce max message sizes, and defer binary/blob optimization until payload sizes are measured. |
-| Server/client optional dependencies become confusing | Medium | Medium | Document extras clearly and keep `asimovbm_protocol` free of server/client implementation dependencies. |
-| Metrics look authoritative before calibration | High | Medium | Retain raw values, document formulas, mark insufficient-confidence tiers, and defer calibration weights to project-grounded telemetry review. |
-| Simulation teammate's adapter shape differs from this plan | Medium | High | Keep the adapter minimal, document it, and validate the real adapter against fake adapter tests. |
-| Diagnostics leak participant IP or secrets | Medium | High | Redact tokens, source snippets, model identifiers, local paths, and full raw payloads by default; test redaction paths. |
+| Server plan drifts from current client messages | Medium | High | Freeze current dataclass lifecycle first and keep import compatibility tests. |
+| Shared protocol extraction breaks colleague imports | Medium | High | Re-export from `asimovbm_client.protocol` and test old imports. |
+| WebSocket adapter becomes second protocol | Medium | High | Implement transport behind current `BenchmarkServer` interface. |
+| `g1_slam` action semantics do not match final joint-target benchmark | Medium | Medium | Split batch smoke from policy-in-loop smoke; keep full joint-target social-navigation adapter separate. |
+| Metric formulas get invented in code | High | High | Add metric spec freeze gate before metric engines. |
+| Package upload expands scope | Medium | Medium | Keep directory package MVP; defer zip upload. |
+| Remote package validation overreads server filesystem | Medium | High | Remote MVP validates manifest metadata only; server-local file validation stays under configured fixture roots. |
+| Payload references become hidden second API | Medium | Medium | Keep inline JSON-compatible payloads for v0. |
+| Token/report leakage | Medium | High | Opaque refs, auth on report route, redacted diagnostics, and no credential logging. |
+| Deadline pressure blurs fake vs real demo | High | Medium | Label fake protocol demo, `g1_slam` batch smoke, `g1_slam` policy-in-loop smoke, and full benchmark demo separately. |
 
 ## Alternative Approaches Considered
 
-- **Server calls participant-hosted HTTP policy endpoint:** This matches the
-  original requirements wording, but conflicts with the active client
-  architecture being built by a teammate. It also pushes participants to host
-  their own service rather than running a local client. Rejected for MVP.
-- **gRPC first:** Strong typed streaming, but heavier participant setup than the
-  current FastAPI/WebSocket stack and less aligned with the existing Python
-  client plan. Defer until JSON/WebSocket becomes a proven bottleneck.
-- **Single package namespace only (`asimovbm.client`, `asimovbm.server`):**
-  Slightly tidier imports, but top-level `asimovbm_protocol`,
-  `asimovbm_server`, and `asimovbm_client` make dependency boundaries and
-  ownership clearer during parallel implementation.
-- **Separate repositories for server and client:** Cleaner release boundaries
-  eventually, but higher coordination cost before the shared contract is stable.
-  One repo is safer for the May MVP.
-- **Client-side metrics preview:** Useful for participant feedback, but risks
-  confusing local diagnostics with authoritative scoring. Keep the client
-  score-free.
+- **Keep separate `asimovbm_protocol` greenfield models:** rejected for now
+  because merged client already has message dataclasses.
+- **Make server import client internals forever:** rejected as long-term shape,
+  but acceptable during extraction if imports are compatibility aliases.
+- **Zip upload in MVP:** deferred because current client uses local directories
+  and archive hardening is extra scope.
+- **Payload references in MVP:** deferred because current `SensorReading.data`
+  supports inline data and no fetch path exists.
+- **Reconnect/resume in MVP:** deferred because current runner only proves
+  transient timeout retry, not disconnected session recovery.
+- **Batch `g1_slam` demo as sole real-demo proof:** rejected because it proves
+  telemetry ingestion but not client policy-in-loop handoff.
+- **Fake demo as sole success metric:** rejected because `g1_slam` real demo
+  exists and should anchor the server smoke path.
 
 ## Phased Delivery
 
-### Phase 1: Contract and skeleton
+### Phase 0: Client-owner contract gate
 
-- Units 1-2. Establish project tooling and shared protocol models before either
-  side builds behavior around incompatible assumptions.
+- Review current `src/asimovbm_client/protocol/models.py`,
+  `docs/protocol/client-server-api.md`, CLI flags, and package format with the
+  client owner.
+- Freeze allowed v0 deviations before server implementation starts.
 
-### Phase 2: Server/client API surfaces
+### Phase 1: Shared contract and validation
 
-- Units 3-5. Build the server API shell, package validation path, and headless
-  client loading/runtime surfaces.
+- Units 0-2. Align tooling/imports, preserve current messages, add schema
+  validation, and align package validation.
 
-### Phase 3: Control loop and simulation boundary
+### Phase 2: Server shell and transport
 
-- Units 6-7. Implement WebSocket step/action exchange, retry semantics, fake
-  simulation, episode policy, and telemetry.
+- Units 3-4. Build server API and real transport adapter without changing
+  runner semantics.
 
-### Phase 4: Metrics, reports, and fake demo
+### Phase 3: Real simulation smoke
 
-- Units 8-9. Implement scoring/report generation and prove the whole path with
-  fake server/client integration before real MuJoCo work lands.
+- Units 5-6. Add `g1_slam` batch + policy-in-loop adapters and server episode
+  runner.
 
-### Phase 5: Real simulation and rendering integration
+### Phase 4: Metrics and reports
 
-- Separate tasks. Plug in the teammate's MuJoCo adapter and any future
-  rendering/report presentation work after the protocol and fake run are stable.
+- Units 7-10. Freeze formulas, implement metrics/report retrieval, and prove
+  fake plus `g1_slam` batch/policy-in-loop smoke demos.
+
+### Phase 5: Full benchmark scenario
+
+- Separate task. Expand from `g1_slam` smoke to full social-navigation tiers,
+  calibrated metrics, and optional MuJoCo/G1 locomotion integration.
 
 ## Documentation / Operational Notes
 
-- `docs/protocol/client_server_api.md` should become the shared technical
-  contract for the colleague building the client and anyone implementing the
-  server.
-- `docs/protocol/message_lifecycle.md` should document exact state transitions:
-  bootstrap, package validation, control loop, retry, technical failure,
-  terminal state, and report reference.
-- `docs/server/simulation_adapter.md` should be the handoff document for the
-  MuJoCo simulation owner.
-- `docs/specs/social_navigation_metrics.md` should remain metric/formula
-  focused, separate from implementation docs and generated report examples.
-- README should clearly distinguish local fake demo, participant client usage,
-  server usage, and future production deployment.
-- Production deployments must use WSS/TLS termination and should not allow
-  wildcard origins if browser clients are later introduced.
-- Logs should include validation failures, auth failures, abnormal disconnects,
-  retries, and technical failure categories, but not full message contents,
-  access tokens, package source, local source snippets, or full raw sensor
-  payloads.
+- `docs/protocol/client-server-api.md` must describe current message lifecycle,
+  not an imagined future API.
+- `docs/protocol/message-lifecycle.md` must document setup/import,
+  validation-before-inference, timeout retry, disconnect-as-technical-failure,
+  terminal state, and report ref.
+- `docs/server/g1-slam-adapter.md` must state what `g1_slam` proves and what
+  it does not prove.
+- `docs/specs/social-navigation-metrics.md` must separate formulas from
+  implementation code and generated reports.
+- README must distinguish:
+  - current fake client demo
+  - server transport demo
+  - `g1_slam` batch smoke demo
+  - `g1_slam` policy-in-loop smoke demo
+  - future full benchmark demo
+- Logs must exclude access tokens, full message contents, source snippets,
+  local paths when possible, package source, and full raw sensor payloads.
 
 ## Success Metrics
 
-- Server and client pass shared protocol compatibility tests.
-- Fake end-to-end benchmark run produces a JSON report with all four macro
-  indicators, all 12 sub-indicators, per-tier blocks, and reliability
-  diagnostics.
-- A package validation failure prevents policy execution and reports a
-  structured diagnostic to the client.
-- A timeout retry repeats the same simulated step once without advancing
-  simulated time.
-- A technical failure never appears as a behavioral metric failure.
-- The participant client can be installed/run without MuJoCo or server-only
-  dependencies.
+- Current client tests still pass after protocol extraction/aliasing.
+- Server and client pass shared message compatibility tests.
+- Real transport adapter works through current `StepSynchronousRunner`.
+- Package validation rejection prevents policy inference.
+- One transient timeout is retried once without advancing simulated time.
+- Mid-step disconnect is reported as technical failure.
+- Fake protocol demo produces `TerminalMessage(report_ref)`.
+- `g1_slam` batch smoke produces server telemetry and report ref.
+- `g1_slam` policy-in-loop smoke emits one real observation, accepts one
+  client action, advances simulated time, records action effect, and returns
+  report ref.
+- Full report contains four macro indicators and 12 v0 sub-indicators only
+  after metric spec freeze.
+- Uncalibrated reports are labeled prototype diagnostics.
 
 ## Sources & References
 
 - **Origin requirements:** `docs/brainstorms/2026-04-29-black-box-robotic-policy-benchmark-requirements.md`
 - **Old core plan:** `docs/plans/2026-04-29-001-feat-black-box-benchmark-core-plan.md`
 - **Client architecture plan:** `docs/plans/2026-04-29-001-feat-benchmark-client-architecture-plan.md`
+- **Current client protocol:** `src/asimovbm_client/protocol/models.py`
+- **Current fake server:** `src/asimovbm_client/protocol/fake.py`
+- **Current runner:** `src/asimovbm_client/runner/core.py`
+- **Current package loader:** `src/asimovbm_client/robot_package/loader.py`
+- **G1 SLAM README:** `g1_slam/README.md`
+- **G1 SLAM simulation:** `g1_slam/src/g1_slam/simulation.py`
+- **G1 SLAM MuJoCo runner:** `g1_slam/src/g1_slam/mujoco_runner.py`
 - **Shared project instructions:** `AGENTS_SHARED.md`
-- **Notion Paper HRI page:** `https://www.notion.so/34a3652adb22802bb2aadf02ea890108`
-- **Python Packaging User Guide - Writing your pyproject.toml:** `https://packaging.python.org/en/latest/guides/writing-pyproject-toml/`
-- **uv project docs:** `https://docs.astral.sh/uv/guides/projects/`
-- **Pydantic models:** `https://docs.pydantic.dev/latest/concepts/models/`
-- **Pydantic settings:** `https://docs.pydantic.dev/latest/concepts/pydantic_settings/`
+- **Python dataclasses:** `https://docs.python.org/3/library/dataclasses.html`
+- **Pydantic dataclasses:** `https://pydantic.dev/docs/validation/2.9/concepts/dataclasses/`
+- **Pydantic TypeAdapter:** `https://pydantic.dev/docs/validation/2.5/api/pydantic/type_adapter/`
 - **FastAPI WebSockets:** `https://fastapi.tiangolo.com/advanced/websockets/`
-- **FastAPI Request Files:** `https://fastapi.tiangolo.com/tutorial/request-files/`
-- **FastAPI Testing WebSockets:** `https://fastapi.tiangolo.com/advanced/testing-websockets/`
-- **websockets asyncio client:** `https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html`
-- **Uvicorn:** `https://www.uvicorn.org/`
-- **MuJoCo Python docs:** `https://mujoco.readthedocs.io/en/latest/python.html`
+- **websockets sync client:** `https://websockets.readthedocs.io/en/stable/reference/sync/client.html`
 - **OWASP WebSocket Security Cheat Sheet:** `https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html`
 - **OWASP Logging Cheat Sheet:** `https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html`
 - **OWASP File Upload Cheat Sheet:** `https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html`
-- **Python zipfile docs:** `https://docs.python.org/3/library/zipfile.html`
-- **Ruff formatter:** `https://docs.astral.sh/ruff/formatter/`
-- **Ruff linter:** `https://docs.astral.sh/ruff/linter/`
+- **MuJoCo Python docs:** `https://mujoco.readthedocs.io/en/latest/python.html`
