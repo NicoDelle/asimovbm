@@ -792,7 +792,7 @@ transport tests.
 - Real local demo path proves both telemetry ingestion and one client-in-loop
   simulation step before metrics/report claims.
 
-- [ ] **Unit 6: Implement benchmark episode runner on top of adapters**
+- [x] **Unit 6: Implement benchmark episode runner on top of adapters**
 
 **Goal:** Build server-owned episode lifecycle that can use fake and `g1_slam`
 smoke adapters, while leaving full social-navigation tier behavior to the
