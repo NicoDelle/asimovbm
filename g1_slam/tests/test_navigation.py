@@ -1,15 +1,18 @@
 import unittest
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from g1_slam.config import load_navigation_config
+from g1_slam.dynamic_obstacles import make_default_dynamic_cylinders, make_dynamic_cylinder_world
 from g1_slam.geometry import Pose2D
 from g1_slam.lidar import simulate_lidar
 from g1_slam.mapping import GridSpec, OccupancyGrid
 from g1_slam.mujoco_runner import _official_g1_scene_xml, _robot_spec
 from g1_slam.planner import AStarPlanner
+from g1_slam.robojudo_backend import _robojudo_navigation_scene_tail, _world_with_dynamic_cylinders
 from g1_slam.simulation import run_navigation
 from g1_slam.world import RectObstacle, World2D, default_world
+
+from g1_slam.config import load_navigation_config
 
 
 class NavigationTests(unittest.TestCase):
@@ -35,6 +38,24 @@ class NavigationTests(unittest.TestCase):
         self.assertIn('<include file="g1_29dof.xml"/>', xml)
         self.assertIn('name="goal"', xml)
         self.assertIn('name="obs_0"', xml)
+
+    def test_robojudo_navigation_scene_can_include_dynamic_blue_cylinders(self):
+        world = make_dynamic_cylinder_world()
+        cylinders = make_default_dynamic_cylinders(seed=7)
+        xml = _robojudo_navigation_scene_tail(world, cylinders)
+        self.assertIn('name="blue_cylinder_0"', xml)
+        self.assertIn('name="blue_cylinder_7"', xml)
+        self.assertIn('mocap="true"', xml)
+        self.assertIn('nav_dynamic_cylinder_mat', xml)
+        self.assertNotIn('name="obs_0"', xml)
+
+    def test_dynamic_cylinders_extend_lidar_world_over_time(self):
+        world = default_world()
+        cylinders = make_default_dynamic_cylinders(seed=7)
+        world_at_start = _world_with_dynamic_cylinders(world, cylinders, sim_time=0.0)
+        world_later = _world_with_dynamic_cylinders(world, cylinders, sim_time=3.0)
+        self.assertEqual(len(world_at_start.obstacles), len(world.obstacles) + len(cylinders))
+        self.assertNotEqual(world_at_start.obstacles[-1], world_later.obstacles[-1])
 
     def test_lidar_hits_obstacle_ahead(self):
         world = World2D(-2, -2, 4, 2, (RectObstacle(1.0, -0.4, 1.2, 0.4),))

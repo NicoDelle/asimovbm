@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import sys
 import time
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from math import atan2, cos, sin
 from pathlib import Path
-from typing import Callable
 
-from .controller import PurePursuitConfig, PurePursuitController
-from .controller import VelocityCommand
+from .controller import PurePursuitConfig, PurePursuitController, VelocityCommand
+from .dynamic_obstacles import DynamicCylinder, make_default_dynamic_cylinders
 from .geometry import Pose2D, clamp, distance_xy
 from .lidar import simulate_lidar
 from .planner import AStarPlanner
@@ -26,6 +26,8 @@ class RoboJuDoBackendConfig:
     auto_start_walking: bool = True
     run_fullspeed: bool | None = None
     use_navigation_scene: bool = True
+    enable_dynamic_cylinders: bool = False
+    dynamic_cylinder_seed: int = 7
 
 
 @dataclass(frozen=True)
@@ -35,7 +37,7 @@ class RoboJuDoCommand:
     yaw_rate: float = 0.0
 
     @classmethod
-    def from_velocity_command(cls, command: VelocityCommand) -> "RoboJuDoCommand":
+    def from_velocity_command(cls, command: VelocityCommand) -> RoboJuDoCommand:
         return cls(vx=command.linear, vy=0.0, yaw_rate=command.yaw_rate)
 
 
@@ -65,7 +67,7 @@ class RoboJuDoBackend:
 
     def __init__(self, config: RoboJuDoBackendConfig | None = None) -> None:
         self.config = config or RoboJuDoBackendConfig()
-        self._install_repo_path(self.config.repo_path)
+        self.config = replace(self.config, repo_path=self._install_repo_path(self.config.repo_path))
         self._install_virtual_joystick_controller(self.config)
         self.pipeline = self._build_pipeline(self.config)
 
@@ -123,6 +125,35 @@ class RoboJuDoBackend:
         env.model.geom_pos[geom_id][1] = goal[1]
         mujoco.mj_forward(env.model, env.data)
 
+    def set_dynamic_cylinders(
+        self,
+        cylinders: tuple[DynamicCylinder, ...],
+        *,
+        sim_time: float,
+    ) -> None:
+        if not cylinders:
+            return
+        env = self.pipeline.env
+        if not hasattr(env, "model") or not hasattr(env, "data"):
+            return
+        try:
+            import mujoco
+        except ModuleNotFoundError:
+            return
+        for cylinder in cylinders:
+            body_id = mujoco.mj_name2id(env.model, mujoco.mjtObj.mjOBJ_BODY, cylinder.name)
+            if body_id < 0:
+                continue
+            mocap_id = int(env.model.body_mocapid[body_id])
+            if mocap_id < 0:
+                continue
+            x, y = cylinder.xy_at(sim_time)
+            env.data.mocap_pos[mocap_id, 0] = x
+            env.data.mocap_pos[mocap_id, 1] = y
+            env.data.mocap_pos[mocap_id, 2] = cylinder.half_height
+            env.data.mocap_quat[mocap_id] = (1.0, 0.0, 0.0, 0.0)
+        mujoco.mj_forward(env.model, env.data)
+
     def run_forever(self, command_provider: Callable[[], VelocityCommand | RoboJuDoCommand]) -> None:
         while True:
             start_time = time.time()
@@ -133,8 +164,8 @@ class RoboJuDoBackend:
                     time.sleep(sleep_s)
 
     @staticmethod
-    def _install_repo_path(repo_path: Path) -> None:
-        repo_path = repo_path.resolve()
+    def _install_repo_path(repo_path: Path) -> Path:
+        repo_path = _resolve_robojudo_repo_path(repo_path)
         if not repo_path.exists():
             raise FileNotFoundError(
                 f"No se encontro RoboJuDo en {repo_path}. Clonalo con:\n"
@@ -144,6 +175,7 @@ class RoboJuDoBackend:
         repo_path_text = repo_path.as_posix()
         if repo_path_text not in sys.path:
             sys.path.insert(0, repo_path_text)
+        return repo_path
 
     @staticmethod
     def _install_virtual_joystick_controller(config: RoboJuDoBackendConfig) -> None:
@@ -206,7 +238,12 @@ class RoboJuDoBackend:
         cfg = ConfigManager(config_name=config.config_name).get_cfg()
         cfg.ctrl = [RoboJuDoBackend.VirtualJoystickCtrlCfg()]
         if config.use_navigation_scene and world is not None:
-            cfg.env.xml = _ensure_robojudo_navigation_scene(config.repo_path, world).as_posix()
+            dynamic_cylinders = _dynamic_cylinders_from_config(config)
+            cfg.env.xml = _ensure_robojudo_navigation_scene(
+                config.repo_path,
+                world,
+                dynamic_cylinders,
+            ).as_posix()
             if getattr(cfg.env, "forward_kinematic", None) is not None:
                 cfg.env.forward_kinematic.xml_path = cfg.env.xml
         if config.run_fullspeed is not None:
@@ -227,12 +264,14 @@ def run_robojudo_navigation(
 ) -> None:
     backend = RoboJuDoBackend.__new__(RoboJuDoBackend)
     backend.config = backend_config or RoboJuDoBackendConfig()
-    backend._install_repo_path(backend.config.repo_path)
+    backend.config = replace(backend.config, repo_path=backend._install_repo_path(backend.config.repo_path))
     backend._install_virtual_joystick_controller(backend.config)
     backend.pipeline = backend._build_pipeline(backend.config, world)
     backend.reset()
     backend.reborn(start)
     backend.set_goal_marker(goal)
+    dynamic_cylinders = _dynamic_cylinders_from_config(backend.config)
+    backend.set_dynamic_cylinders(dynamic_cylinders, sim_time=0.0)
 
     pose = backend.pose()
     if pose.x == 0.0 and pose.y == 0.0:
@@ -242,9 +281,13 @@ def run_robojudo_navigation(
     planner = AStarPlanner(grid)
     controller = PurePursuitController(controller_config)
     path: list[tuple[float, float]] = []
+    dt = float(getattr(backend.pipeline, "dt", 0.02))
 
     for step in range(steps):
-        scan = simulate_lidar(world, pose)
+        sim_time = step * dt
+        backend.set_dynamic_cylinders(dynamic_cylinders, sim_time=sim_time)
+        scan_world = _world_with_dynamic_cylinders(world, dynamic_cylinders, sim_time)
+        scan = simulate_lidar(scan_world, pose)
         grid.update_from_scan(pose, scan)
         if step % 10 == 0 or not path or controller.waypoint_index >= len(path):
             path = planner.plan(pose, goal)
@@ -266,7 +309,21 @@ def _axis(value: float, max_abs: float) -> float:
     return clamp(value / max_abs, -1.0, 1.0)
 
 
-def _ensure_robojudo_navigation_scene(repo_path: Path, world: World2D) -> Path:
+def _resolve_robojudo_repo_path(repo_path: Path) -> Path:
+    candidate = repo_path.resolve()
+    if candidate.exists():
+        return candidate
+    package_root_candidate = Path(__file__).resolve().parents[2] / "third_party" / "RoboJuDo"
+    if package_root_candidate.exists():
+        return package_root_candidate
+    return candidate
+
+
+def _ensure_robojudo_navigation_scene(
+    repo_path: Path,
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
+) -> Path:
     robot_dir = repo_path.resolve() / "assets" / "robots" / "g1"
     source_xml = robot_dir / "g1_29dof_rev_1_0.xml"
     scene_xml = robot_dir / "g1_29dof_nav.xml"
@@ -278,11 +335,17 @@ def _ensure_robojudo_navigation_scene(repo_path: Path, world: World2D) -> Path:
     marker_index = source.find(marker)
     if marker_index < 0:
         raise ValueError(f"No pude encontrar la seccion de escena en {source_xml}")
-    scene_xml.write_text(source[:marker_index] + _robojudo_navigation_scene_tail(world), encoding="utf-8")
+    scene_xml.write_text(
+        source[:marker_index] + _robojudo_navigation_scene_tail(world, dynamic_cylinders),
+        encoding="utf-8",
+    )
     return scene_xml
 
 
-def _robojudo_navigation_scene_tail(world: World2D) -> str:
+def _robojudo_navigation_scene_tail(
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...],
+) -> str:
     obstacle_geoms = []
     for index, obstacle in enumerate(world.obstacles):
         center_x = 0.5 * (obstacle.x_min + obstacle.x_max)
@@ -299,6 +362,9 @@ def _robojudo_navigation_scene_tail(world: World2D) -> str:
     floor_center_x = 0.5 * (world.x_min + world.x_max)
     floor_center_y = 0.5 * (world.y_min + world.y_max)
     obstacles = "\n".join(obstacle_geoms)
+    dynamic_cylinder_geoms = "\n".join(
+        _dynamic_cylinder_scene_body(cylinder) for cylinder in dynamic_cylinders
+    )
     return f"""  <!-- setup navigation scene -->
   <statistic center="1.0 0.0 1.0" extent="8.0"/>
   <visual>
@@ -310,6 +376,7 @@ def _robojudo_navigation_scene_tail(world: World2D) -> str:
     <texture name="nav_grid" type="2d" builtin="checker" rgb1="0.18 0.19 0.20" rgb2="0.24 0.25 0.26" width="512" height="512"/>
     <material name="nav_floor_mat" texture="nav_grid" texrepeat="4 4" reflectance="0.1"/>
     <material name="nav_obstacle_mat" rgba="0.8 0.18 0.12 1"/>
+    <material name="nav_dynamic_cylinder_mat" rgba="0.05 0.35 1.0 1"/>
     <material name="nav_goal_mat" rgba="0.1 0.8 0.35 1"/>
   </asset>
   <worldbody>
@@ -319,9 +386,44 @@ def _robojudo_navigation_scene_tail(world: World2D) -> str:
     <geom name="floor" type="plane" pos="{floor_center_x:.4f} {floor_center_y:.4f} 0" size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>
     <geom name="goal" type="cylinder" pos="0 0 0.02" size="0.28 0.02" material="nav_goal_mat"/>
 {obstacles}
+{dynamic_cylinder_geoms}
   </worldbody>
 </mujoco>
 """
+
+
+def _dynamic_cylinder_scene_body(cylinder: DynamicCylinder) -> str:
+    x, y = cylinder.center
+    return (
+        f'    <body name="{cylinder.name}" mocap="true" '
+        f'pos="{x:.4f} {y:.4f} {cylinder.half_height:.4f}">\n'
+        f'      <geom name="{cylinder.name}_geom" type="cylinder" '
+        f'size="{cylinder.radius:.4f} {cylinder.half_height:.4f}" '
+        'material="nav_dynamic_cylinder_mat"/>\n'
+        "    </body>"
+    )
+
+
+def _dynamic_cylinders_from_config(config: RoboJuDoBackendConfig) -> tuple[DynamicCylinder, ...]:
+    if not config.enable_dynamic_cylinders:
+        return ()
+    return make_default_dynamic_cylinders(config.dynamic_cylinder_seed)
+
+
+def _world_with_dynamic_cylinders(
+    world: World2D,
+    cylinders: tuple[DynamicCylinder, ...],
+    sim_time: float,
+) -> World2D:
+    if not cylinders:
+        return world
+    return World2D(
+        x_min=world.x_min,
+        y_min=world.y_min,
+        x_max=world.x_max,
+        y_max=world.y_max,
+        obstacles=world.obstacles + tuple(cylinder.rect_at(sim_time) for cylinder in cylinders),
+    )
 
 
 def _yaw_from_xyzw_quat(quat) -> float:
