@@ -89,6 +89,19 @@ Out of scope:
 - **Final-rush choices are binding.** Check `final-rush-choices.md` before
   implementing or changing the episode contract, observation boundary, status
   semantics, trace schema, metric invocation, or aggregation behavior.
+- **The local-validation CLI is the launcher.** The executable entry point for
+  this MVP validation loop is:
+
+  ```bash
+  .venv/bin/python -m asimovbm_server.cli \
+    --orchestrator local-validation \
+    --episode-pack examples/episode_packs/social_navigation_mvp.json \
+    --artifact-root artifacts/local-validation
+  ```
+
+  This command owns the end-to-end run shape:
+  episode pack -> tiers -> episodes -> attempts -> control steps -> traces ->
+  metric invocation -> result JSON.
 - **Validation path is server-local.** Do not route this runner through
   `asimovbm_client`, `StepSynchronousRunner`, or WebSocket transport. Keep the
   production client path available, but this branch is for local episode/metric
@@ -175,6 +188,9 @@ Recommended protocol:
 class EpisodeScenario(Protocol):
     definition: EpisodeDefinition
 
+    def create_world(self) -> ScenarioWorld:
+        ...
+
     def reset(self, world: ScenarioWorld, robot: RobotAdapter) -> EpisodeObservation:
         ...
 
@@ -194,6 +210,78 @@ class EpisodeScenario(Protocol):
 `before_step` is where moving humans and scheduled social cues update. For a
 static episode it can be a no-op. `evaluate` should return only episode outcome
 state; it should not compute research metrics.
+
+`create_world` is where a real scenario implementation should return its
+MuJoCo-backed world or overlay state object. The runner must not know the
+scenario internals beyond the protocol above.
+
+## Current Launcher and Handoff Instructions
+
+The implemented launcher is the `local-validation` orchestrator in
+`src/asimovbm_server/cli.py`.
+
+Default smoke command:
+
+```bash
+.venv/bin/python -m asimovbm_server.cli \
+  --orchestrator local-validation \
+  --artifact-root artifacts/local-validation
+```
+
+Configurable command:
+
+```bash
+.venv/bin/python -m asimovbm_server.cli \
+  --orchestrator local-validation \
+  --episode-pack examples/episode_packs/social_navigation_mvp.json \
+  --robot-profile placeholder-humanoid \
+  --agent-profile reference-social-nav \
+  --artifact-root artifacts/local-validation
+```
+
+The launcher writes:
+
+```text
+<artifact-root>/<episode-pack-id>-validation-result.json
+```
+
+What is intentionally smoke/placeholder right now:
+
+- `examples/episode_packs/social_navigation_mvp.json` is a smoke MVP pack. The
+  episode implementer should replace or evolve it into the actual episode pack
+  used for research validation.
+- `OverlayEpisodeScenario` is an overlay-first smoke scenario. It is acceptable
+  as scaffolding, but the episode implementer should replace the scenario
+  registration with actual MuJoCo-backed scenario implementations when they
+  land.
+- `minimal-mobile-base`, `placeholder-humanoid`, and `placeholder-robot-dog`
+  are placeholder robot profiles. The robot implementer should replace these
+  with real adapters/assets and implement `viewer_target()` so `--visible`
+  opens the MuJoCo viewer.
+- `ReferenceSocialNavigationPolicy` is only a deterministic smoke policy. It
+  proves the observation/action loop, not final agent behavior.
+- `PlaceholderMetricFunction` modules deliberately return `not_implemented`
+  when trace evidence exists. The metric implementer should replace those
+  functions with the real formulas from
+  `docs/specs/social-navigation-metrics.md`.
+- `final_axes` currently contains `None` values. The aggregation implementer
+  should replace this with the trained/versioned four-axis aggregation once the
+  metric outputs are real.
+
+Instructions for future agents:
+
+- Before changing this area, read `AGENTS_SHARED.md`, `final-rush-choices.md`,
+  and this plan.
+- When real episodes, robot adapters, metric modules, or aggregation land,
+  update `final-rush-choices.md` and this plan to identify which smoke pieces
+  were replaced and which launcher command is now canonical.
+- Do not leave ambiguous smoke defaults once actual research assets exist. If
+  the canonical episode pack or robot profile changes, update the CLI defaults
+  or document the required flags in this section.
+- Keep `local-validation` as the single launcher for this validation path unless
+  Nico explicitly changes the boundary.
+- Keep the no-client-transport boundary test current: local validation modules
+  must not import `asimovbm_client`.
 
 The episode pack should start with exactly these three MVP episodes:
 

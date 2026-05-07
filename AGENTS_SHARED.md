@@ -26,6 +26,11 @@ During the final MVP rush, always inspect `final-rush-choices.md` before
 changing episodic validation, scenario interfaces, observation boundaries,
 metric computation, or aggregation behavior.
 
+When replacing smoke episodic-validation scaffolding with actual episode packs,
+MuJoCo scenarios, robot adapters, metric implementations, or aggregation logic,
+update `final-rush-choices.md` and the active plan so future agents know which
+launcher command and defaults are canonical.
+
 ## Suggested Lookup Order
 
 1. Read the local repository for current files and artifacts.
