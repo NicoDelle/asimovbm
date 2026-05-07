@@ -22,15 +22,21 @@ implementation direction, inspect the available project context. If a local
 `AGENTS.md` exists, check it for private workspace links and local lookup
 instructions before relying only on repository files.
 
+During the final MVP rush, always inspect `final-rush-choices.md` before
+changing episodic validation, scenario interfaces, observation boundaries,
+metric computation, or aggregation behavior.
+
 ## Suggested Lookup Order
 
 1. Read the local repository for current files and artifacts.
-2. Inspect canonical project planning material when available.
-3. Inspect relevant metric or document pages before changing derived benchmark
+2. Inspect `final-rush-choices.md` for current final-rush implementation
+   decisions.
+3. Inspect canonical project planning material when available.
+4. Inspect relevant metric or document pages before changing derived benchmark
    content.
-4. Inspect brainstorms, diagrams, or visual reasoning boards when
+5. Inspect brainstorms, diagrams, or visual reasoning boards when
    reconstructing decisions or updating benchmark scope.
-5. Only then update files, definitions, or implementation plans.
+6. Only then update files, definitions, or implementation plans.
 
 ## Benchmark Content
 

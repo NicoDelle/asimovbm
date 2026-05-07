@@ -6,6 +6,7 @@ date: 2026-05-07
 branch: paper-sub
 origin: docs/specs/social-navigation-metrics.md
 related:
+  - final-rush-choices.md
   - docs/specs/social-navigation-metrics.md
   - docs/plans/2026-05-07-002-feat-social-navigation-feature-computation-plan.md
 ---
@@ -85,6 +86,9 @@ Out of scope:
 
 ## Key Decisions
 
+- **Final-rush choices are binding.** Check `final-rush-choices.md` before
+  implementing or changing the episode contract, observation boundary, status
+  semantics, trace schema, metric invocation, or aggregation behavior.
 - **Validation path is server-local.** Do not route this runner through
   `asimovbm_client`, `StepSynchronousRunner`, or WebSocket transport. Keep the
   production client path available, but this branch is for local episode/metric
@@ -146,6 +150,24 @@ Ownership boundary:
 The episode implementer should not compute metrics or aggregate results. Their
 job is to make each episode visible, resettable, observable, terminable, and
 traceable.
+
+Approved contract choices:
+
+- Agents may see robot pose/yaw/velocity, public goals, range readings, visible
+  coarse entity roles, active cues/task events, and elapsed time.
+- Agents must not see metric thresholds, future cue schedules, hidden target
+  identity before cue emission, or non-perceptible ground-truth labels.
+- Episode status values are `running`, `success`, `timeout`, `collision`,
+  `proxemic_violation`, `left_bounds`, `robot_failure`, `episode_failure`, and
+  `policy_failure`.
+- Technical validity is separate from terminal reason via `technical_valid:
+  bool`; metrics run only on technically valid traces.
+- Every step trace records time, step id, dt, robot pose/velocity/action,
+  entity poses/velocities/radii/roles, collision/contact summary, cue events,
+  public observation, goal/target distance when applicable, and post-step
+  episode status.
+- Prefer overlay-first humans and obstacles unless physical MuJoCo bodies are
+  already available.
 
 Recommended protocol:
 
