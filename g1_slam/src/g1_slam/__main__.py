@@ -4,6 +4,12 @@ import argparse
 from pathlib import Path
 
 from .config import load_navigation_config
+from .dynamic_obstacles import (
+    DYNAMIC_SCENARIO_GOAL,
+    DYNAMIC_SCENARIO_START,
+    DYNAMIC_SCENARIO_STEPS,
+    make_dynamic_cylinder_world,
+)
 from .geometry import Pose2D
 from .mujoco_runner import run_mujoco_navigation
 from .simulation import run_navigation, save_trajectory
@@ -24,14 +30,34 @@ def main() -> None:
     parser.add_argument("--model-path", type=Path, help="ruta opcional a un XML/MJCF de MuJoCo")
     parser.add_argument("--robojudo-repo", type=Path, default=Path("third_party/RoboJuDo"))
     parser.add_argument("--robojudo-config", default="g1_asap_loco")
+    parser.add_argument(
+        "--dynamic-blue-cylinders",
+        action="store_true",
+        help="enable slow cyclic blue cylinders in the RoboJuDo SLAM scene",
+    )
+    parser.add_argument(
+        "--dynamic-cylinder-seed",
+        type=int,
+        default=7,
+        help="seed used for deterministic dynamic-cylinder phases",
+    )
     parser.add_argument("--render", action="store_true", help="abre el viewer de MuJoCo")
     args = parser.parse_args()
 
-    world = default_world()
     nav_config = load_navigation_config(args.config)
-    start = Pose2D(*args.start) if args.start is not None else nav_config.start
-    goal = (args.goal[0], args.goal[1]) if args.goal is not None else nav_config.goal
-    steps = args.steps if args.steps is not None else nav_config.steps
+    if args.dynamic_blue_cylinders:
+        world = make_dynamic_cylinder_world()
+        default_start = DYNAMIC_SCENARIO_START
+        default_goal = DYNAMIC_SCENARIO_GOAL
+        default_steps = max(nav_config.steps, DYNAMIC_SCENARIO_STEPS)
+    else:
+        world = default_world()
+        default_start = nav_config.start
+        default_goal = nav_config.goal
+        default_steps = nav_config.steps
+    start = Pose2D(*args.start) if args.start is not None else default_start
+    goal = (args.goal[0], args.goal[1]) if args.goal is not None else default_goal
+    steps = args.steps if args.steps is not None else default_steps
     locomotion_config = nav_config.locomotion
     if args.locomotion is not None:
         locomotion_config = locomotion_config.__class__(
@@ -67,6 +93,8 @@ def main() -> None:
                 max_vx=nav_config.controller.max_linear_speed,
                 max_vy=nav_config.controller.max_linear_speed,
                 max_yaw_rate=nav_config.controller.max_yaw_rate,
+                enable_dynamic_cylinders=args.dynamic_blue_cylinders,
+                dynamic_cylinder_seed=args.dynamic_cylinder_seed,
             ),
         )
         return
