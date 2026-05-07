@@ -37,6 +37,15 @@ step ids, checks for collisions, and advances simulated time only after an
 accepted action. This proves the server/client/simulation handoff, but it is
 not the full social-navigation benchmark or a calibrated G1 joint controller.
 
+## MuJoCo Parity Convention
+
+The server-owned MuJoCo mobile-base smoke adapter and the pure-Python
+`g1_slam` reference both interpret `[linear_velocity, yaw_rate]` with the same
+per-step convention: update yaw by `yaw_rate * dt`, then translate the base
+using that updated yaw. This mirrors `g1_slam.geometry.Pose2D.moved` and keeps
+open-loop pose traces comparable across the server authority and the client-side
+G1 reference policy.
+
 ## Dependency Boundary
 
 The adapter imports no MuJoCo or ONNX runtime modules. Optional visualization

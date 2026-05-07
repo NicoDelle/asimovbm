@@ -136,8 +136,8 @@ class MuJoCoSimulationAdapter:
         dt = self.config.control_dt
         yaw = _wrap_angle(before.yaw + yaw_rate * dt)
         after = _Pose2D(
-            x=before.x + linear_velocity * math.cos(before.yaw) * dt,
-            y=before.y + linear_velocity * math.sin(before.yaw) * dt,
+            x=before.x + linear_velocity * math.cos(yaw) * dt,
+            y=before.y + linear_velocity * math.sin(yaw) * dt,
             yaw=yaw,
         )
         self._write_pose(after)
