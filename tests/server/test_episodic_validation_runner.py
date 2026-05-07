@@ -52,6 +52,20 @@ def test_social_cue_target_identity_is_hidden_until_cue() -> None:
     assert after_cue_observation.public_goal.target_human_id == "target"
 
 
+def test_local_validation_runner_can_filter_to_one_episode() -> None:
+    pack = load_episode_pack(Path("examples/episode_packs/social_navigation_mvp.json"))
+
+    result = EpisodicValidationRunner().run(
+        pack,
+        BenchmarkRunConfig(tier_id="obstacle_only", episode_id="obstacle_slalom_001"),
+    )
+
+    assert result.attempts == 1
+    assert len(result.records) == 1
+    assert result.records[0].tier_id == "obstacle_only"
+    assert result.records[0].episode_id == "obstacle_slalom_001"
+
+
 def test_technical_policy_failure_retries_episode_attempt() -> None:
     class FailingOncePolicy:
         id = "failing-once"

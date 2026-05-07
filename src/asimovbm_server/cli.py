@@ -50,13 +50,29 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--agent-profile",
-        default="reference-social-nav",
+        default="obstacle-aware-nav",
         help="Agent policy for local-validation mode.",
+    )
+    parser.add_argument(
+        "--tier-id",
+        default=None,
+        help="Run only this tier in local-validation mode.",
+    )
+    parser.add_argument(
+        "--episode-id",
+        default=None,
+        help="Run only this episode id in local-validation mode.",
     )
     parser.add_argument(
         "--visible",
         action="store_true",
         help="Open a MuJoCo viewer when the selected robot adapter exposes one.",
+    )
+    parser.add_argument(
+        "--realtime",
+        type=float,
+        default=0.0,
+        help="Throttle local-validation visible playback; 1.0 is real-time-ish.",
     )
     parser.add_argument(
         "--demo-steps",
@@ -124,6 +140,9 @@ def main(argv: list[str] | None = None) -> int:
                 robot_profile_id=args.robot_profile,
                 agent_id=args.agent_profile,
                 visible=args.visible,
+                realtime=args.realtime,
+                tier_id=args.tier_id,
+                episode_id=args.episode_id,
             ),
         )
         output_path = args.artifact_root / f"{pack.id}-validation-result.json"
@@ -137,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     import uvicorn
+
     from .app import create_app
     from .config import ServerConfig
     from .sessions import SessionManager

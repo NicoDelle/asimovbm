@@ -10,7 +10,7 @@
           "scenario_type": "obstacle_navigation",
           "robot_start": {"x": 0.0, "y": 0.0, "yaw": 0.0},
           "goal": {"x": 4.0, "y": 0.0},
-          "max_steps": 160,
+          "max_steps": 320,
           "obstacles": [
             {"id": "box_left", "x": 1.4, "y": 0.45, "radius": 0.25},
             {"id": "box_right", "x": 2.4, "y": -0.45, "radius": 0.25}

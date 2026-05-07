@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from .base import AgentPolicy
+from .obstacle_aware_navigation import ObstacleAwareNavigationPolicy
 from .reference_social_navigation import ReferenceSocialNavigationPolicy
 
 AgentFactory = Callable[[], AgentPolicy]
@@ -26,5 +27,6 @@ class AgentRegistry:
 
 def default_agent_registry() -> AgentRegistry:
     registry = AgentRegistry()
+    registry.register(ObstacleAwareNavigationPolicy.id, ObstacleAwareNavigationPolicy)
     registry.register(ReferenceSocialNavigationPolicy.id, ReferenceSocialNavigationPolicy)
     return registry

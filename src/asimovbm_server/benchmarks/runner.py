@@ -45,6 +45,8 @@ class EpisodicValidationRunner:
         tier_summaries: list[TierRunSummary] = []
 
         for tier in pack.tiers:
+            if config.tier_id is not None and tier.id != config.tier_id:
+                continue
             tier_attempts = 0
             tier_valid = 0
             tier_technical_failures = 0
@@ -52,6 +54,8 @@ class EpisodicValidationRunner:
             max_attempts = tier.max_attempts or config.max_attempts_per_episode
 
             for episode in tier.episodes:
+                if config.episode_id is not None and episode.id != config.episode_id:
+                    continue
                 for attempt in range(1, max_attempts + 1):
                     tier_attempts += 1
                     robot = self.robot_registry.create(config.robot_profile_id)
@@ -121,7 +125,7 @@ class EpisodicValidationRunner:
         observation = scenario.reset(world, robot)
         step_traces: list[StepTrace] = []
         status = EpisodeStatus(EpisodeStatusCode.RUNNING)
-        viewer = maybe_open_viewer(robot, enabled=config.visible)
+        viewer = maybe_open_viewer(_scenario_viewer_target(scenario, world), robot, enabled=config.visible)
         try:
             while not status.terminal:
                 action = agent.act(observation)
@@ -196,6 +200,13 @@ def _sync_viewer(viewer: ViewerHandle, config: BenchmarkRunConfig) -> None:
         # The runner does not know per-step dt here; realtime is just a visible
         # manual-validation throttle.
         time.sleep(0.02 / config.realtime)
+
+
+def _scenario_viewer_target(scenario, world) -> tuple[Any, Any] | None:
+    viewer_target = getattr(scenario, "viewer_target", None)
+    if not callable(viewer_target):
+        return None
+    return viewer_target(world)
 
 
 def _placeholder_axis_summary(records: list[EpisodeRunRecord]) -> dict[str, float | None]:

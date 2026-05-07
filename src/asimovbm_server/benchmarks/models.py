@@ -11,10 +11,12 @@ from asimovbm_server.traces import EpisodeTrace
 @dataclass(frozen=True)
 class BenchmarkRunConfig:
     robot_profile_id: str = "minimal-mobile-base"
-    agent_id: str = "reference-social-nav"
+    agent_id: str = "obstacle-aware-nav"
     max_attempts_per_episode: int = 1
     realtime: float = 0.0
     visible: bool = False
+    tier_id: str | None = None
+    episode_id: str | None = None
 
 
 @dataclass(frozen=True)
