@@ -103,3 +103,15 @@ termination logic around that simulation.
 
 This keeps orchestration and metric validation unblocked while preserving a path
 to physical human/obstacle bodies later.
+
+## Implemented Episode Replacements
+
+`obstacle_navigation` is no longer served by the generic overlay smoke scenario.
+It is registered to `StaticObstacleNavigationScenario`, which implements the
+first static-obstacle MVP episode through the approved `EpisodeScenario`
+interface. It follows the `g1_slam` static world and lidar behavior locally so
+the `local-validation` launcher works without relying on pytest-only import
+paths.
+
+The human-obstacle and social-cue episodes still use smoke overlay scaffolding
+until their real scenario implementations land.

@@ -247,13 +247,16 @@ The launcher writes:
 
 What is intentionally smoke/placeholder right now:
 
-- `examples/episode_packs/social_navigation_mvp.json` is a smoke MVP pack. The
+- `obstacle_navigation` now has a first concrete implementation in
+  `StaticObstacleNavigationScenario`. It uses the approved episode protocol and
+  g1_slam-style static world/lidar behavior for the first MVP episode.
+- `examples/episode_packs/social_navigation_mvp.json` is still a smoke MVP pack. The
   episode implementer should replace or evolve it into the actual episode pack
   used for research validation.
-- `OverlayEpisodeScenario` is an overlay-first smoke scenario. It is acceptable
-  as scaffolding, but the episode implementer should replace the scenario
-  registration with actual MuJoCo-backed scenario implementations when they
-  land.
+- `OverlayEpisodeScenario` remains an overlay-first smoke scenario for
+  `human_obstacle_navigation` and `social_cue_target_approach`. It is acceptable
+  as scaffolding, but the episode implementer should replace those scenario
+  registrations with actual implementations when they land.
 - `minimal-mobile-base`, `placeholder-humanoid`, and `placeholder-robot-dog`
   are placeholder robot profiles. The robot implementer should replace these
   with real adapters/assets and implement `viewer_target()` so `--visible`

@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from .models import EpisodeDefinition, EpisodeScenario
 from .overlay import OverlayEpisodeScenario
+from .static_obstacles import StaticObstacleNavigationScenario
 
 ScenarioFactory = Callable[[EpisodeDefinition], EpisodeScenario]
 
@@ -26,10 +27,7 @@ class ScenarioRegistry:
 
 def default_scenario_registry() -> ScenarioRegistry:
     registry = ScenarioRegistry()
-    for scenario_type in (
-        "obstacle_navigation",
-        "human_obstacle_navigation",
-        "social_cue_target_approach",
-    ):
-        registry.register(scenario_type, OverlayEpisodeScenario)
+    registry.register("obstacle_navigation", StaticObstacleNavigationScenario)
+    registry.register("human_obstacle_navigation", OverlayEpisodeScenario)
+    registry.register("social_cue_target_approach", OverlayEpisodeScenario)
     return registry
