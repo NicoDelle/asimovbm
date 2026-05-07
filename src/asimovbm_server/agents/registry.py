@@ -1,0 +1,30 @@
+"""Local agent policy registry."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+
+from .base import AgentPolicy
+from .reference_social_navigation import ReferenceSocialNavigationPolicy
+
+AgentFactory = Callable[[], AgentPolicy]
+
+
+class AgentRegistry:
+    def __init__(self) -> None:
+        self._factories: dict[str, AgentFactory] = {}
+
+    def register(self, agent_id: str, factory: AgentFactory) -> None:
+        self._factories[agent_id] = factory
+
+    def create(self, agent_id: str) -> AgentPolicy:
+        factory = self._factories.get(agent_id)
+        if factory is None:
+            raise KeyError(f"unknown agent policy: {agent_id}")
+        return factory()
+
+
+def default_agent_registry() -> AgentRegistry:
+    registry = AgentRegistry()
+    registry.register(ReferenceSocialNavigationPolicy.id, ReferenceSocialNavigationPolicy)
+    return registry

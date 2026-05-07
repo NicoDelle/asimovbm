@@ -1,11 +1,23 @@
-"""Metric package marker.
+"""Metric interfaces for social-navigation validation."""
 
-Behavioral metric engines are implemented after the social-navigation metric
-spec is frozen. Unit 7 intentionally exposes no scoring functions yet; report
-code must refuse calibrated score mode unless a caller explicitly confirms the
-metric freeze.
-"""
+from .models import MetricContext, MetricFunction, MetricStatus, MetricValue
+from .registry import (
+    SOCIAL_NAVIGATION_METRIC_IDS,
+    MetricRegistry,
+    PlaceholderMetricFunction,
+    default_metric_registry,
+)
 
 METRIC_SPEC_PATH = "docs/specs/social-navigation-metrics.md"
 
-__all__ = ["METRIC_SPEC_PATH"]
+__all__ = [
+    "METRIC_SPEC_PATH",
+    "SOCIAL_NAVIGATION_METRIC_IDS",
+    "MetricContext",
+    "MetricFunction",
+    "MetricRegistry",
+    "MetricStatus",
+    "MetricValue",
+    "PlaceholderMetricFunction",
+    "default_metric_registry",
+]
