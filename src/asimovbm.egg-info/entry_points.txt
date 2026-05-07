@@ -1,0 +1,3 @@
+[console_scripts]
+asimovbm-client = asimovbm_client.cli:main
+asimovbm-server = asimovbm_server.cli:main
