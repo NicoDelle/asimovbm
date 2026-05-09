@@ -1,15 +1,4 @@
-*.md
-!AGENTS_SHARED.md
-!README.md
-!docs/**/*.md
-.obsidian
-.venv/
-__pycache__/
-*.egg-info/
-.pytest_cache/
-*.pyc
-
-# LaTeX build 
+# LaTeX build artifacts
 *.aux
 *.bbl
 *.blg

@@ -1,0 +1,128 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{siunitx}
+
+\begin{document}
+
+\title{Toward Simulation-Based Evaluation of Human-Perceived Traits in Robotic Agents}
+
+\author{
+	\IEEEauthorblockN{Andrea Tosi, Niccolò Dellepiane, Luis Sebastian Caballero Fritas}
+	\IEEEauthorblockA{\textit{TALOS Robotics} \\
+		Milan, Italy \\
+		\{emails\}@talosrobotics.ai}
+}
+
+\maketitle
+
+\begin{abstract}
+@TODO
+\end{abstract}
+
+\begin{IEEEkeywords}
+@TODO
+\end{IEEEkeywords}
+
+%--------------------------------------------------
+\section{Introduction}
+
+Robotic agents are moving from controlled laboratory settings toward human-centered environments, where they are expected not only to complete tasks, but to do so in ways that are safe, legible, and socially acceptable. As embodied or physical AI systems become more capable, the need for reliable benchmarks becomes increasingly urgent: researchers, developers, and users need principled ways to compare which robotic agent performs better in a given context.
+
+A similar transition has already occurred in the evaluation of large language models. Early benchmarks mainly focused on task accuracy, while more recent evaluation frameworks attempt to quantify subjective and human-facing qualities of interaction. For example, Chatbot Arena ranks models through crowdsourced pairwise human preferences, MT-Bench evaluates multi-turn conversational quality using human-aligned judges, and HELM argues for multi-metric evaluation beyond accuracy, including robustness, fairness, bias, toxicity, calibration, and efficiency. These benchmarks show that, when AI systems are deployed in open-ended human contexts, performance cannot be reduced to objective correctness alone.
+
+Robotics faces an even harder version of this problem. In Human-Robot Interaction (HRI), the success of an agent depends not only on whether it completes a task, but also on how its behavior is perceived by humans. A robot may be mechanically efficient while appearing unsafe, unaware, intrusive, hesitant, or socially inappropriate. These subjective impressions are difficult to measure, but they are central to real-world adoption: a robot that is not perceived as trustworthy, competent, or predictable may fail even when its low-level control policy is technically effective.
+
+This work addresses the need for reproducible evaluation methods that connect objective robot behavior to human-perceived interaction traits. We propose a framework for estimating subjective traits of a robotic agent from objective measurements collected in a purpose-built simulation environment. By sampling robot behavior across controlled scenarios and aggregating measurable signals into human-centered dimensions, our goal is to make HRI evaluation more systematic, comparable, and actionable during the design and benchmarking of robotic agents.
+
+
+
+
+%--------------------------------------------------
+\section{Background}
+% maybe we can merge these two subsections since the paper is short
+%In here we discuss what is being done now, like the various surveys and cite the first paper luis found
+Currently, the state of the art methodology to evaluate how robots are perceived by humans heavily leans on surveys, like GODSPEED and NARS. <-- Insert what these surveys ask -->
+
+\subsection{Problem Statement}
+% The problem is that surveys cost a lot and take a lot of time. To solve this we propose an automatic evaluation tool
+Surveying takes a lot of time and requires a lot of money. Consequently, it is not feasible to obtain reliable data when developing a robotic project
+
+\subsection{Prior Works}
+@TODO %no clue here
+
+%--------------------------------------------------
+\section{Methodology}
+% we chose what was important to evaluate (4 axis), then chose metric to compute it with, then designed a simulation architecture to gather the metrics and an aggregation methodology to holistically produce the axis eval
+We measure objective metrics in a simulation environment based on MuJoco. We simulate different scenarios, and gather a specific set of objective metrics. We then aggregate these metrics into 4 different core metrics:
+\begin{itemize}
+\item perceived dexterity
+\item perceived safety
+\item perceived social awareness
+\item impression.
+\end{itemize}
+ 
+
+@TODO
+
+\section{Experimental Setup}
+%explain the simulation env (HOW we gather the metrics) and the validation environment (HOW we made sure they made sense)
+@TODO
+
+
+
+%--------------------------------------------------
+\section{Results}
+
+\begin{table*}[htbp]
+  \centering
+  \caption{Macro-Metric Scores by Evaluator Group (Mean $\pm$ Std, scale 0--100).
+           %The Composite row is the equal-weight mean across the four macros.
+		   }
+  \label{tab:metrics}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Metric} & \textbf{Auto Evaluator} & \textbf{Human (Random Pop.)} & \textbf{Human (Robotics St.)} \\
+    \midrule
+    Perceived Dexterity        & $67.7 \pm 9.3$  & $70.5 \pm 12.2$ & $54.6 \pm 9.6$ \\
+    Perceived Safety           & $68.2 \pm 9.6$  & $66.7 \pm 14.0$ & $51.4 \pm 9.6$ \\
+    Perceived Social Awareness & $64.6 \pm 9.1$  & $63.4 \pm 8.5$  & $45.9 \pm 7.2$ \\
+    Impression                 & $72.8 \pm 8.9$  & $73.2 \pm 11.8$ & $57.2 \pm 7.4$ \\
+    \midrule
+    \textbf{Composite}         & $\mathbf{68.4 \pm 4.3}$ & $\mathbf{68.4 \pm 6.4}$ & $\mathbf{52.3 \pm 3.8}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\columnwidth]{assets/distribution_shift}
+  \caption{Kernel-density estimates of composite evaluation scores for the
+           three evaluator groups. Dashed vertical lines mark group means.}
+  \label{fig:distribution}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\columnwidth]{assets/radar_plot}
+  \caption{Spider chart of mean macro-metric scores per evaluator group.}
+  \label{fig:radar}
+\end{figure}
+
+
+%--------------------------------------------------
+\section{Conclusion}
+@TODO
+
+\bibliographystyle{IEEEtran}
+\bibliography{bibliography}
+
+\end{document}
