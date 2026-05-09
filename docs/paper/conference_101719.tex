@@ -13,13 +13,14 @@
 
 \begin{document}
 
-\title{Toward Simulation-Based Evaluation of Human-Perceived Traits in Robotic Agents}
+\title{Toward Simulation-Based Automatic Evaluation of Human-Perceived Traits in Robotic Agents}
 
 \author{
-	\IEEEauthorblockN{Andrea Tosi, Niccolò Dellepiane, Luis Sebastian Caballero Fritas}
-	\IEEEauthorblockA{\textit{TALOS Robotics} \\
+	\IEEEauthorblockN{Andrea Tosi, Niccolò Dellepiane, Luis Sebastian Caballero Fritas, 
+	Tommaso Felice Banfi\thanks{TODO}}
+	\IEEEauthorblockA{\textit{Talos Robotics AI} \\
 		Milan, Italy \\
-		\{emails\}@talosrobotics.ai}
+		\{andrea.tosi, niccolo.dellepiane, luis.caballero, tommasofelice.banfi\}@talosrobotics.ai}
 }
 
 \maketitle
@@ -29,7 +30,7 @@
 \end{abstract}
 
 \begin{IEEEkeywords}
-@TODO
+Human-Robot Interaction, Human Perception, Automatic Evaluation, Physical AI Safety, Robotic Agents
 \end{IEEEkeywords}
 
 %--------------------------------------------------
@@ -48,16 +49,29 @@ This work addresses the need for reproducible evaluation methods that connect ob
 
 %--------------------------------------------------
 \section{Background}
-% maybe we can merge these two subsections since the paper is short
-%In here we discuss what is being done now, like the various surveys and cite the first paper luis found
-Currently, the state of the art methodology to evaluate how robots are perceived by humans heavily leans on surveys, like GODSPEED and NARS. <-- Insert what these surveys ask -->
+% TODO we dont have enough space to separate problem statement and prior works, maybe we can merge them into a single section
+% --> just one section
 
-\subsection{Problem Statement}
+
+%\subsection{Problem Statement}
 % The problem is that surveys cost a lot and take a lot of time. To solve this we propose an automatic evaluation tool
 Surveying takes a lot of time and requires a lot of money. Consequently, it is not feasible to obtain reliable data when developing a robotic project
 
-\subsection{Prior Works}
-@TODO %no clue here
+%\subsection{Prior Works}
+% maybe we can merge these two subsections since the paper is short
+%In here we discuss what is being done now, like the various surveys and cite the first paper luis found
+Currently, the state of the art methodology to evaluate how robots are perceived by humans heavily leans on surveys, like GODSPEED and NARS. % TODO Insert what these surveys ask + citation paper
+
+% TODO, add prior works (not only safty, but add percetion and HRI
+\begin{itemize}
+    \item Research on safety evaluation and decision algorithm of automatic driving based on artificial intelligence~\cite{11237876}
+
+    \item Safety Assessment of Collaborative Robotics Through Automated Formal Verification~\cite{8844289}
+
+    \item Safety Evaluation of Robot Systems via Uncertainty Quantification~\cite{10160598}
+    
+\end{itemize}
+
 
 %--------------------------------------------------
 \section{Methodology}
@@ -105,8 +119,7 @@ We measure objective metrics in a simulation environment based on MuJoco. We sim
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\columnwidth]{assets/distribution_shift}
-  \caption{Kernel-density estimates of composite evaluation scores for the
-           three evaluator groups. Dashed vertical lines mark group means.}
+  \caption{Composite evaluation scores for the three evaluator groups. Dashed vertical lines mark group means.}
   \label{fig:distribution}
 \end{figure}
 
@@ -122,6 +135,7 @@ We measure objective metrics in a simulation environment based on MuJoco. We sim
 \section{Conclusion}
 @TODO
 
+\newpage . \newpage % TODO, remove this line - max 2 pages EXLUDING references
 \bibliographystyle{IEEEtran}
 \bibliography{bibliography}
 
