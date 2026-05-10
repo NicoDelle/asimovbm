@@ -38,14 +38,27 @@ def main() -> None:
     parser.add_argument(
         "--dynamic-cylinder-seed",
         type=int,
-        default=7,
+        default=None,
         help="seed used for deterministic dynamic-cylinder phases",
     )
     parser.add_argument("--render", action="store_true", help="abre el viewer de MuJoCo")
     args = parser.parse_args()
 
     nav_config = load_navigation_config(args.config)
-    if args.dynamic_blue_cylinders:
+    enable_dynamic_cylinders = (
+        nav_config.dynamic_obstacles.blue_cylinders or args.dynamic_blue_cylinders
+    )
+    dynamic_cylinder_seed = (
+        args.dynamic_cylinder_seed
+        if args.dynamic_cylinder_seed is not None
+        else nav_config.dynamic_obstacles.blue_cylinder_seed
+    )
+    if nav_config.world is not None:
+        world = nav_config.world
+        default_start = nav_config.start
+        default_goal = nav_config.goal
+        default_steps = nav_config.steps
+    elif enable_dynamic_cylinders:
         world = make_dynamic_cylinder_world()
         default_start = DYNAMIC_SCENARIO_START
         default_goal = DYNAMIC_SCENARIO_GOAL
@@ -93,8 +106,10 @@ def main() -> None:
                 max_vx=nav_config.controller.max_linear_speed,
                 max_vy=nav_config.controller.max_linear_speed,
                 max_yaw_rate=nav_config.controller.max_yaw_rate,
-                enable_dynamic_cylinders=args.dynamic_blue_cylinders,
-                dynamic_cylinder_seed=args.dynamic_cylinder_seed,
+                enable_dynamic_cylinders=enable_dynamic_cylinders,
+                dynamic_cylinder_seed=dynamic_cylinder_seed,
+                dynamic_cylinder_count=nav_config.dynamic_obstacles.blue_cylinder_count,
+                visualization=nav_config.visualization,
             ),
         )
         return
@@ -109,6 +124,7 @@ def main() -> None:
             steps=steps,
             controller_config=nav_config.controller,
             locomotion_config=locomotion_config,
+            visualization_config=nav_config.visualization,
             render=args.render,
         )
         return

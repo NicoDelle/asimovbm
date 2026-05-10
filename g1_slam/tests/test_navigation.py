@@ -20,13 +20,73 @@ class NavigationTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "navigation.json"
             path.write_text(
-                '{"start": {"x": 1.0, "y": 2.0, "yaw": 0.5}, "goal": {"x": 3.0, "y": 4.0}, "steps": 77}',
+                """{
+                    "start": {"x": 1.0, "y": 2.0, "yaw": 0.5},
+                    "goal": {"x": 3.0, "y": 4.0},
+                    "steps": 77,
+                    "world": {
+                        "x_min": -1.0,
+                        "y_min": -2.0,
+                        "x_max": 5.0,
+                        "y_max": 6.0,
+                        "obstacles": [
+                            {"x_min": 0.0, "y_min": 0.1, "x_max": 0.2, "y_max": 0.3}
+                        ]
+                    },
+                    "dynamic_obstacles": {
+                        "blue_cylinders": true,
+                        "blue_cylinder_seed": 42,
+                        "blue_cylinder_count": 3
+                    },
+                    "visualization": {
+                        "camera": {
+                            "fixed": true,
+                            "lookat": {"x": 1.0, "y": 2.0, "z": 1.2},
+                            "distance": 3.5,
+                            "azimuth": 90.0,
+                            "elevation": -8.0
+                        },
+                        "show_trajectory": true,
+                        "trajectory_interval_steps": 12
+                    }
+                }""",
                 encoding="utf-8",
             )
             config = load_navigation_config(path)
         self.assertEqual(config.start, Pose2D(1.0, 2.0, 0.5))
         self.assertEqual(config.goal, (3.0, 4.0))
         self.assertEqual(config.steps, 77)
+        self.assertIsNotNone(config.world)
+        self.assertEqual(config.world.obstacles, (RectObstacle(0.0, 0.1, 0.2, 0.3),))
+        self.assertTrue(config.dynamic_obstacles.blue_cylinders)
+        self.assertEqual(config.dynamic_obstacles.blue_cylinder_seed, 42)
+        self.assertEqual(config.dynamic_obstacles.blue_cylinder_count, 3)
+        self.assertEqual(config.visualization.camera_lookat, (1.0, 2.0, 1.2))
+        self.assertEqual(config.visualization.camera_distance, 3.5)
+        self.assertTrue(config.visualization.fixed_camera)
+        self.assertTrue(config.visualization.show_trajectory)
+        self.assertEqual(config.visualization.trajectory_interval_steps, 12)
+
+    def test_episode_configs_load(self):
+        config_dir = Path(__file__).resolve().parents[1] / "config" / "episodes"
+        config_paths = sorted(config_dir.glob("*.json"))
+        self.assertEqual(len(config_paths), 3)
+        configs = {path.stem: load_navigation_config(path) for path in config_paths}
+
+        self.assertEqual(configs["g1_lateral_open"].world.obstacles, ())
+        self.assertFalse(configs["g1_lateral_open"].dynamic_obstacles.blue_cylinders)
+        self.assertTrue(configs["g1_lateral_static_dynamic_obstacles"].world.obstacles)
+        self.assertTrue(
+            configs["g1_lateral_static_dynamic_obstacles"].dynamic_obstacles.blue_cylinders
+        )
+        self.assertEqual(
+            configs["g1_lateral_static_dynamic_obstacles"].dynamic_obstacles.blue_cylinder_count,
+            3,
+        )
+        for config in configs.values():
+            self.assertTrue(config.visualization.fixed_camera)
+            self.assertFalse(config.visualization.show_trajectory)
+        self.assertLess(configs["g1_approach_user"].goal[0], 0.0)
 
     def test_robot_spec_supports_official_g1(self):
         spec = _robot_spec("official_g1")

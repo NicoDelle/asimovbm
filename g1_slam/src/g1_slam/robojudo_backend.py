@@ -7,6 +7,7 @@ from dataclasses import dataclass, replace
 from math import atan2, cos, sin
 from pathlib import Path
 
+from .config import VisualizationConfig
 from .controller import PurePursuitConfig, PurePursuitController, VelocityCommand
 from .dynamic_obstacles import DynamicCylinder, make_default_dynamic_cylinders
 from .geometry import Pose2D, clamp, distance_xy
@@ -28,6 +29,8 @@ class RoboJuDoBackendConfig:
     use_navigation_scene: bool = True
     enable_dynamic_cylinders: bool = False
     dynamic_cylinder_seed: int = 7
+    dynamic_cylinder_count: int | None = None
+    visualization: VisualizationConfig | None = None
 
 
 @dataclass(frozen=True)
@@ -154,6 +157,103 @@ class RoboJuDoBackend:
             env.data.mocap_quat[mocap_id] = (1.0, 0.0, 0.0, 0.0)
         mujoco.mj_forward(env.model, env.data)
 
+    def configure_viewer(self) -> None:
+        config = self.config.visualization
+        if config is None:
+            return
+        viewer = getattr(self.pipeline.env, "viewer", None)
+        cam = getattr(viewer, "cam", None)
+        if cam is None:
+            return
+        if config.fixed_camera:
+            self._lock_viewer_camera()
+        self._apply_viewer_camera()
+
+    def add_episode_markers(self, start: Pose2D, goal: tuple[float, float]) -> None:
+        config = self.config.visualization
+        if config is None or not config.show_trajectory:
+            return
+        viewer = getattr(self.pipeline.env, "viewer", None)
+        if viewer is None or not hasattr(viewer, "add_marker"):
+            return
+        try:
+            import mujoco
+        except ModuleNotFoundError:
+            return
+        viewer.add_marker(
+            id=9000,
+            pos=(start.x, start.y, 0.06),
+            size=(0.22, 0.22, 0.04),
+            rgba=(1.0, 0.82, 0.08, 1.0),
+            type=mujoco.mjtGeom.mjGEOM_CYLINDER,
+            label="start",
+        )
+        viewer.add_marker(
+            id=9001,
+            pos=(goal[0], goal[1], 0.08),
+            size=(0.24, 0.24, 0.05),
+            rgba=(0.0, 0.9, 0.25, 1.0),
+            type=mujoco.mjtGeom.mjGEOM_CYLINDER,
+            label="goal",
+        )
+
+    def add_trajectory_marker(self, pose: Pose2D, marker_index: int) -> None:
+        config = self.config.visualization
+        if config is None or not config.show_trajectory:
+            return
+        viewer = getattr(self.pipeline.env, "viewer", None)
+        if viewer is None or not hasattr(viewer, "add_marker"):
+            return
+        try:
+            import mujoco
+        except ModuleNotFoundError:
+            return
+        viewer.add_marker(
+            id=9100 + marker_index,
+            pos=(pose.x, pose.y, 0.04),
+            size=(0.08, 0.08, 0.02),
+            rgba=(1.0, 0.55, 0.0, 0.85),
+            type=mujoco.mjtGeom.mjGEOM_CYLINDER,
+            label="",
+        )
+
+    def _apply_viewer_camera(self) -> None:
+        config = self.config.visualization
+        if config is None:
+            return
+        env = self.pipeline.env
+        viewer = getattr(env, "viewer", None)
+        cam = getattr(viewer, "cam", None)
+        if cam is None:
+            return
+        try:
+            import mujoco
+        except ModuleNotFoundError:
+            mujoco = None
+        if mujoco is not None and config.fixed_camera:
+            cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+        if config.camera_lookat is not None:
+            cam.lookat[:] = config.camera_lookat
+        if config.camera_distance is not None:
+            cam.distance = config.camera_distance
+        if config.camera_azimuth is not None:
+            cam.azimuth = config.camera_azimuth
+        if config.camera_elevation is not None:
+            cam.elevation = config.camera_elevation
+
+    def _lock_viewer_camera(self) -> None:
+        viewer = getattr(self.pipeline.env, "viewer", None)
+        if viewer is None or getattr(viewer, "_g1_slam_camera_locked", False):
+            return
+        original_render = viewer.render
+
+        def render_with_configured_camera(*args, **kwargs):
+            self._apply_viewer_camera()
+            return original_render(*args, **kwargs)
+
+        viewer.render = render_with_configured_camera
+        viewer._g1_slam_camera_locked = True
+
     def run_forever(self, command_provider: Callable[[], VelocityCommand | RoboJuDoCommand]) -> None:
         while True:
             start_time = time.time()
@@ -272,6 +372,8 @@ def run_robojudo_navigation(
     backend.set_goal_marker(goal)
     dynamic_cylinders = _dynamic_cylinders_from_config(backend.config)
     backend.set_dynamic_cylinders(dynamic_cylinders, sim_time=0.0)
+    backend.configure_viewer()
+    backend.add_episode_markers(start, goal)
 
     pose = backend.pose()
     if pose.x == 0.0 and pose.y == 0.0:
@@ -283,6 +385,7 @@ def run_robojudo_navigation(
     path: list[tuple[float, float]] = []
     dt = float(getattr(backend.pipeline, "dt", 0.02))
 
+    trajectory_marker_index = 0
     for step in range(steps):
         sim_time = step * dt
         backend.set_dynamic_cylinders(dynamic_cylinders, sim_time=sim_time)
@@ -295,6 +398,10 @@ def run_robojudo_navigation(
 
         command = controller.command(pose, path, goal)
         pose = backend.step(command)
+        interval = max(1, backend.config.visualization.trajectory_interval_steps)
+        if step % interval == 0:
+            backend.add_trajectory_marker(pose, trajectory_marker_index)
+            trajectory_marker_index += 1
 
         if distance_xy((pose.x, pose.y), goal) < controller.config.goal_tolerance:
             print(f"Meta alcanzada con RoboJuDo en {step + 1} pasos. Pose final: {pose}")
@@ -407,7 +514,10 @@ def _dynamic_cylinder_scene_body(cylinder: DynamicCylinder) -> str:
 def _dynamic_cylinders_from_config(config: RoboJuDoBackendConfig) -> tuple[DynamicCylinder, ...]:
     if not config.enable_dynamic_cylinders:
         return ()
-    return make_default_dynamic_cylinders(config.dynamic_cylinder_seed)
+    cylinders = make_default_dynamic_cylinders(config.dynamic_cylinder_seed)
+    if config.dynamic_cylinder_count is None:
+        return cylinders
+    return cylinders[: max(0, config.dynamic_cylinder_count)]
 
 
 def _world_with_dynamic_cylinders(

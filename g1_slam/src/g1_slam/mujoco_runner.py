@@ -5,7 +5,7 @@ from math import cos, sin
 from pathlib import Path
 from time import sleep
 
-from .config import LocomotionConfig
+from .config import LocomotionConfig, VisualizationConfig
 from .controller import PurePursuitConfig
 from .geometry import Pose2D
 from .simulation import make_grid_for_world
@@ -47,6 +47,7 @@ def run_mujoco_navigation(
     controller_config: PurePursuitConfig,
     locomotion_config: LocomotionConfig,
     render: bool,
+    visualization_config: VisualizationConfig | None = None,
 ) -> None:
     try:
         import mujoco
@@ -82,6 +83,8 @@ def run_mujoco_navigation(
 
     viewer_context = _viewer(model, data) if render else _null_context()
     with viewer_context as viewer:
+        if render:
+            _configure_viewer_camera(viewer, visualization_config)
         for step in range(steps):
             scan = simulate_lidar(world, pose)
             grid.update_from_scan(pose, scan)
@@ -247,3 +250,23 @@ def _viewer(model, data):
     import mujoco.viewer
 
     return mujoco.viewer.launch_passive(model, data)
+
+
+def _configure_viewer_camera(viewer, config: VisualizationConfig | None) -> None:
+    if config is None:
+        return
+    if config.fixed_camera:
+        try:
+            import mujoco
+        except ModuleNotFoundError:
+            mujoco = None
+        if mujoco is not None:
+            viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+    if config.camera_lookat is not None:
+        viewer.cam.lookat[:] = config.camera_lookat
+    if config.camera_distance is not None:
+        viewer.cam.distance = config.camera_distance
+    if config.camera_azimuth is not None:
+        viewer.cam.azimuth = config.camera_azimuth
+    if config.camera_elevation is not None:
+        viewer.cam.elevation = config.camera_elevation

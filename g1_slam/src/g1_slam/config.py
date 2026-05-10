@@ -7,6 +7,7 @@ from typing import Any
 
 from .controller import PurePursuitConfig
 from .geometry import Pose2D
+from .world import RectObstacle, World2D, default_world
 
 
 @dataclass(frozen=True)
@@ -20,12 +21,33 @@ class LocomotionConfig:
 
 
 @dataclass(frozen=True)
+class DynamicObstaclesConfig:
+    blue_cylinders: bool
+    blue_cylinder_seed: int
+    blue_cylinder_count: int | None
+
+
+@dataclass(frozen=True)
+class VisualizationConfig:
+    camera_lookat: tuple[float, float, float] | None
+    camera_distance: float | None
+    camera_azimuth: float | None
+    camera_elevation: float | None
+    fixed_camera: bool
+    show_trajectory: bool
+    trajectory_interval_steps: int
+
+
+@dataclass(frozen=True)
 class NavigationConfig:
     start: Pose2D
     goal: tuple[float, float]
     steps: int
     controller: PurePursuitConfig
     locomotion: LocomotionConfig
+    world: World2D | None
+    dynamic_obstacles: DynamicObstaclesConfig
+    visualization: VisualizationConfig
 
 
 DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
@@ -40,6 +62,21 @@ DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
         action_scale=0.25,
         kp=35.0,
         kd=1.0,
+    ),
+    world=None,
+    dynamic_obstacles=DynamicObstaclesConfig(
+        blue_cylinders=False,
+        blue_cylinder_seed=7,
+        blue_cylinder_count=None,
+    ),
+    visualization=VisualizationConfig(
+        camera_lookat=None,
+        camera_distance=None,
+        camera_azimuth=None,
+        camera_elevation=None,
+        fixed_camera=False,
+        show_trajectory=False,
+        trajectory_interval_steps=25,
     ),
 )
 
@@ -58,6 +95,9 @@ def load_navigation_config(path: str | Path) -> NavigationConfig:
         steps=int(payload.get("steps", DEFAULT_NAVIGATION_CONFIG.steps)),
         controller=_read_controller(payload.get("controller", {})),
         locomotion=_read_locomotion(payload.get("locomotion", {})),
+        world=_read_world(payload.get("world")),
+        dynamic_obstacles=_read_dynamic_obstacles(payload.get("dynamic_obstacles", {})),
+        visualization=_read_visualization(payload.get("visualization", {})),
     )
 
 
@@ -98,3 +138,83 @@ def _read_controller(payload: dict[str, Any]) -> PurePursuitConfig:
         max_linear_speed=float(payload.get("max_linear_speed", defaults.max_linear_speed)),
         max_yaw_rate=float(payload.get("max_yaw_rate", defaults.max_yaw_rate)),
     )
+
+
+def _read_world(payload: dict[str, Any] | None) -> World2D | None:
+    if payload is None:
+        return DEFAULT_NAVIGATION_CONFIG.world
+
+    defaults = default_world()
+    return World2D(
+        x_min=float(payload.get("x_min", defaults.x_min)),
+        y_min=float(payload.get("y_min", defaults.y_min)),
+        x_max=float(payload.get("x_max", defaults.x_max)),
+        y_max=float(payload.get("y_max", defaults.y_max)),
+        obstacles=tuple(_read_obstacle(obstacle) for obstacle in payload.get("obstacles", ())),
+    )
+
+
+def _read_obstacle(payload: dict[str, Any]) -> RectObstacle:
+    return RectObstacle(
+        x_min=float(payload["x_min"]),
+        y_min=float(payload["y_min"]),
+        x_max=float(payload["x_max"]),
+        y_max=float(payload["y_max"]),
+    )
+
+
+def _read_dynamic_obstacles(payload: dict[str, Any]) -> DynamicObstaclesConfig:
+    defaults = DEFAULT_NAVIGATION_CONFIG.dynamic_obstacles
+    return DynamicObstaclesConfig(
+        blue_cylinders=bool(payload.get("blue_cylinders", defaults.blue_cylinders)),
+        blue_cylinder_seed=int(payload.get("blue_cylinder_seed", defaults.blue_cylinder_seed)),
+        blue_cylinder_count=_read_optional_int(
+            payload,
+            "blue_cylinder_count",
+            defaults.blue_cylinder_count,
+        ),
+    )
+
+
+def _read_visualization(payload: dict[str, Any]) -> VisualizationConfig:
+    defaults = DEFAULT_NAVIGATION_CONFIG.visualization
+    camera = payload.get("camera", {})
+    return VisualizationConfig(
+        camera_lookat=_read_camera_lookat(camera.get("lookat")),
+        camera_distance=_read_optional_float(camera, "distance", defaults.camera_distance),
+        camera_azimuth=_read_optional_float(camera, "azimuth", defaults.camera_azimuth),
+        camera_elevation=_read_optional_float(camera, "elevation", defaults.camera_elevation),
+        fixed_camera=bool(camera.get("fixed", defaults.fixed_camera)),
+        show_trajectory=bool(payload.get("show_trajectory", defaults.show_trajectory)),
+        trajectory_interval_steps=int(
+            payload.get("trajectory_interval_steps", defaults.trajectory_interval_steps)
+        ),
+    )
+
+
+def _read_camera_lookat(payload: dict[str, Any] | None) -> tuple[float, float, float] | None:
+    if payload is None:
+        return DEFAULT_NAVIGATION_CONFIG.visualization.camera_lookat
+    return (
+        float(payload.get("x", 0.0)),
+        float(payload.get("y", 0.0)),
+        float(payload.get("z", 1.0)),
+    )
+
+
+def _read_optional_float(
+    payload: dict[str, Any],
+    key: str,
+    default: float | None,
+) -> float | None:
+    value = payload.get(key, default)
+    return float(value) if value is not None else None
+
+
+def _read_optional_int(
+    payload: dict[str, Any],
+    key: str,
+    default: int | None,
+) -> int | None:
+    value = payload.get(key, default)
+    return int(value) if value is not None else None
