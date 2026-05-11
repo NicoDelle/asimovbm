@@ -1,5 +1,2 @@
-*.onnx
-*.onnx.data
-params/
 !README.md
 !.gitignore
