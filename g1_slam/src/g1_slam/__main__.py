@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
-from .config import load_navigation_config
+from .config import LocomotionConfig, load_navigation_config
 from .dynamic_obstacles import (
     DYNAMIC_SCENARIO_GOAL,
     DYNAMIC_SCENARIO_START,
     DYNAMIC_SCENARIO_STEPS,
+    make_default_dynamic_cylinders,
     make_dynamic_cylinder_world,
 )
 from .geometry import Pose2D
@@ -15,19 +17,21 @@ from .mujoco_runner import run_mujoco_navigation
 from .simulation import run_navigation, save_trajectory
 from .world import default_world
 
+DEFAULT_GO2_POLICY_PATH = Path("policies/go2/unitree_rl_mjlab/policy.onnx")
+
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="SLAM y navegacion para un humanoide tipo Unitree G1.")
+    parser = argparse.ArgumentParser(description="SLAM and navigation for Unitree robots in MuJoCo.")
     parser.add_argument("--config", type=Path, default=Path("config/navigation.json"))
     parser.add_argument("--steps", type=int)
     parser.add_argument("--start", nargs=3, type=float, metavar=("X", "Y", "YAW"))
     parser.add_argument("--goal", nargs=2, type=float, metavar=("X", "Y"))
     parser.add_argument("--out", type=Path, default=Path("runs"))
-    parser.add_argument("--mujoco", action="store_true", help="usa MuJoCo como visualizacion")
-    parser.add_argument("--robot", choices=("kinematic", "official_g1"), default="kinematic")
-    parser.add_argument("--locomotion", choices=("kinematic", "policy", "robojudo"), help="sobrescribe locomotion.mode del config")
-    parser.add_argument("--policy-path", type=Path, help="sobrescribe locomotion.policy_path del config")
-    parser.add_argument("--model-path", type=Path, help="ruta opcional a un XML/MJCF de MuJoCo")
+    parser.add_argument("--mujoco", action="store_true", help="use MuJoCo for visualization")
+    parser.add_argument("--robot", choices=("kinematic", "official_g1", "official_go2"), default="kinematic")
+    parser.add_argument("--locomotion", choices=("kinematic", "policy", "robojudo"), help="override config locomotion.mode")
+    parser.add_argument("--policy-path", type=Path, help="override config locomotion.policy_path")
+    parser.add_argument("--model-path", type=Path, help="optional path to a MuJoCo XML/MJCF file")
     parser.add_argument("--robojudo-repo", type=Path, default=Path("third_party/RoboJuDo"))
     parser.add_argument("--robojudo-config", default="g1_asap_loco")
     parser.add_argument(
@@ -41,7 +45,7 @@ def main() -> None:
         default=None,
         help="seed used for deterministic dynamic-cylinder phases",
     )
-    parser.add_argument("--render", action="store_true", help="abre el viewer de MuJoCo")
+    parser.add_argument("--render", action="store_true", help="open the MuJoCo viewer")
     args = parser.parse_args()
 
     nav_config = load_navigation_config(args.config)
@@ -53,6 +57,13 @@ def main() -> None:
         if args.dynamic_cylinder_seed is not None
         else nav_config.dynamic_obstacles.blue_cylinder_seed
     )
+    dynamic_cylinders = ()
+    if enable_dynamic_cylinders:
+        dynamic_cylinders = make_default_dynamic_cylinders(dynamic_cylinder_seed)
+        if nav_config.dynamic_obstacles.blue_cylinder_count is not None:
+            dynamic_cylinders = dynamic_cylinders[
+                : max(0, nav_config.dynamic_obstacles.blue_cylinder_count)
+            ]
     if nav_config.world is not None:
         world = nav_config.world
         default_start = nav_config.start
@@ -77,6 +88,7 @@ def main() -> None:
             mode=args.locomotion,
             policy_path=locomotion_config.policy_path,
             observation_size=locomotion_config.observation_size,
+            observation_profile=locomotion_config.observation_profile,
             action_scale=locomotion_config.action_scale,
             kp=locomotion_config.kp,
             kd=locomotion_config.kd,
@@ -86,10 +98,16 @@ def main() -> None:
             mode=locomotion_config.mode,
             policy_path=args.policy_path,
             observation_size=locomotion_config.observation_size,
+            observation_profile=locomotion_config.observation_profile,
             action_scale=locomotion_config.action_scale,
             kp=locomotion_config.kp,
             kd=locomotion_config.kd,
         )
+    locomotion_config = _fallback_missing_default_go2_policy(
+        locomotion_config,
+        robot=args.robot,
+        explicit_policy_path=args.policy_path is not None,
+    )
 
     if locomotion_config.mode == "robojudo":
         from .robojudo_backend import RoboJuDoBackendConfig, run_robojudo_navigation
@@ -126,6 +144,7 @@ def main() -> None:
             locomotion_config=locomotion_config,
             visualization_config=nav_config.visualization,
             render=args.render,
+            dynamic_cylinders=dynamic_cylinders,
         )
         return
 
@@ -133,10 +152,44 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     result.grid.save_pgm(args.out / "map.pgm")
     save_trajectory(args.out / "path.csv", result.trajectory)
-    status = "alcanzada" if result.reached_goal else "no alcanzada"
-    print(f"Meta {status} en {result.steps} pasos. Pose final: {result.pose}")
-    print(f"Mapa: {args.out / 'map.pgm'}")
-    print(f"Trayectoria: {args.out / 'path.csv'}")
+    status = "reached" if result.reached_goal else "not reached"
+    print(f"Goal {status} in {result.steps} steps. Final pose: {result.pose}")
+    print(f"Map: {args.out / 'map.pgm'}")
+    print(f"Trajectory: {args.out / 'path.csv'}")
+
+
+def _fallback_missing_default_go2_policy(
+    locomotion_config: LocomotionConfig,
+    *,
+    robot: str,
+    explicit_policy_path: bool,
+) -> LocomotionConfig:
+    policy_path = locomotion_config.policy_path
+    if (
+        robot != "official_go2"
+        or locomotion_config.mode != "policy"
+        or explicit_policy_path
+        or policy_path != DEFAULT_GO2_POLICY_PATH
+        or policy_path.exists()
+    ):
+        return locomotion_config
+
+    print(
+        "Warning: the default Go2 ONNX policy was not found at "
+        f"{policy_path}. Falling back to kinematic MuJoCo locomotion for this "
+        "run. Provide --policy-path with a real Go2 velocity policy to use "
+        "dynamic policy locomotion.",
+        file=sys.stderr,
+    )
+    return LocomotionConfig(
+        mode="kinematic",
+        policy_path=policy_path,
+        observation_size=locomotion_config.observation_size,
+        observation_profile=locomotion_config.observation_profile,
+        action_scale=locomotion_config.action_scale,
+        kp=locomotion_config.kp,
+        kd=locomotion_config.kd,
+    )
 
 
 if __name__ == "__main__":

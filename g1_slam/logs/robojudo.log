@@ -868,3 +868,18 @@
 05-10 12:58:33.381 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
 05-10 12:58:33.382 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
 05-10 12:58:33.382 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 00:56:41.931 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 00:56:41.935 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 00:56:41.943 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 00:56:42.541 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 00:56:42.548 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 00:56:42.549 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 00:56:42.549 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 00:56:42.549 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 00:56:42.549 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 00:56:42.549 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 00:56:42.558 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 00:56:42.558 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 00:56:42.558 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 00:56:42.559 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12

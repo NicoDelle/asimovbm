@@ -15,6 +15,7 @@ class LocomotionConfig:
     mode: str
     policy_path: Path | None
     observation_size: int | None
+    observation_profile: str
     action_scale: float
     kp: float
     kd: float
@@ -59,6 +60,7 @@ DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
         mode="kinematic",
         policy_path=Path("policies/g1/policy.onnx"),
         observation_size=None,
+        observation_profile="generic",
         action_scale=0.25,
         kp=35.0,
         kd=1.0,
@@ -123,6 +125,12 @@ def _read_locomotion(payload: dict[str, Any]) -> LocomotionConfig:
         mode=str(payload.get("mode", DEFAULT_NAVIGATION_CONFIG.locomotion.mode)),
         policy_path=Path(raw_policy_path) if raw_policy_path else None,
         observation_size=int(raw_observation_size) if raw_observation_size is not None else None,
+        observation_profile=str(
+            payload.get(
+                "observation_profile",
+                DEFAULT_NAVIGATION_CONFIG.locomotion.observation_profile,
+            )
+        ),
         action_scale=float(payload.get("action_scale", DEFAULT_NAVIGATION_CONFIG.locomotion.action_scale)),
         kp=float(payload.get("kp", DEFAULT_NAVIGATION_CONFIG.locomotion.kp)),
         kd=float(payload.get("kd", DEFAULT_NAVIGATION_CONFIG.locomotion.kd)),

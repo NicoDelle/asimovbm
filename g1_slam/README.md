@@ -67,9 +67,25 @@ PYTHONPATH=src python3 -m g1_slam --mujoco --robot official_g1 --render
 
 For `official_g1`, the runner generates a local navigation scene next to the official G1 XML so the `meshes/` directory resolves correctly. At this stage the official robot is moved kinematically for visualization; dynamic humanoid locomotion is the next layer.
 
+The runner can also load the official Unitree Go2 model:
+
+```bash
+PYTHONPATH=src python3 -m g1_slam --mujoco --robot official_go2 --render
+```
+
+For episode configs that use Go2 policy locomotion, use the Go2 robot selector:
+
+```bash
+PYTHONPATH=src python3 -m g1_slam \
+  --config config/episodes/go2_lateral_open.json \
+  --mujoco \
+  --robot official_go2 \
+  --render
+```
+
 ## Policy Locomotion
 
-The navigation layer can drive the official G1 through an ONNX locomotion policy:
+The navigation layer can drive the official G1 or Go2 through an ONNX locomotion policy:
 
 ```bash
 PYTHONPATH=src python3 -m g1_slam --mujoco --robot official_g1 --locomotion policy --render
@@ -82,6 +98,7 @@ The policy path and low-level PD gains are configured in `config/navigation.json
   "mode": "kinematic",
   "policy_path": "policies/g1/policy.onnx",
   "observation_size": null,
+  "observation_profile": "generic",
   "action_scale": 0.25,
   "kp": 35.0,
   "kd": 1.0
@@ -95,7 +112,10 @@ torque = kp * (target_joint_angle - joint_angle) - kd * joint_velocity
 target_joint_angle = default_angle + action_scale * policy_action
 ```
 
-The current observation is intentionally generic: velocity command, placeholder base orientation terms, joint position offsets, joint velocities, and previous action. Real policies often require an exact observation layout, so update `src/g1_slam/locomotion.py` to match the policy you use.
+The default G1 observation is intentionally generic: velocity command, placeholder base orientation terms, joint position offsets, joint velocities, and previous action. Real policies often require an exact observation layout, so update `src/g1_slam/locomotion.py` to match the policy you use.
+
+For Go2, the episode configs are tuned for the Hugging Face model `diasAiMaster/unitree-go2-velocity-flat`, trained with Unitree's `unitree_rl_mjlab` Go2 velocity task. Download `policy.onnx`, `policy.onnx.data`, and `params/deploy.yaml` into `policies/go2/unitree_rl_mjlab/`. The Go2 configs use `observation_profile: "dias_ai_master_go2_velocity_flat"`, which builds the 45-value observation expected by that model: base angular velocity, projected gravity, velocity command, relative joint positions, relative joint velocities, and previous action. This published model was trained without `gait_phase` and uses action scale `0.5`.
+RoboJuDo remains G1/H1-oriented in this repo, so the Go2 path uses the MuJoCo ONNX policy runner instead of the RoboJuDo backend.
 
 ## RoboJuDo Locomotion
 

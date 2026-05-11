@@ -7,6 +7,7 @@ from time import sleep
 
 from .config import LocomotionConfig, VisualizationConfig
 from .controller import PurePursuitConfig
+from .dynamic_obstacles import DynamicCylinder
 from .geometry import Pose2D
 from .simulation import make_grid_for_world
 from .world import World2D
@@ -33,6 +34,12 @@ ROBOT_SPECS = {
         base_height=0.80,
         use_physics_step=False,
     ),
+    "official_go2": RobotSpec(
+        name="official_go2",
+        default_model_path=Path("third_party/unitree_mujoco/unitree_robots/go2/go2_nav_generated.xml"),
+        base_height=0.27,
+        use_physics_step=False,
+    ),
 }
 
 
@@ -48,11 +55,12 @@ def run_mujoco_navigation(
     locomotion_config: LocomotionConfig,
     render: bool,
     visualization_config: VisualizationConfig | None = None,
+    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
 ) -> None:
     try:
         import mujoco
     except ModuleNotFoundError as exc:
-        raise RuntimeError("Instala mujoco para usar --mujoco: pip install mujoco") from exc
+        raise RuntimeError("Install mujoco to use --mujoco: pip install mujoco") from exc
 
     from .controller import PurePursuitController
     from .lidar import simulate_lidar
@@ -60,10 +68,12 @@ def run_mujoco_navigation(
     from .planner import AStarPlanner
 
     spec = _robot_spec(robot)
-    resolved_model_path = _resolve_model_path(spec, model_path, world)
+    resolved_model_path = _resolve_model_path(spec, model_path, world, dynamic_cylinders)
     model = mujoco.MjModel.from_xml_path(str(resolved_model_path))
     data = mujoco.MjData(model)
+    _set_home_keyframe_pose(mujoco, model, data)
     _set_goal_marker(mujoco, model, data, goal)
+    _set_dynamic_cylinder_positions(mujoco, model, data, dynamic_cylinders, 0.0)
     _set_freejoint_pose(mujoco, model, data, start, spec.base_height)
     mujoco.mj_forward(model, data)
     grid = make_grid_for_world(world)
@@ -71,12 +81,12 @@ def run_mujoco_navigation(
     controller = PurePursuitController(controller_config)
     policy_locomotion = None
     if locomotion_config.mode == "policy":
-        if spec.name != "official_g1":
-            raise ValueError("locomotion.mode='policy' requiere --robot official_g1")
+        if spec.name not in {"official_g1", "official_go2"}:
+            raise ValueError("locomotion.mode='policy' requires --robot official_g1 or official_go2")
         policy_locomotion = OnnxPolicyLocomotion(mujoco, model, locomotion_config)
         spec = RobotSpec(spec.name, spec.default_model_path, spec.base_height, True)
     elif locomotion_config.mode != "kinematic":
-        raise ValueError("locomotion.mode debe ser 'kinematic' o 'policy'")
+        raise ValueError("locomotion.mode must be 'kinematic' or 'policy'")
     pose = start
     path: list[tuple[float, float]] = []
     dt = model.opt.timestep
@@ -86,7 +96,10 @@ def run_mujoco_navigation(
         if render:
             _configure_viewer_camera(viewer, visualization_config)
         for step in range(steps):
-            scan = simulate_lidar(world, pose)
+            sim_time = step * dt
+            active_world = _world_with_dynamic_cylinders(world, dynamic_cylinders, sim_time)
+            _set_dynamic_cylinder_positions(mujoco, model, data, dynamic_cylinders, sim_time)
+            scan = simulate_lidar(active_world, pose)
             grid.update_from_scan(pose, scan)
             if step % 10 == 0 or not path or controller.waypoint_index >= len(path):
                 path = planner.plan(pose, goal)
@@ -94,7 +107,7 @@ def run_mujoco_navigation(
 
             command = controller.command(pose, path, goal)
             candidate = pose.moved(command.linear, command.yaw_rate, dt)
-            if world.collides(candidate, 0.20):
+            if active_world.collides(candidate, 0.20):
                 candidate = pose.moved(0.0, 0.9, dt)
                 path = []
                 controller.reset()
@@ -120,34 +133,101 @@ def _robot_spec(robot: str) -> RobotSpec:
         return ROBOT_SPECS[robot]
     except KeyError as exc:
         supported = ", ".join(sorted(ROBOT_SPECS))
-        raise ValueError(f"Robot no soportado: {robot}. Opciones: {supported}") from exc
+        raise ValueError(f"Unsupported robot: {robot}. Options: {supported}") from exc
 
 
-def _resolve_model_path(spec: RobotSpec, model_path: str | Path | None, world: World2D) -> Path:
+def _resolve_model_path(
+    spec: RobotSpec,
+    model_path: str | Path | None,
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...],
+) -> Path:
     if model_path is not None:
         return Path(model_path)
     if spec.name == "official_g1":
-        return _ensure_official_g1_nav_scene(spec.default_model_path, world)
+        return _ensure_official_g1_nav_scene(spec.default_model_path, world, dynamic_cylinders)
+    if spec.name == "official_go2":
+        return _ensure_official_go2_nav_scene(spec.default_model_path, world, dynamic_cylinders)
     return spec.default_model_path
 
 
-def _ensure_official_g1_nav_scene(scene_path: Path, world: World2D) -> Path:
+def _ensure_official_g1_nav_scene(
+    scene_path: Path,
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...],
+) -> Path:
     robot_xml = scene_path.parent / "g1_29dof.xml"
     meshes_dir = scene_path.parent / "meshes"
     if not robot_xml.exists() or not meshes_dir.exists():
         raise FileNotFoundError(
-            "No se encontro el modelo oficial del Unitree G1. Clonalo con:\n"
+            "Could not find the official Unitree G1 model. Clone it with:\n"
             "mkdir -p third_party\n"
             "git clone --depth 1 --filter=blob:none --sparse "
             "https://github.com/unitreerobotics/unitree_mujoco.git third_party/unitree_mujoco\n"
             "cd third_party/unitree_mujoco\n"
             "git sparse-checkout set unitree_robots/g1"
         )
-    scene_path.write_text(_official_g1_scene_xml(world), encoding="utf-8")
+    scene_path.write_text(_official_g1_scene_xml(world, dynamic_cylinders), encoding="utf-8")
     return scene_path
 
 
-def _official_g1_scene_xml(world: World2D) -> str:
+def _official_g1_scene_xml(
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
+) -> str:
+    return _official_unitree_nav_scene_xml(
+        world,
+        model_name="g1_official_nav",
+        include_file="g1_29dof.xml",
+        statistic_center="0 0 0.8",
+        statistic_extent=8.0,
+        dynamic_cylinders=dynamic_cylinders,
+    )
+
+
+def _ensure_official_go2_nav_scene(
+    scene_path: Path,
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...],
+) -> Path:
+    robot_xml = scene_path.parent / "go2.xml"
+    assets_dir = scene_path.parent / "assets"
+    if not robot_xml.exists() or not assets_dir.exists():
+        raise FileNotFoundError(
+            "Could not find the official Unitree Go2 model. Clone it with:\n"
+            "mkdir -p third_party\n"
+            "git clone --depth 1 --filter=blob:none --sparse "
+            "https://github.com/unitreerobotics/unitree_mujoco.git third_party/unitree_mujoco\n"
+            "cd third_party/unitree_mujoco\n"
+            "git sparse-checkout set unitree_robots/go2"
+        )
+    scene_path.write_text(_official_go2_scene_xml(world, dynamic_cylinders), encoding="utf-8")
+    return scene_path
+
+
+def _official_go2_scene_xml(
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
+) -> str:
+    return _official_unitree_nav_scene_xml(
+        world,
+        model_name="go2_official_nav",
+        include_file="go2.xml",
+        statistic_center="0 0 0.35",
+        statistic_extent=6.0,
+        dynamic_cylinders=dynamic_cylinders,
+    )
+
+
+def _official_unitree_nav_scene_xml(
+    world: World2D,
+    *,
+    model_name: str,
+    include_file: str,
+    statistic_center: str,
+    statistic_extent: float,
+    dynamic_cylinders: tuple[DynamicCylinder, ...],
+) -> str:
     obstacle_geoms = []
     for index, obstacle in enumerate(world.obstacles):
         center_x = 0.5 * (obstacle.x_min + obstacle.x_max)
@@ -164,10 +244,13 @@ def _official_g1_scene_xml(world: World2D) -> str:
     floor_center_x = 0.5 * (world.x_min + world.x_max)
     floor_center_y = 0.5 * (world.y_min + world.y_max)
     obstacles = "\n".join(obstacle_geoms)
-    return f"""<mujoco model="g1_official_nav">
-  <include file="g1_29dof.xml"/>
+    dynamic_cylinder_geoms = "\n".join(
+        _dynamic_cylinder_scene_body(cylinder) for cylinder in dynamic_cylinders
+    )
+    return f"""<mujoco model="{model_name}">
+  <include file="{include_file}"/>
 
-  <statistic center="0 0 0.8" extent="8.0"/>
+  <statistic center="{statistic_center}" extent="{statistic_extent:.1f}"/>
   <visual>
     <global azimuth="130" elevation="-35"/>
     <headlight ambient="0.55 0.55 0.55" diffuse="0.35 0.35 0.35" specular="0.03 0.03 0.03"/>
@@ -177,6 +260,7 @@ def _official_g1_scene_xml(world: World2D) -> str:
     <texture name="nav_grid" type="2d" builtin="checker" rgb1="0.18 0.19 0.20" rgb2="0.24 0.25 0.26" width="512" height="512"/>
     <material name="nav_floor_mat" texture="nav_grid" texrepeat="4 4" reflectance="0.1"/>
     <material name="nav_obstacle_mat" rgba="0.8 0.18 0.12 1"/>
+    <material name="nav_dynamic_cylinder_mat" rgba="0.05 0.35 1.0 1"/>
     <material name="nav_goal_mat" rgba="0.1 0.8 0.35 1"/>
   </asset>
 
@@ -187,9 +271,64 @@ def _official_g1_scene_xml(world: World2D) -> str:
     <geom name="floor" type="plane" pos="{floor_center_x:.4f} {floor_center_y:.4f} 0" size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>
     <geom name="goal" type="cylinder" pos="0 0 0.02" size="0.28 0.02" material="nav_goal_mat"/>
 {obstacles}
+{dynamic_cylinder_geoms}
   </worldbody>
 </mujoco>
 """
+
+
+def _dynamic_cylinder_scene_body(cylinder: DynamicCylinder) -> str:
+    x, y = cylinder.center
+    return (
+        f'    <body name="{cylinder.name}" mocap="true" '
+        f'pos="{x:.4f} {y:.4f} {cylinder.half_height:.4f}">\n'
+        f'      <geom name="{cylinder.name}_geom" type="cylinder" '
+        f'size="{cylinder.radius:.4f} {cylinder.half_height:.4f}" '
+        'material="nav_dynamic_cylinder_mat"/>\n'
+        "    </body>"
+    )
+
+
+def _set_dynamic_cylinder_positions(
+    mujoco,
+    model,
+    data,
+    cylinders: tuple[DynamicCylinder, ...],
+    sim_time: float,
+) -> None:
+    for cylinder in cylinders:
+        body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, cylinder.name)
+        if body_id < 0:
+            continue
+        mocap_id = int(model.body_mocapid[body_id])
+        if mocap_id < 0:
+            continue
+        x, y = cylinder.xy_at(sim_time)
+        data.mocap_pos[mocap_id][0] = x
+        data.mocap_pos[mocap_id][1] = y
+        data.mocap_pos[mocap_id][2] = cylinder.half_height
+
+
+def _world_with_dynamic_cylinders(
+    world: World2D,
+    cylinders: tuple[DynamicCylinder, ...],
+    sim_time: float,
+) -> World2D:
+    if not cylinders:
+        return world
+    return World2D(
+        x_min=world.x_min,
+        y_min=world.y_min,
+        x_max=world.x_max,
+        y_max=world.y_max,
+        obstacles=world.obstacles + tuple(cylinder.rect_at(sim_time) for cylinder in cylinders),
+    )
+
+
+def _set_home_keyframe_pose(mujoco, model, data) -> None:
+    home_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_KEY, "home")
+    if home_id >= 0:
+        mujoco.mj_resetDataKeyframe(model, data, home_id)
 
 
 def _set_freejoint_pose(mujoco, model, data, pose: Pose2D, base_height: float) -> None:
@@ -249,7 +388,7 @@ class _null_context:
 def _viewer(model, data):
     import mujoco.viewer
 
-    return mujoco.viewer.launch_passive(model, data)
+    return mujoco.viewer.launch_passive(model, data, show_left_ui=False, show_right_ui=False)
 
 
 def _configure_viewer_camera(viewer, config: VisualizationConfig | None) -> None:
