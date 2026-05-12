@@ -1003,3 +1003,123 @@
 05-12 19:16:50.132 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
 05-12 19:16:50.132 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
 05-12 19:16:50.133 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:36:37.749 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 19:36:37.751 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 19:36:37.756 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 19:36:38.403 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 19:36:38.409 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:36:38.410 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 19:36:38.410 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 19:36:38.410 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 19:36:38.410 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 19:36:38.410 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 19:36:38.418 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:36:38.418 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:36:38.418 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:36:38.418 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:37:03.880 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 19:37:03.882 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 19:37:03.886 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 19:37:04.507 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 19:37:04.514 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:37:04.514 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 19:37:04.515 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 19:37:04.515 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 19:37:04.515 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 19:37:04.515 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 19:37:04.523 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:37:04.523 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:37:04.523 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:37:04.523 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:37:37.195 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 19:37:37.197 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 19:37:37.202 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 19:37:37.837 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 19:37:37.845 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:37:37.845 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 19:37:37.846 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 19:37:37.846 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 19:37:37.846 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 19:37:37.846 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 19:37:37.859 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:37:37.859 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:37:37.860 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:37:37.860 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:45:05.543 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 19:45:05.545 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 19:45:05.550 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 19:45:06.163 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 19:45:06.169 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:45:06.169 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 19:45:06.169 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 19:45:06.169 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 19:45:06.169 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 19:45:06.170 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 19:45:06.178 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:45:06.178 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:45:06.178 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:45:06.178 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:45:58.049 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 19:45:58.050 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 19:45:58.055 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 19:45:58.660 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 19:45:58.668 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:45:58.668 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 19:45:58.668 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 19:45:58.668 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 19:45:58.668 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 19:45:58.668 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 19:45:58.681 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:45:58.681 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 19:45:58.681 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 19:45:58.681 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:11:12.398 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 20:11:12.400 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 20:11:12.405 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 20:11:13.306 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 20:11:13.312 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:11:13.312 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 20:11:13.312 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 20:11:13.312 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 20:11:13.313 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 20:11:13.313 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 20:11:13.320 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 20:11:13.321 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:11:13.321 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 20:11:13.321 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:38:10.827 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 20:38:10.830 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 20:38:10.835 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 20:38:11.718 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 20:38:11.724 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:38:11.724 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 20:38:11.724 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 20:38:11.724 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 20:38:11.724 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 20:38:11.725 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 20:38:11.732 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 20:38:11.732 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:38:11.732 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 20:38:11.732 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:52:36.205 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-12 20:52:36.208 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-12 20:52:36.217 [INFO] [robojudo.utils.rotation] base set to pos: [0. 0. 0.], quat: [0. 0. 0. 1.]
+05-12 20:52:36.895 [DEBUG] [robojudo.policy.asap_policy] Loading mimic policy '20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof' from /home/luis/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo/assets/models/g1/asap/dec_loco/20250109_231507-noDR_rand_history_loco_stand_height_noise-decoupled_locomotion-g1_29dof/model_6600.onnx
+05-12 20:52:36.918 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:52:36.919 [DEBUG] [robojudo.tools.dof] [DoF] override default_pos with [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+05-12 20:52:36.919 [DEBUG] [robojudo.tools.dof] [DoF] override stiffness with [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20, 200, 200, 200, 40, 40, 40, 40, 20, 20, 20, 40, 40, 40, 40, 20, 20, 20]
+05-12 20:52:36.919 [DEBUG] [robojudo.tools.dof] [DoF] override damping with [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 6.0, 6.0, 6.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+05-12 20:52:36.919 [DEBUG] [robojudo.tools.dof] [DoF] override torque_limits with [88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 88.0, 88.0, 88.0, 139.0, 50.0, 50.0, 200.0, 200.0, 200.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0, 40.0, 40.0, 18.0, 18.0, 10.0, 10.0, 10.0]
+05-12 20:52:36.919 [DEBUG] [robojudo.tools.dof] [DoF] override position_limits with [[-2.5307, 2.8798], [-0.5236, 2.9671], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.5307, 2.8798], [-2.9671, 0.5236], [-2.7576, 2.7576], [-0.087267, 2.8798], [-0.87267, 0.5236], [-0.2618, 0.2618], [-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52], [-3.0892, 2.6704], [-1.5882, 2.2515], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558], [-3.0892, 2.6704], [-2.2515, 1.5882], [-2.618, 2.618], [-1.0472, 2.0944], [-1.972222054, 1.972222054], [-1.614429558, 1.614429558], [-1.614429558, 1.614429558]]
+05-12 20:52:36.929 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 20:52:36.930 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12
+05-12 20:52:36.930 [INFO] [robojudo.pipeline.rl_pipeline] Pipeline reset
+05-12 20:52:36.930 [DEBUG] [robojudo.policy.base_policy] Initializing history buffer as 4 x 12

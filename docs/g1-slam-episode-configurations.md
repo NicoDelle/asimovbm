@@ -11,6 +11,12 @@ layout, controller limits, locomotion mode, and fixed viewer framing.
 The Go2 MuJoCo viewer opens without the left/right option panels so the window
 shows only the fixed scene view.
 
+The generated MuJoCo scenes use a recording-oriented visual environment: a
+solid matte floor, a sky gradient, softer multi-directional lighting, and
+subtle NPC shadows. These visual elements do not change the SLAM world or
+collision planning; they are there to make screen recordings feel less like a
+debug scene while keeping the camera view open.
+
 ## Prerequisites
 
 Run the commands from the G1 SLAM package root:

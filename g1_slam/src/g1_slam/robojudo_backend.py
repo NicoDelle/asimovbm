@@ -13,6 +13,14 @@ from .dynamic_obstacles import DynamicObstacle, make_default_dynamic_obstacles
 from .geometry import Pose2D, clamp, distance_xy
 from .lidar import simulate_lidar
 from .planner import AStarPlanner
+from .scene_visuals import (
+    dynamic_obstacle_scene_body,
+    environment_scene_geoms,
+    navigation_lights_and_camera,
+    navigation_scene_assets,
+    navigation_visual_settings,
+    static_obstacle_geom,
+)
 from .simulation import make_grid_for_world
 from .world import World2D
 
@@ -457,85 +465,31 @@ def _robojudo_navigation_scene_tail(
     world: World2D,
     dynamic_obstacles: tuple[DynamicObstacle, ...],
 ) -> str:
-    obstacle_geoms = []
-    for index, obstacle in enumerate(world.obstacles):
-        center_x = 0.5 * (obstacle.x_min + obstacle.x_max)
-        center_y = 0.5 * (obstacle.y_min + obstacle.y_max)
-        size_x = 0.5 * (obstacle.x_max - obstacle.x_min)
-        size_y = 0.5 * (obstacle.y_max - obstacle.y_min)
-        obstacle_geoms.append(
-            f'    <geom name="obs_{index}" type="box" pos="{center_x:.4f} {center_y:.4f} 0.35" '
-            f'size="{size_x:.4f} {size_y:.4f} 0.35" material="nav_obstacle_mat"/>'
-        )
-
-    floor_size_x = 0.5 * (world.x_max - world.x_min) + 1.0
-    floor_size_y = 0.5 * (world.y_max - world.y_min) + 1.0
-    floor_center_x = 0.5 * (world.x_min + world.x_max)
-    floor_center_y = 0.5 * (world.y_min + world.y_max)
-    obstacles = "\n".join(obstacle_geoms)
-    dynamic_obstacle_bodies = "\n".join(
-        _dynamic_obstacle_scene_body(obstacle) for obstacle in dynamic_obstacles
+    assets = navigation_scene_assets()
+    environment = environment_scene_geoms(world)
+    lighting = navigation_lights_and_camera()
+    obstacles = "\n".join(
+        static_obstacle_geom(index, obstacle) for index, obstacle in enumerate(world.obstacles)
     )
+    dynamic_obstacle_bodies = "\n".join(
+        dynamic_obstacle_scene_body(obstacle) for obstacle in dynamic_obstacles
+    )
+    visual_settings = navigation_visual_settings()
     return f"""  <!-- setup navigation scene -->
   <statistic center="1.0 0.0 1.0" extent="8.0"/>
-  <visual>
-    <headlight ambient="0.55 0.55 0.55" diffuse="0.35 0.35 0.35" specular="0.03 0.03 0.03"/>
-    <rgba haze="0.15 0.18 0.2 1"/>
-    <global azimuth="130" elevation="-35"/>
-  </visual>
+{visual_settings}
   <asset>
-    <texture name="nav_grid" type="2d" builtin="checker" rgb1="0.18 0.19 0.20" rgb2="0.24 0.25 0.26" width="512" height="512"/>
-    <material name="nav_floor_mat" texture="nav_grid" texrepeat="4 4" reflectance="0.1"/>
-    <material name="nav_obstacle_mat" rgba="0.8 0.18 0.12 1"/>
-    <material name="nav_dynamic_cylinder_mat" rgba="0.05 0.35 1.0 1"/>
-    <material name="nav_npc_clothes_mat" rgba="0.16 0.32 0.44 1"/>
-    <material name="nav_npc_skin_mat" rgba="0.78 0.58 0.42 1"/>
-    <material name="nav_npc_leg_mat" rgba="0.08 0.08 0.09 1"/>
-    <material name="nav_goal_mat" rgba="0.1 0.8 0.35 1"/>
+{assets}
   </asset>
   <worldbody>
-    <light name="soft_top_light" directional="true" pos="0 0 8" dir="0 0 -1" ambient="0.35 0.35 0.35" diffuse="0.45 0.45 0.45" specular="0.02 0.02 0.02"/>
-    <light name="soft_front_light" directional="true" pos="0 -5 6" dir="0 0.45 -1" ambient="0.18 0.18 0.18" diffuse="0.28 0.28 0.28" specular="0.01 0.01 0.01"/>
-    <camera name="nav_overview" pos="1 -8 7" xyaxes="1 0 0 0 0.65 0.76"/>
-    <geom name="floor" type="plane" pos="{floor_center_x:.4f} {floor_center_y:.4f} 0" size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>
+{lighting}
+{environment}
     <geom name="goal" type="cylinder" pos="0 0 0.02" size="0.28 0.02" material="nav_goal_mat"/>
 {obstacles}
 {dynamic_obstacle_bodies}
   </worldbody>
 </mujoco>
 """
-
-
-def _dynamic_obstacle_scene_body(obstacle: DynamicObstacle) -> str:
-    x, y = obstacle.center
-    if obstacle.mode == "npc":
-        return (
-            f'    <body name="{obstacle.name}" mocap="true" '
-            f'pos="{x:.4f} {y:.4f} 0.0000">\n'
-            f'      <geom name="{obstacle.name}_torso" type="capsule" '
-            'fromto="0 0 0.72 0 0 1.32" size="0.16" '
-            'material="nav_npc_clothes_mat"/>\n'
-            f'      <geom name="{obstacle.name}_head" type="sphere" '
-            'pos="0 0 1.55" size="0.14" material="nav_npc_skin_mat"/>\n'
-            f'      <geom name="{obstacle.name}_left_leg" type="capsule" '
-            'fromto="0 0.075 0.05 0 0.075 0.72" size="0.055" '
-            'material="nav_npc_leg_mat"/>\n'
-            f'      <geom name="{obstacle.name}_right_leg" type="capsule" '
-            'fromto="0 -0.075 0.05 0 -0.075 0.72" size="0.055" '
-            'material="nav_npc_leg_mat"/>\n'
-            f'      <geom name="{obstacle.name}_personal_space" type="cylinder" '
-            f'pos="0 0 0.01" size="{obstacle.radius:.4f} 0.01" '
-            'rgba="0.16 0.32 0.44 0.16" contype="0" conaffinity="0"/>\n'
-            "    </body>"
-        )
-    return (
-        f'    <body name="{obstacle.name}" mocap="true" '
-        f'pos="{x:.4f} {y:.4f} {obstacle.half_height:.4f}">\n'
-        f'      <geom name="{obstacle.name}_geom" type="cylinder" '
-        f'size="{obstacle.radius:.4f} {obstacle.half_height:.4f}" '
-        'material="nav_dynamic_cylinder_mat"/>\n'
-        "    </body>"
-    )
 
 
 def _dynamic_obstacles_from_config(
