@@ -5,7 +5,7 @@ description = "SLAM 2D y navegacion punto-a-punto para un humanoide Unitree G1 c
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "mujoco>=3.2.0",
+  "mujoco>=3.2.0,<3.4.0",
   "numpy>=1.26",
   "onnxruntime>=1.17",
 ]

@@ -62,6 +62,8 @@ ROBOT_SPECS = {
     ),
 }
 
+_VIEWER_LIFETIME_GUARD: list[object] = []
+
 
 def run_mujoco_navigation(
     world: World2D,
@@ -152,6 +154,10 @@ def run_mujoco_navigation(
             if render:
                 viewer.sync()
                 sleep(dt / realtime_factor)
+    if render:
+        # MuJoCo's passive viewer can segfault when the closed viewer object is
+        # destroyed at function return on some Linux desktop stacks.
+        _VIEWER_LIFETIME_GUARD.append((model, data, viewer_context, viewer))
 
 
 def _robot_spec(robot: str) -> RobotSpec:
