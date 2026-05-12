@@ -5,6 +5,14 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+MEASUREMENT_PROOF_LEVELS: tuple[str, ...] = (
+    "unavailable",
+    "reference",
+    "fake_model_data",
+    "minimal_mujoco",
+    "asset_mujoco",
+)
+
 
 @dataclass(frozen=True)
 class LocalStepTrace:
@@ -23,6 +31,11 @@ class LocalStepTrace:
     public_observation: dict[str, Any] = field(default_factory=dict)
     qpos: tuple[float, ...] = ()
     qvel: tuple[float, ...] = ()
+    measurement_source: str = "reference"
+    frame_conventions: dict[str, Any] = field(default_factory=dict)
+    robot_state: dict[str, Any] = field(default_factory=dict)
+    contacts: tuple[dict[str, Any], ...] = ()
+    sensors: dict[str, Any] = field(default_factory=dict)
     status: str = "running"
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -44,6 +57,9 @@ class LocalEpisodeTrace:
     canonical_backend_id: str
     execution_backend_id: str
     viewer_mode: str
+    measurement_backend_id: str = "reference"
+    measurement_proof_level: str = "reference"
+    validation_summary: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -88,4 +104,7 @@ class LocalRunRecord:
             "viewer_mode": self.trace.viewer_mode,
             "canonical_backend_id": self.trace.canonical_backend_id,
             "execution_backend_id": self.trace.execution_backend_id,
+            "measurement_backend_id": self.trace.measurement_backend_id,
+            "measurement_proof_level": self.trace.measurement_proof_level,
+            "validation_status": self.trace.validation_summary.get("status"),
         }

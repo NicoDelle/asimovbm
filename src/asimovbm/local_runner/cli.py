@@ -14,6 +14,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--artifact-root", type=Path, default=Path("artifacts/local-validation"))
     parser.add_argument("--iterations", type=int, default=1)
     parser.add_argument(
+        "--measurement-backend",
+        choices=("reference", "mujoco"),
+        default="reference",
+        help="Select trace measurement source. 'mujoco' reports a technical failure unless optional trace execution is available.",
+    )
+    parser.add_argument(
         "--episode",
         action="append",
         choices=DEFAULT_EPISODE_IDS,
@@ -37,6 +43,7 @@ def main(argv: list[str] | None = None) -> int:
             episode_ids=tuple(args.episodes or ()),
             visible=visible,
             run_id=args.run_id,
+            measurement_backend=args.measurement_backend,
         )
     )
     print(f"local validation run: {result.run_id}")

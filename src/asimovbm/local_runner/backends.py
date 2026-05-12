@@ -24,6 +24,7 @@ from g1_slam.world import World2D, default_world
 from g1_slam.config import LocomotionConfig
 
 from .catalog import LocalEpisodeSpec
+from .public_observation import build_public_observation
 from .traces import LocalEpisodeTrace, LocalStepTrace
 
 
@@ -47,6 +48,7 @@ class BackendProof:
     execution_backend_id: str
     real_backend_verified: bool
     proof_status: str
+    measurement_proof_level: str = "reference"
     reason: str | None = None
 
     def to_dict(self) -> dict[str, object]:
@@ -56,6 +58,7 @@ class BackendProof:
             "execution_backend_id": self.execution_backend_id,
             "real_backend_verified": self.real_backend_verified,
             "proof_status": self.proof_status,
+            "measurement_proof_level": self.measurement_proof_level,
             "reason": self.reason,
         }
 
@@ -99,7 +102,9 @@ class G1SlamReferenceBackend:
 
             command = controller.command(pose, path, goal)
             candidate = pose.moved(command.linear, command.yaw_rate, self.dt_s)
-            collision = active_world.collides(candidate, self.robot_radius_m)
+            sample_time_s = time_s + self.dt_s
+            measurement_world = _world_with_dynamic_obstacles(world, dynamic_obstacles, sample_time_s)
+            collision = measurement_world.collides(candidate, self.robot_radius_m)
             if collision:
                 candidate = pose.moved(0.0, spec.config.controller.max_yaw_rate * 0.65, self.dt_s)
                 path = []
@@ -110,10 +115,13 @@ class G1SlamReferenceBackend:
             status = "success" if distance_to_goal < spec.config.controller.goal_tolerance else "running"
             if status == "success":
                 terminal_status = "success"
+            dynamic_entities = _dynamic_entities(dynamic_obstacles, sample_time_s, step_start_time_s=time_s)
+            target_entities = _target_entities(spec, sample_time_s)
+            visible_entities = target_entities + dynamic_entities
             step_traces.append(
                 LocalStepTrace(
                     step_id=step_id,
-                    time_s=time_s + self.dt_s,
+                    time_s=sample_time_s,
                     dt_s=self.dt_s,
                     robot_pose=(pose.x, pose.y, pose.yaw),
                     robot_velocity=velocity,
@@ -121,16 +129,39 @@ class G1SlamReferenceBackend:
                     distance_to_goal=distance_to_goal,
                     lidar_ranges=tuple(round(value, 4) for value in scan.ranges),
                     static_entities=_static_entities(world),
-                    dynamic_entities=_dynamic_entities(dynamic_obstacles, time_s),
+                    dynamic_entities=target_entities + dynamic_entities,
                     collisions=_collision_summary(collision, step_id),
-                    public_observation={
-                        "robot_pose": (pose.x, pose.y, pose.yaw),
-                        "goal": goal,
-                        "distance_to_goal": distance_to_goal,
-                        "lidar_range_count": len(scan.ranges),
+                    public_observation=build_public_observation(
+                        robot_pose=(pose.x, pose.y, pose.yaw),
+                        goal=goal,
+                        distance_to_goal=distance_to_goal,
+                        lidar_range_count=len(scan.ranges),
+                        visible_entities=visible_entities,
+                    ),
+                    measurement_source="reference",
+                    frame_conventions={
+                        "world_frame": "g1_slam_xy_yaw",
+                        "robot_pose": "world_x_m_y_m_yaw_rad",
+                        "robot_velocity": "world_vx_mps_vy_mps_yaw_rate_radps",
+                    },
+                    robot_state={
+                        "world_position": (pose.x, pose.y, 0.0),
+                        "yaw_rad": pose.yaw,
+                        "world_linear_velocity_mps": (velocity[0], velocity[1], 0.0),
+                        "yaw_rate_radps": velocity[2],
+                        "source": "reference_kinematic",
                     },
                     status=status,
-                    metadata={"path_waypoints": len(path)},
+                    metadata={
+                        "path_waypoints": len(path),
+                        "measurement": {
+                            "source": "reference",
+                            "time_boundary": "post_step",
+                            "robot_sample_time_s": sample_time_s,
+                            "entity_sample_time_s": sample_time_s,
+                            "proof_level": "reference",
+                        },
+                    },
                 )
             )
             if status == "success":
@@ -149,10 +180,18 @@ class G1SlamReferenceBackend:
             canonical_backend_id=spec.canonical_backend_id,
             execution_backend_id=self.backend_id,
             viewer_mode="visible" if viewer_enabled else "headless",
+            measurement_backend_id="reference",
+            measurement_proof_level="reference",
             metadata={
                 "reference_backend": True,
                 "viewer_proof": viewer_proof,
                 "canonical_backend_proof": backend_proof_for(spec).to_dict(),
+                "measurement": {
+                    "backend_id": "reference",
+                    "proof_level": "reference",
+                    "time_boundary": "post_step",
+                },
+                "role_inventory": spec.role_inventory,
             },
         )
 
@@ -168,6 +207,7 @@ def backend_proof_for(spec: LocalEpisodeSpec) -> BackendProof:
         execution_backend_id=G1SlamReferenceBackend.backend_id,
         real_backend_verified=False,
         proof_status="not_verified_in_this_run",
+        measurement_proof_level="reference",
         reason=reason,
     )
 
@@ -218,26 +258,70 @@ def _static_entities(world: World2D) -> tuple[dict[str, object], ...]:
         {
             "id": f"static_obstacle_{index}",
             "type": "obstacle",
+            "role": "obstacle",
             "shape": "rect",
             "bounds": (obstacle.x_min, obstacle.y_min, obstacle.x_max, obstacle.y_max),
+            "source": "world_obstacle",
         }
         for index, obstacle in enumerate(world.obstacles)
     )
 
 
-def _dynamic_entities(obstacles, sim_time: float) -> tuple[dict[str, object], ...]:
+def _target_entities(spec: LocalEpisodeSpec, sample_time_s: float) -> tuple[dict[str, object], ...]:
+    if not spec.id.endswith("_approach_user"):
+        return ()
+    return (
+        {
+            "id": "target_user",
+            "type": "human",
+            "role": "target",
+            "shape": "circle",
+            "pose": (spec.config.goal[0], spec.config.goal[1], 0.0),
+            "velocity": (0.0, 0.0, 0.0),
+            "radius": 0.30,
+            "facing_yaw": 3.141592653589793,
+            "source": "episode_goal",
+            "sample_time_s": sample_time_s,
+        },
+    )
+
+
+def _dynamic_entities(
+    obstacles,
+    sim_time: float,
+    *,
+    step_start_time_s: float | None = None,
+) -> tuple[dict[str, object], ...]:
     return tuple(
         {
             "id": obstacle.name,
-            "type": "obstacle",
+            "type": "human" if obstacle.mode == "npc" else "obstacle",
+            "role": "bystander" if obstacle.mode == "npc" else "obstacle",
             "shape": "cylinder",
             "mode": obstacle.mode,
             "policy": obstacle.policy,
             "pose": (*obstacle.xy_at(sim_time), 0.0),
+            "velocity": (*_dynamic_obstacle_velocity(obstacle, sim_time), 0.0),
             "radius": obstacle.radius,
+            "facing_yaw": obstacle.yaw_at(sim_time),
+            "source": "deterministic_overlay",
+            "sample_time_s": sim_time,
+            "metadata": {
+                "velocity_method": "central_finite_difference",
+                "debug_pose_at_step_start": (*obstacle.xy_at(step_start_time_s), 0.0)
+                if step_start_time_s is not None
+                else None,
+            },
         }
         for obstacle in obstacles
     )
+
+
+def _dynamic_obstacle_velocity(obstacle, sim_time: float) -> tuple[float, float]:
+    epsilon = min(1e-3, max(obstacle.period_s / 10000.0, 1e-6))
+    before = obstacle.xy_at(sim_time - epsilon)
+    after = obstacle.xy_at(sim_time + epsilon)
+    return ((after[0] - before[0]) / (2.0 * epsilon), (after[1] - before[1]) / (2.0 * epsilon))
 
 
 def _collision_summary(collision: bool, step_id: int) -> tuple[dict[str, object], ...]:

@@ -43,6 +43,7 @@ class LocalEpisodeSpec:
     config: NavigationConfig
     robot_selector: str
     canonical_backend_id: str
+    role_inventory: tuple[dict[str, Any], ...] = ()
 
     @property
     def steps(self) -> int:
@@ -63,6 +64,7 @@ class LocalEpisodeSpec:
             "robot_selector": self.robot_selector,
             "canonical_backend_id": self.canonical_backend_id,
             "locomotion_mode": self.locomotion_mode,
+            "role_inventory": self.role_inventory,
             "start": {
                 "x": self.config.start.x,
                 "y": self.config.start.y,
@@ -133,6 +135,7 @@ def _load_episode_spec(path: Path) -> LocalEpisodeSpec:
         config=load_navigation_config(path),
         robot_selector=_robot_selector(episode_id, raw_config),
         canonical_backend_id=_canonical_backend_id(episode_id, raw_config),
+        role_inventory=_role_inventory(episode_id, raw_config),
     )
 
 
@@ -151,6 +154,69 @@ def _canonical_backend_id(episode_id: str, raw_config: Mapping[str, Any]) -> str
     if episode_id.startswith("go2_") and locomotion_mode == "policy":
         return "go2_mujoco_onnx"
     return "g1_slam_kinematic"
+
+
+def _role_inventory(episode_id: str, raw_config: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    roles: list[dict[str, Any]] = []
+    if episode_id.endswith("_approach_user"):
+        roles.append(
+            {
+                "id": "target_user",
+                "type": "human",
+                "role": "target",
+                "source": "episode_goal",
+                "publicly_revealed": True,
+            }
+        )
+    dynamic = raw_config.get("dynamic_obstacles", {})
+    mode = str(dynamic.get("mode", "blue_cylinders" if dynamic.get("blue_cylinders") else "none"))
+    normalized_mode = mode.replace("-", "_")
+    default_dynamic_count = 3 if normalized_mode in {
+        "blue",
+        "blue_cylinder",
+        "blue_cylinders",
+        "cylinders",
+        "npc",
+        "npcs",
+        "people",
+        "persons",
+        "pedestrians",
+    } else 0
+    count = int(dynamic.get("count", dynamic.get("blue_cylinder_count", default_dynamic_count)) or 0)
+    if normalized_mode in {"npc", "npcs", "people", "persons", "pedestrians"}:
+        roles.extend(
+            {
+                "id": f"person_npc_{index}",
+                "type": "human",
+                "role": "bystander",
+                "source": "dynamic_obstacle",
+                "publicly_revealed": True,
+            }
+            for index in range(count)
+        )
+    elif normalized_mode in {"blue", "cylinders", "blue_cylinder", "blue_cylinders"}:
+        roles.extend(
+            {
+                "id": f"blue_cylinder_{index}",
+                "type": "obstacle",
+                "role": "obstacle",
+                "source": "dynamic_obstacle",
+                "publicly_revealed": True,
+            }
+            for index in range(count)
+        )
+    static_obstacles = raw_config.get("world", {}).get("obstacles", ())
+    roles.extend(
+        {
+            "id": f"static_obstacle_{index}",
+            "type": "obstacle",
+            "role": "obstacle",
+            "source": "world_obstacle",
+            "publicly_revealed": True,
+        }
+        for index, _obstacle in enumerate(static_obstacles)
+    )
+    return tuple(roles)
 
 
 def _repo_root() -> Path:

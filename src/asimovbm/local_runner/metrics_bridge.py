@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from math import atan2, hypot
+from dataclasses import replace
+from math import atan2, hypot, isfinite
 from typing import Any
 
 from asimovbm.metrics import (
@@ -17,7 +18,10 @@ from asimovbm.metrics.completion_time import compute as compute_completion_time
 from asimovbm.metrics.heading_jerk import compute as compute_heading_jerk
 from asimovbm.metrics.hesitation import compute as compute_hesitation
 from asimovbm.metrics.legibility import compute as compute_legibility
+from asimovbm.metrics.min_human_robot_distance import compute as compute_min_human_distance
+from asimovbm.metrics.proxemic_intrusion_dose import compute as compute_proxemic_intrusion
 from asimovbm.metrics.sparc import compute as compute_sparc
+from asimovbm.metrics.speed_near_humans_p95 import compute as compute_speed_near_humans
 from asimovbm.metrics.stability import compute as compute_stability
 from asimovbm.metrics.task_success_rate import TaskSuccessAttempt
 from asimovbm.metrics.task_success_rate import compute as compute_task_success
@@ -42,6 +46,7 @@ def compute_metrics_for_trace(trace: LocalEpisodeTrace) -> dict[str, MetricValue
     times = [step.time_s for step in trace.steps]
     speeds = [hypot(step.robot_velocity[0], step.robot_velocity[1]) for step in trace.steps]
     yaw_rates = [step.robot_velocity[2] for step in trace.steps]
+    human_stream = _human_position_stream(trace)
     heading_errors = _heading_errors_to_goal(trace)
     path_length = _path_length(positions)
     optimal_length = _straight_line_length(trace)
@@ -85,8 +90,9 @@ def compute_metrics_for_trace(trace: LocalEpisodeTrace) -> dict[str, MetricValue
         "stability": compute_stability(collisions=trace.collision_count),
         "legibility": compute_legibility(times=times, heading_errors=heading_errors),
     }
+    values.update(_safety_metrics(trace, positions, times, speeds, human_stream))
     for metric_id in SOCIAL_NAVIGATION_METRIC_IDS:
-        values.setdefault(metric_id, _not_applicable(metric_id, "no human/social-cue entities in g1_slam six-episode trace"))
+        values.setdefault(metric_id, _not_applicable(metric_id, _missing_stream_reason(metric_id, human_stream)))
     return values
 
 
@@ -110,6 +116,145 @@ def _not_applicable(metric_id: str, reason: str) -> MetricValue:
         confidence="not_applicable",
         reason=reason,
     )
+
+
+def _safety_metrics(
+    trace: LocalEpisodeTrace,
+    robot_positions: list[tuple[float, float]],
+    times: list[float],
+    speeds: list[float],
+    human_stream: tuple[tuple[tuple[float, float], ...], ...] | None,
+) -> dict[str, MetricValue]:
+    if human_stream is None:
+        return {
+            metric_id: _insufficient_evidence(metric_id, "human entity stream is malformed or misaligned")
+            for metric_id in (
+                "min_human_robot_distance",
+                "proxemic_intrusion_dose",
+                "speed_near_humans_p95",
+            )
+        }
+    if not any(humans for humans in human_stream):
+        reason = "no human entities in trace"
+        return {
+            metric_id: _not_applicable(metric_id, reason)
+            for metric_id in (
+                "min_human_robot_distance",
+                "proxemic_intrusion_dose",
+                "speed_near_humans_p95",
+            )
+        }
+    min_distances = [
+        min((hypot(robot[0] - human[0], robot[1] - human[1]) for human in humans), default=float("inf"))
+        for robot, humans in zip(robot_positions, human_stream, strict=True)
+    ]
+    evidence = _evidence_summary(trace, human_stream)
+    return {
+        "min_human_robot_distance": _with_evidence(
+            compute_min_human_distance(
+                robot_positions=robot_positions,
+                human_positions=human_stream,
+            ),
+            evidence,
+        ),
+        "proxemic_intrusion_dose": _with_evidence(
+            compute_proxemic_intrusion(
+                times=times,
+                robot_positions=robot_positions,
+                human_positions=human_stream,
+                bystanders_present=_bystanders_present(trace),
+            ),
+            evidence,
+        ),
+        "speed_near_humans_p95": _with_evidence(
+            compute_speed_near_humans(
+                speeds=speeds,
+                min_human_distances=min_distances,
+            ),
+            evidence,
+        ),
+    }
+
+
+def _human_position_stream(
+    trace: LocalEpisodeTrace,
+) -> tuple[tuple[tuple[float, float], ...], ...] | None:
+    stream: list[tuple[tuple[float, float], ...]] = []
+    for step in trace.steps:
+        humans: list[tuple[float, float]] = []
+        for entity in step.dynamic_entities + step.static_entities:
+            if entity.get("type") != "human":
+                continue
+            pose = entity.get("pose")
+            if (
+                not isinstance(pose, (tuple, list))
+                or len(pose) < 2
+                or not isfinite(float(pose[0]))
+                or not isfinite(float(pose[1]))
+            ):
+                return None
+            humans.append((float(pose[0]), float(pose[1])))
+        stream.append(tuple(humans))
+    return tuple(stream)
+
+
+def _insufficient_evidence(metric_id: str, reason: str) -> MetricValue:
+    return MetricValue(
+        metric_id=metric_id,
+        status=MetricStatus.INSUFFICIENT_EVIDENCE,
+        confidence="insufficient",
+        reason=reason,
+    )
+
+
+def _with_evidence(value: MetricValue, evidence: dict[str, Any]) -> MetricValue:
+    summary = dict(value.raw_inputs_summary)
+    summary.update(evidence)
+    metadata = dict(value.metadata)
+    metadata["evidence_compatibility"] = {
+        "source_type": evidence["measurement_proof_level"],
+        "frame": "world_xy_m",
+        "human_proxy": "entity_pose_radius",
+        "overlay_evidence": evidence["measurement_proof_level"] == "reference",
+    }
+    return replace(value, raw_inputs_summary=summary, metadata=metadata)
+
+
+def _evidence_summary(
+    trace: LocalEpisodeTrace,
+    human_stream: tuple[tuple[tuple[float, float], ...], ...],
+) -> dict[str, Any]:
+    return {
+        "measurement_backend_id": trace.measurement_backend_id,
+        "measurement_proof_level": trace.measurement_proof_level,
+        "human_sample_count": sum(len(humans) for humans in human_stream),
+        "frames_with_humans": sum(1 for humans in human_stream if humans),
+    }
+
+
+def _bystanders_present(trace: LocalEpisodeTrace) -> bool:
+    return any(
+        entity.get("type") == "human" and entity.get("role") == "bystander"
+        for step in trace.steps
+        for entity in step.dynamic_entities + step.static_entities
+    )
+
+
+def _missing_stream_reason(
+    metric_id: str,
+    human_stream: tuple[tuple[tuple[float, float], ...], ...] | None,
+) -> str:
+    if metric_id in {
+        "gesture_response_success",
+        "acknowledgement_clarity",
+        "human_aware_approach",
+        "bystander_ack",
+        "behavioral_naturalness",
+    }:
+        return "target, cue, facing, or world-frame naturalness streams are not present in this trace"
+    if human_stream is None:
+        return "human entity stream is malformed or misaligned"
+    return "metric input stream is not present in this trace"
 
 
 def _metric_to_dict(value: MetricValue) -> dict[str, Any]:

@@ -18,3 +18,19 @@ def test_visible_and_headless_flags_are_mutually_exclusive() -> None:
 
     with pytest.raises(SystemExit):
         parser.parse_args(["--visible", "--headless"])
+
+
+def test_measurement_backend_selector_defaults_to_reference() -> None:
+    parser = build_parser()
+
+    args = parser.parse_args([])
+
+    assert args.measurement_backend == "reference"
+
+
+def test_measurement_backend_selector_accepts_mujoco_and_rejects_unknown() -> None:
+    parser = build_parser()
+
+    assert parser.parse_args(["--measurement-backend", "mujoco"]).measurement_backend == "mujoco"
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--measurement-backend", "simulator"])
