@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from asimovbm_server.metrics import MetricValue
 from asimovbm_server.traces import EpisodeTrace
@@ -40,7 +41,7 @@ class BenchmarkRunResult:
     pack_id: str
     records: tuple[EpisodeRunRecord, ...]
     tier_summaries: tuple[TierRunSummary, ...]
-    final_axes: dict[str, float | None]
+    final_axes: dict[str, dict[str, Any]]
 
     @property
     def attempts(self) -> int:

@@ -22,11 +22,12 @@ def _spec_text() -> str:
 
 
 def _sections(text: str) -> list[str]:
+    text = text.split("## Weight Matrix v0", maxsplit=1)[0]
     parts = re.split(r"^### Sub-indicator: ", text, flags=re.MULTILINE)
     return parts[1:]
 
 
-def test_metric_spec_names_four_macro_indicators_and_twelve_subindicators() -> None:
+def test_metric_spec_names_four_macro_indicators_and_sixteen_subindicators() -> None:
     text = _spec_text()
 
     macros = re.findall(r"^## Macro: (.+)$", text, flags=re.MULTILINE)
@@ -43,33 +44,44 @@ def test_metric_spec_names_four_macro_indicators_and_twelve_subindicators() -> N
     assert subindicators == [
         "Task Success Rate",
         "Task Completion Time",
-        "Path Efficiency",
-        "Minimum Human-Robot Distance",
-        "Proxemic Intrusion Time",
-        "Robot Speed Near Humans",
+        "Comfort-Aware Path Efficiency",
+        "Hesitation Rate",
+        "Minimum Human–Robot Distance",
+        "Proxemic Intrusion Dose",
+        "Speed Near Humans (95th percentile)",
         "Gesture Response Success",
-        "Acknowledgement Clarity",
-        "Human-Aware Approach",
+        "Acknowledgement Clarity (Target)",
+        "Human-Aware Approach (with side/angle term)",
+        "Bystander Acknowledgement",
         "Motion Smoothness (SPARC)",
-        "Stability / Controlledness",
-        "Morphology-Task Fit",
+        "Heading Jerk (yaw SPARC)",
+        "Stability",
+        "Legibility (commit-time)",
+        "Behavioral Naturalness (gait/wheel regularity)",
     ]
 
 
 def test_each_metric_section_has_required_contract_fields() -> None:
     required = [
-        "Raw inputs:",
-        "Formula:",
-        "Thresholds:",
-        "Normalization:",
-        "Confidence behavior:",
-        "Source rationale:",
-        "Owner approval:",
+        "Inputs",
+        "Formula",
+        "Normalization",
+        "Confidence",
+        "Sources",
     ]
 
     for section in _sections(_spec_text()):
         for label in required:
             assert label in section
+
+
+def test_metric_spec_weight_matrix_uses_registry_feature_ids() -> None:
+    from asimovbm_server.metrics import SOCIAL_NAVIGATION_METRIC_IDS
+
+    text = _spec_text()
+
+    for metric_id in SOCIAL_NAVIGATION_METRIC_IDS:
+        assert f"| {metric_id}" in text
 
 
 def test_metric_spec_has_no_placeholder_formulas() -> None:

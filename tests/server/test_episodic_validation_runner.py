@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from asimovbm_protocol import ActionMessage
 from asimovbm_server.agents import AgentRegistry, ReferenceSocialNavigationPolicy
-from asimovbm_server.benchmarks import BenchmarkRunConfig, EpisodicValidationRunner
+from asimovbm_server.benchmarks import (
+    BenchmarkRunConfig,
+    EpisodicValidationRunner,
+    result_to_dict,
+)
 from asimovbm_server.episodes import load_episode_pack
 
 
@@ -30,6 +35,10 @@ def test_local_validation_runner_executes_three_nested_episode_records() -> None
         "perceived_social_awareness",
         "impression",
     }
+    assert {axis["status"] for axis in result.final_axes.values()} == {
+        "not_applicable"
+    }
+    json.dumps(result_to_dict(result))
 
 
 def test_social_cue_target_identity_is_hidden_until_cue() -> None:

@@ -1,4 +1,4 @@
-"""Placeholder metric registry for the social-navigation contract."""
+"""Metric registry for the social-navigation contract."""
 
 from __future__ import annotations
 
@@ -6,25 +6,18 @@ from collections.abc import Iterable
 
 from asimovbm_server.traces import EpisodeTrace
 
-from .models import MetricContext, MetricFunction, MetricStatus, MetricValue
-
-SOCIAL_NAVIGATION_METRIC_IDS: tuple[str, ...] = (
-    "task_success_rate",
-    "task_completion_time",
-    "path_efficiency",
-    "minimum_human_robot_distance",
-    "proxemic_intrusion_time",
-    "robot_speed_near_humans",
-    "gesture_response_success",
-    "acknowledgement_clarity",
-    "human_aware_approach",
-    "motion_smoothness_sparc",
-    "stability_controlledness",
-    "morphology_task_fit",
+from .models import (
+    SOCIAL_NAVIGATION_METRIC_IDS,
+    MetricContext,
+    MetricFunction,
+    MetricStatus,
+    MetricValue,
 )
 
 
-class PlaceholderMetricFunction:
+class TraceMetricFunction:
+    """Runner-facing compatibility adapter until full trace extraction lands."""
+
     def __init__(
         self,
         metric_id: str,
@@ -40,14 +33,24 @@ class PlaceholderMetricFunction:
             return MetricValue(
                 metric_id=self.id,
                 status=MetricStatus.INSUFFICIENT_EVIDENCE,
+                confidence="insufficient",
                 reason=f"missing required trace fields: {', '.join(missing)}",
+                raw_inputs_summary={"missing_fields": tuple(missing)},
             )
         return MetricValue(
             metric_id=self.id,
-            status=MetricStatus.NOT_IMPLEMENTED,
-            reason="metric formula module not implemented yet",
+            status=MetricStatus.INSUFFICIENT_EVIDENCE,
+            confidence="insufficient",
+            reason="metric extraction for v1 formula inputs is not implemented yet",
+            raw_inputs_summary={
+                "available_steps": len(trace.steps),
+                "trace_adapter": "pending",
+            },
             metadata={"tier_id": context.tier_id, "episode_id": context.episode_id},
         )
+
+
+PlaceholderMetricFunction = TraceMetricFunction
 
 
 class MetricRegistry:
@@ -73,7 +76,7 @@ class MetricRegistry:
 
 def default_metric_registry() -> MetricRegistry:
     return MetricRegistry(
-        PlaceholderMetricFunction(metric_id)
+        TraceMetricFunction(metric_id)
         for metric_id in SOCIAL_NAVIGATION_METRIC_IDS
     )
 

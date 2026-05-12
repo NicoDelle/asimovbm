@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import asdict
 from pathlib import Path
+from statistics import mean
 from typing import Any
 
 from asimovbm_protocol import ActionMessage
@@ -17,7 +18,13 @@ from asimovbm_server.episodes import (
     default_scenario_registry,
 )
 from asimovbm_server.episodes.registry import ScenarioRegistry
-from asimovbm_server.metrics import MetricRegistry, default_metric_registry
+from asimovbm_server.metrics import (
+    MetricRegistry,
+    MetricStatus,
+    MetricValue,
+    aggregate_axes,
+    default_metric_registry,
+)
 from asimovbm_server.robots import RobotRegistry, default_robot_registry
 from asimovbm_server.traces import EpisodeTrace, StepTrace
 from asimovbm_server.visualization import ViewerHandle, maybe_open_viewer
@@ -103,7 +110,7 @@ class EpisodicValidationRunner:
             pack_id=pack.id,
             records=tuple(records),
             tier_summaries=tuple(tier_summaries),
-            final_axes=_placeholder_axis_summary(records),
+            final_axes=_final_axis_summary(records),
         )
 
     def _run_episode(
@@ -198,17 +205,69 @@ def _sync_viewer(viewer: ViewerHandle, config: BenchmarkRunConfig) -> None:
         time.sleep(0.02 / config.realtime)
 
 
-def _placeholder_axis_summary(records: list[EpisodeRunRecord]) -> dict[str, float | None]:
-    if not records:
-        return {
-            "perceived_dexterity": None,
-            "perceived_safety": None,
-            "perceived_social_awareness": None,
-            "impression": None,
-        }
+def _final_axis_summary(records: list[EpisodeRunRecord]) -> dict[str, dict[str, Any]]:
+    axes = aggregate_axes(_run_metric_values(records))
+    return {axis_id: axis.to_report() for axis_id, axis in axes.items()}
+
+
+def _run_metric_values(records: list[EpisodeRunRecord]) -> dict[str, MetricValue]:
+    values_by_metric: defaultdict[str, list[MetricValue]] = defaultdict(list)
+    for record in records:
+        if not record.trace.technical_valid:
+            continue
+        for value in record.metrics.values():
+            values_by_metric[value.metric_id].append(value)
     return {
-        "perceived_dexterity": None,
-        "perceived_safety": None,
-        "perceived_social_awareness": None,
-        "impression": None,
+        metric_id: _summarize_metric_values(metric_id, values)
+        for metric_id, values in values_by_metric.items()
     }
+
+
+def _summarize_metric_values(
+    metric_id: str,
+    values: list[MetricValue],
+) -> MetricValue:
+    scored_values = [value for value in values if value.scored]
+    metadata = {
+        "aggregation": "mean_over_valid_episodes",
+        "eligible_episodes": len(values),
+        "computed_episodes": len(scored_values),
+    }
+    if scored_values:
+        raw_values = [
+            value.raw_value for value in scored_values if value.raw_value is not None
+        ]
+        return MetricValue(
+            metric_id=metric_id,
+            status=MetricStatus.COMPUTED,
+            raw_value=mean(raw_values) if len(raw_values) == len(scored_values) else None,
+            normalized_score=mean(
+                value.normalized_score or 0.0 for value in scored_values
+            ),
+            confidence="sufficient"
+            if len(scored_values) == len(values)
+            else "partial",
+            metadata=metadata,
+        )
+
+    status = _summarize_unscored_status(values)
+    return MetricValue(
+        metric_id=metric_id,
+        status=status,
+        confidence="not_applicable"
+        if status == MetricStatus.NOT_APPLICABLE
+        else "insufficient",
+        reason="no scored metric values across valid episodes",
+        metadata=metadata,
+    )
+
+
+def _summarize_unscored_status(values: list[MetricValue]) -> MetricStatus:
+    statuses = {value.status for value in values}
+    if statuses == {MetricStatus.NOT_APPLICABLE}:
+        return MetricStatus.NOT_APPLICABLE
+    if statuses == {MetricStatus.NOT_IMPLEMENTED}:
+        return MetricStatus.NOT_IMPLEMENTED
+    if MetricStatus.INVALID_INPUT in statuses:
+        return MetricStatus.INVALID_INPUT
+    return MetricStatus.INSUFFICIENT_EVIDENCE

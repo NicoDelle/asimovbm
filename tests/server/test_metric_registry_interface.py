@@ -36,7 +36,25 @@ def test_default_metric_registry_exposes_all_social_navigation_metric_ids() -> N
     registry = default_metric_registry()
 
     assert registry.metric_ids == SOCIAL_NAVIGATION_METRIC_IDS
-    assert len(registry.metric_ids) == 12
+    assert len(registry.metric_ids) == 16
+    assert registry.metric_ids == (
+        "task_success_rate",
+        "task_completion_time",
+        "comfort_aware_path_efficiency",
+        "hesitation",
+        "min_human_robot_distance",
+        "proxemic_intrusion_dose",
+        "speed_near_humans_p95",
+        "gesture_response_success",
+        "acknowledgement_clarity",
+        "human_aware_approach",
+        "bystander_ack",
+        "sparc",
+        "heading_jerk",
+        "stability",
+        "legibility",
+        "behavioral_naturalness",
+    )
 
 
 def test_runner_invokes_placeholder_metrics_for_valid_episode() -> None:
@@ -48,4 +66,6 @@ def test_runner_invokes_placeholder_metrics_for_valid_episode() -> None:
     assert result.valid_episodes == 1
     metrics = result.records[0].metrics
     assert set(metrics) == set(SOCIAL_NAVIGATION_METRIC_IDS)
-    assert {value.status for value in metrics.values()} == {MetricStatus.NOT_IMPLEMENTED}
+    assert {value.status for value in metrics.values()} == {
+        MetricStatus.INSUFFICIENT_EVIDENCE
+    }
