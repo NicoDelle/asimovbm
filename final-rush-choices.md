@@ -7,12 +7,23 @@ final MVP rush unless Nico explicitly changes them.
 
 ## Episodic Metrics Validation Boundary
 
-The validation harness is server-local. It should not use the client transport,
-WebSocket runner, or `asimovbm_client` as the proof path for metric validation.
+The validation harness is local-first. Metric validation is proven through the
+local episode catalog, local trace artifacts, and local metric reports.
 
-The colleague implementing scenarios owns episode definitions and episode
-lifecycle hooks. The validation glue owns orchestration, trace recording, metric
-invocation, and final aggregation.
+The active launcher is:
+
+```bash
+asimovbm-local --iterations 1
+```
+
+`iterations=1` defaults to visible validation mode. `iterations>1` defaults to
+headless metric collection unless `--visible` is explicitly passed. `--visible`
+and `--headless` are mutually exclusive.
+
+The six `g1_slam/config/episodes/*.json` files are the canonical local
+validation set for this submission path. The validation glue owns episode
+catalog loading, sequential execution, trace recording, metric invocation,
+artifact manifests, and final reporting.
 
 ## Episode Ownership
 
@@ -104,14 +115,16 @@ termination logic around that simulation.
 This keeps orchestration and metric validation unblocked while preserving a path
 to physical human/obstacle bodies later.
 
-## Implemented Episode Replacements
+## Implemented Local Path
 
-`obstacle_navigation` is no longer served by the generic overlay smoke scenario.
-It is registered to `StaticObstacleNavigationScenario`, which implements the
-first static-obstacle MVP episode through the approved `EpisodeScenario`
-interface. It follows the `g1_slam` static world and lidar behavior locally so
-the `local-validation` launcher works without relying on pytest-only import
-paths.
+Active execution lives in `src/asimovbm/local_runner/`. It loads the six
+canonical `g1_slam` configs, records per-step traces, maps trace fields into
+the pure metric functions under `src/asimovbm/metrics/`, and writes
+`manifest.json`, `report.json`, trace files, and metric files under
+`artifacts/local-validation/<run-id>/`.
 
-The human-obstacle and social-cue episodes still use smoke overlay scaffolding
-until their real scenario implementations land.
+The portable default execution backend is `g1_slam_reference_trace_v1`, which
+instruments the existing `g1_slam` planner, lidar, controller, world, and
+dynamic-obstacle scripts. Manifests still record the canonical backend selector
+for each episode (`g1_robojudo` for G1 and `go2_mujoco_onnx` for Go2) so
+release-smoke runs with optional assets can prove those paths explicitly.

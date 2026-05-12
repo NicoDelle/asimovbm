@@ -7,7 +7,6 @@ from pathlib import Path
 from .config import LocomotionConfig
 from .controller import VelocityCommand
 
-
 G1_29DOF_JOINT_ORDER = (
     "left_hip_pitch",
     "left_hip_roll",
