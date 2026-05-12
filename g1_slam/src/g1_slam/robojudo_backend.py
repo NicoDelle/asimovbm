@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .config import VisualizationConfig
 from .controller import PurePursuitConfig, PurePursuitController, VelocityCommand
-from .dynamic_obstacles import DynamicCylinder, make_default_dynamic_cylinders
+from .dynamic_obstacles import DynamicObstacle, make_default_dynamic_obstacles
 from .geometry import Pose2D, clamp, distance_xy
 from .lidar import simulate_lidar
 from .planner import AStarPlanner
@@ -30,6 +30,10 @@ class RoboJuDoBackendConfig:
     enable_dynamic_cylinders: bool = False
     dynamic_cylinder_seed: int = 7
     dynamic_cylinder_count: int | None = None
+    dynamic_obstacle_mode: str | None = None
+    dynamic_obstacle_seed: int | None = None
+    dynamic_obstacle_count: int | None = None
+    npc_policy: str = "social_patrol"
     visualization: VisualizationConfig | None = None
 
 
@@ -128,13 +132,13 @@ class RoboJuDoBackend:
         env.model.geom_pos[geom_id][1] = goal[1]
         mujoco.mj_forward(env.model, env.data)
 
-    def set_dynamic_cylinders(
+    def set_dynamic_obstacles(
         self,
-        cylinders: tuple[DynamicCylinder, ...],
+        obstacles: tuple[DynamicObstacle, ...],
         *,
         sim_time: float,
     ) -> None:
-        if not cylinders:
+        if not obstacles:
             return
         env = self.pipeline.env
         if not hasattr(env, "model") or not hasattr(env, "data"):
@@ -143,18 +147,18 @@ class RoboJuDoBackend:
             import mujoco
         except ModuleNotFoundError:
             return
-        for cylinder in cylinders:
-            body_id = mujoco.mj_name2id(env.model, mujoco.mjtObj.mjOBJ_BODY, cylinder.name)
+        for obstacle in obstacles:
+            body_id = mujoco.mj_name2id(env.model, mujoco.mjtObj.mjOBJ_BODY, obstacle.name)
             if body_id < 0:
                 continue
             mocap_id = int(env.model.body_mocapid[body_id])
             if mocap_id < 0:
                 continue
-            x, y = cylinder.xy_at(sim_time)
+            x, y = obstacle.xy_at(sim_time)
             env.data.mocap_pos[mocap_id, 0] = x
             env.data.mocap_pos[mocap_id, 1] = y
-            env.data.mocap_pos[mocap_id, 2] = cylinder.half_height
-            env.data.mocap_quat[mocap_id] = (1.0, 0.0, 0.0, 0.0)
+            env.data.mocap_pos[mocap_id, 2] = 0.0 if obstacle.mode == "npc" else obstacle.half_height
+            env.data.mocap_quat[mocap_id] = _yaw_quat(obstacle.yaw_at(sim_time))
         mujoco.mj_forward(env.model, env.data)
 
     def configure_viewer(self) -> None:
@@ -338,11 +342,11 @@ class RoboJuDoBackend:
         cfg = ConfigManager(config_name=config.config_name).get_cfg()
         cfg.ctrl = [RoboJuDoBackend.VirtualJoystickCtrlCfg()]
         if config.use_navigation_scene and world is not None:
-            dynamic_cylinders = _dynamic_cylinders_from_config(config)
+            dynamic_obstacles = _dynamic_obstacles_from_config(config, world)
             cfg.env.xml = _ensure_robojudo_navigation_scene(
                 config.repo_path,
                 world,
-                dynamic_cylinders,
+                dynamic_obstacles,
             ).as_posix()
             if getattr(cfg.env, "forward_kinematic", None) is not None:
                 cfg.env.forward_kinematic.xml_path = cfg.env.xml
@@ -370,8 +374,8 @@ def run_robojudo_navigation(
     backend.reset()
     backend.reborn(start)
     backend.set_goal_marker(goal)
-    dynamic_cylinders = _dynamic_cylinders_from_config(backend.config)
-    backend.set_dynamic_cylinders(dynamic_cylinders, sim_time=0.0)
+    dynamic_obstacles = _dynamic_obstacles_from_config(backend.config, world)
+    backend.set_dynamic_obstacles(dynamic_obstacles, sim_time=0.0)
     backend.configure_viewer()
     backend.add_episode_markers(start, goal)
 
@@ -388,8 +392,8 @@ def run_robojudo_navigation(
     trajectory_marker_index = 0
     for step in range(steps):
         sim_time = step * dt
-        backend.set_dynamic_cylinders(dynamic_cylinders, sim_time=sim_time)
-        scan_world = _world_with_dynamic_cylinders(world, dynamic_cylinders, sim_time)
+        backend.set_dynamic_obstacles(dynamic_obstacles, sim_time=sim_time)
+        scan_world = _world_with_dynamic_obstacles(world, dynamic_obstacles, sim_time)
         scan = simulate_lidar(scan_world, pose)
         grid.update_from_scan(pose, scan)
         if step % 10 == 0 or not path or controller.waypoint_index >= len(path):
@@ -429,7 +433,7 @@ def _resolve_robojudo_repo_path(repo_path: Path) -> Path:
 def _ensure_robojudo_navigation_scene(
     repo_path: Path,
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
+    dynamic_obstacles: tuple[DynamicObstacle, ...] = (),
 ) -> Path:
     robot_dir = repo_path.resolve() / "assets" / "robots" / "g1"
     source_xml = robot_dir / "g1_29dof_rev_1_0.xml"
@@ -443,7 +447,7 @@ def _ensure_robojudo_navigation_scene(
     if marker_index < 0:
         raise ValueError(f"No pude encontrar la seccion de escena en {source_xml}")
     scene_xml.write_text(
-        source[:marker_index] + _robojudo_navigation_scene_tail(world, dynamic_cylinders),
+        source[:marker_index] + _robojudo_navigation_scene_tail(world, dynamic_obstacles),
         encoding="utf-8",
     )
     return scene_xml
@@ -451,7 +455,7 @@ def _ensure_robojudo_navigation_scene(
 
 def _robojudo_navigation_scene_tail(
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    dynamic_obstacles: tuple[DynamicObstacle, ...],
 ) -> str:
     obstacle_geoms = []
     for index, obstacle in enumerate(world.obstacles):
@@ -469,8 +473,8 @@ def _robojudo_navigation_scene_tail(
     floor_center_x = 0.5 * (world.x_min + world.x_max)
     floor_center_y = 0.5 * (world.y_min + world.y_max)
     obstacles = "\n".join(obstacle_geoms)
-    dynamic_cylinder_geoms = "\n".join(
-        _dynamic_cylinder_scene_body(cylinder) for cylinder in dynamic_cylinders
+    dynamic_obstacle_bodies = "\n".join(
+        _dynamic_obstacle_scene_body(obstacle) for obstacle in dynamic_obstacles
     )
     return f"""  <!-- setup navigation scene -->
   <statistic center="1.0 0.0 1.0" extent="8.0"/>
@@ -484,6 +488,9 @@ def _robojudo_navigation_scene_tail(
     <material name="nav_floor_mat" texture="nav_grid" texrepeat="4 4" reflectance="0.1"/>
     <material name="nav_obstacle_mat" rgba="0.8 0.18 0.12 1"/>
     <material name="nav_dynamic_cylinder_mat" rgba="0.05 0.35 1.0 1"/>
+    <material name="nav_npc_clothes_mat" rgba="0.16 0.32 0.44 1"/>
+    <material name="nav_npc_skin_mat" rgba="0.78 0.58 0.42 1"/>
+    <material name="nav_npc_leg_mat" rgba="0.08 0.08 0.09 1"/>
     <material name="nav_goal_mat" rgba="0.1 0.8 0.35 1"/>
   </asset>
   <worldbody>
@@ -493,47 +500,89 @@ def _robojudo_navigation_scene_tail(
     <geom name="floor" type="plane" pos="{floor_center_x:.4f} {floor_center_y:.4f} 0" size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>
     <geom name="goal" type="cylinder" pos="0 0 0.02" size="0.28 0.02" material="nav_goal_mat"/>
 {obstacles}
-{dynamic_cylinder_geoms}
+{dynamic_obstacle_bodies}
   </worldbody>
 </mujoco>
 """
 
 
-def _dynamic_cylinder_scene_body(cylinder: DynamicCylinder) -> str:
-    x, y = cylinder.center
+def _dynamic_obstacle_scene_body(obstacle: DynamicObstacle) -> str:
+    x, y = obstacle.center
+    if obstacle.mode == "npc":
+        return (
+            f'    <body name="{obstacle.name}" mocap="true" '
+            f'pos="{x:.4f} {y:.4f} 0.0000">\n'
+            f'      <geom name="{obstacle.name}_torso" type="capsule" '
+            'fromto="0 0 0.72 0 0 1.32" size="0.16" '
+            'material="nav_npc_clothes_mat"/>\n'
+            f'      <geom name="{obstacle.name}_head" type="sphere" '
+            'pos="0 0 1.55" size="0.14" material="nav_npc_skin_mat"/>\n'
+            f'      <geom name="{obstacle.name}_left_leg" type="capsule" '
+            'fromto="0 0.075 0.05 0 0.075 0.72" size="0.055" '
+            'material="nav_npc_leg_mat"/>\n'
+            f'      <geom name="{obstacle.name}_right_leg" type="capsule" '
+            'fromto="0 -0.075 0.05 0 -0.075 0.72" size="0.055" '
+            'material="nav_npc_leg_mat"/>\n'
+            f'      <geom name="{obstacle.name}_personal_space" type="cylinder" '
+            f'pos="0 0 0.01" size="{obstacle.radius:.4f} 0.01" '
+            'rgba="0.16 0.32 0.44 0.16" contype="0" conaffinity="0"/>\n'
+            "    </body>"
+        )
     return (
-        f'    <body name="{cylinder.name}" mocap="true" '
-        f'pos="{x:.4f} {y:.4f} {cylinder.half_height:.4f}">\n'
-        f'      <geom name="{cylinder.name}_geom" type="cylinder" '
-        f'size="{cylinder.radius:.4f} {cylinder.half_height:.4f}" '
+        f'    <body name="{obstacle.name}" mocap="true" '
+        f'pos="{x:.4f} {y:.4f} {obstacle.half_height:.4f}">\n'
+        f'      <geom name="{obstacle.name}_geom" type="cylinder" '
+        f'size="{obstacle.radius:.4f} {obstacle.half_height:.4f}" '
         'material="nav_dynamic_cylinder_mat"/>\n'
         "    </body>"
     )
 
 
-def _dynamic_cylinders_from_config(config: RoboJuDoBackendConfig) -> tuple[DynamicCylinder, ...]:
-    if not config.enable_dynamic_cylinders:
-        return ()
-    cylinders = make_default_dynamic_cylinders(config.dynamic_cylinder_seed)
-    if config.dynamic_cylinder_count is None:
-        return cylinders
-    return cylinders[: max(0, config.dynamic_cylinder_count)]
-
-
-def _world_with_dynamic_cylinders(
+def _dynamic_obstacles_from_config(
+    config: RoboJuDoBackendConfig,
     world: World2D,
-    cylinders: tuple[DynamicCylinder, ...],
+) -> tuple[DynamicObstacle, ...]:
+    mode = config.dynamic_obstacle_mode
+    if mode is None:
+        mode = "blue_cylinders" if config.enable_dynamic_cylinders else "none"
+    seed = (
+        config.dynamic_obstacle_seed
+        if config.dynamic_obstacle_seed is not None
+        else config.dynamic_cylinder_seed
+    )
+    count = (
+        config.dynamic_obstacle_count
+        if config.dynamic_obstacle_count is not None
+        else config.dynamic_cylinder_count
+    )
+    return make_default_dynamic_obstacles(
+        mode,
+        seed=seed,
+        count=count,
+        world=world,
+        npc_policy=config.npc_policy,
+    )
+
+
+def _world_with_dynamic_obstacles(
+    world: World2D,
+    obstacles: tuple[DynamicObstacle, ...],
     sim_time: float,
 ) -> World2D:
-    if not cylinders:
+    if not obstacles:
         return world
     return World2D(
         x_min=world.x_min,
         y_min=world.y_min,
         x_max=world.x_max,
         y_max=world.y_max,
-        obstacles=world.obstacles + tuple(cylinder.rect_at(sim_time) for cylinder in cylinders),
+        obstacles=world.obstacles + tuple(obstacle.rect_at(sim_time) for obstacle in obstacles),
     )
+
+
+def _yaw_quat(yaw: float) -> tuple[float, float, float, float]:
+    half_yaw = 0.5 * yaw
+    return (cos(half_yaw), 0.0, 0.0, sin(half_yaw))
 
 
 def _yaw_from_xyzw_quat(quat) -> float:

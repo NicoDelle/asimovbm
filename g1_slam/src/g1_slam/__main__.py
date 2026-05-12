@@ -9,7 +9,7 @@ from .dynamic_obstacles import (
     DYNAMIC_SCENARIO_GOAL,
     DYNAMIC_SCENARIO_START,
     DYNAMIC_SCENARIO_STEPS,
-    make_default_dynamic_cylinders,
+    make_default_dynamic_obstacles,
     make_dynamic_cylinder_world,
 )
 from .geometry import Pose2D
@@ -40,36 +40,52 @@ def main() -> None:
         help="enable slow cyclic blue cylinders in the RoboJuDo SLAM scene",
     )
     parser.add_argument(
+        "--dynamic-obstacle-mode",
+        choices=("none", "blue_cylinders", "npcs"),
+        help="override config dynamic_obstacles.mode",
+    )
+    parser.add_argument(
+        "--dynamic-obstacle-count",
+        type=int,
+        help="override the number of dynamic cylinders or NPCs",
+    )
+    parser.add_argument(
         "--dynamic-cylinder-seed",
         type=int,
         default=None,
         help="seed used for deterministic dynamic-cylinder phases",
     )
+    parser.add_argument(
+        "--npc-policy",
+        default=None,
+        help="NPC movement policy. Default: config value, usually social_patrol",
+    )
     parser.add_argument("--render", action="store_true", help="open the MuJoCo viewer")
     args = parser.parse_args()
 
     nav_config = load_navigation_config(args.config)
-    enable_dynamic_cylinders = (
-        nav_config.dynamic_obstacles.blue_cylinders or args.dynamic_blue_cylinders
-    )
-    dynamic_cylinder_seed = (
+    dynamic_obstacle_mode = nav_config.dynamic_obstacles.mode
+    if args.dynamic_blue_cylinders:
+        dynamic_obstacle_mode = "blue_cylinders"
+    if args.dynamic_obstacle_mode is not None:
+        dynamic_obstacle_mode = args.dynamic_obstacle_mode
+    dynamic_obstacle_seed = (
         args.dynamic_cylinder_seed
         if args.dynamic_cylinder_seed is not None
         else nav_config.dynamic_obstacles.blue_cylinder_seed
     )
-    dynamic_cylinders = ()
-    if enable_dynamic_cylinders:
-        dynamic_cylinders = make_default_dynamic_cylinders(dynamic_cylinder_seed)
-        if nav_config.dynamic_obstacles.blue_cylinder_count is not None:
-            dynamic_cylinders = dynamic_cylinders[
-                : max(0, nav_config.dynamic_obstacles.blue_cylinder_count)
-            ]
+    dynamic_obstacle_count = (
+        args.dynamic_obstacle_count
+        if args.dynamic_obstacle_count is not None
+        else nav_config.dynamic_obstacles.blue_cylinder_count
+    )
+    npc_policy = args.npc_policy or nav_config.dynamic_obstacles.npc_policy
     if nav_config.world is not None:
         world = nav_config.world
         default_start = nav_config.start
         default_goal = nav_config.goal
         default_steps = nav_config.steps
-    elif enable_dynamic_cylinders:
+    elif dynamic_obstacle_mode != "none":
         world = make_dynamic_cylinder_world()
         default_start = DYNAMIC_SCENARIO_START
         default_goal = DYNAMIC_SCENARIO_GOAL
@@ -79,6 +95,13 @@ def main() -> None:
         default_start = nav_config.start
         default_goal = nav_config.goal
         default_steps = nav_config.steps
+    dynamic_obstacles = make_default_dynamic_obstacles(
+        dynamic_obstacle_mode,
+        seed=dynamic_obstacle_seed,
+        count=dynamic_obstacle_count,
+        world=world,
+        npc_policy=npc_policy,
+    )
     start = Pose2D(*args.start) if args.start is not None else default_start
     goal = (args.goal[0], args.goal[1]) if args.goal is not None else default_goal
     steps = args.steps if args.steps is not None else default_steps
@@ -124,9 +147,10 @@ def main() -> None:
                 max_vx=nav_config.controller.max_linear_speed,
                 max_vy=nav_config.controller.max_linear_speed,
                 max_yaw_rate=nav_config.controller.max_yaw_rate,
-                enable_dynamic_cylinders=enable_dynamic_cylinders,
-                dynamic_cylinder_seed=dynamic_cylinder_seed,
-                dynamic_cylinder_count=nav_config.dynamic_obstacles.blue_cylinder_count,
+                dynamic_obstacle_mode=dynamic_obstacle_mode,
+                dynamic_obstacle_seed=dynamic_obstacle_seed,
+                dynamic_obstacle_count=dynamic_obstacle_count,
+                npc_policy=npc_policy,
                 visualization=nav_config.visualization,
             ),
         )
@@ -144,7 +168,7 @@ def main() -> None:
             locomotion_config=locomotion_config,
             visualization_config=nav_config.visualization,
             render=args.render,
-            dynamic_cylinders=dynamic_cylinders,
+            dynamic_obstacles=dynamic_obstacles,
         )
         return
 

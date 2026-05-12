@@ -4,6 +4,9 @@ This guide is intentionally beginner-friendly. It assumes you want to open the
 G1 RoboJuDo simulation, run SLAM/navigation, and watch the humanoid react to
 dynamic blue cylinders.
 
+For the three reusable episode configurations, see
+`docs/g1-slam-episode-configurations.md`.
+
 ## 1. Open a Terminal
 
 Go to the repository:

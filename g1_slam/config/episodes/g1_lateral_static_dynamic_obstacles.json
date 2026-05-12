@@ -1,8 +1,8 @@
 {
   "episode": {
     "id": "g1_lateral_static_dynamic_obstacles",
-    "title": "G1 lateral motion with static red obstacles and dynamic blue cylinders",
-    "description": "The humanoid traverses the MuJoCo navigation corridor while SLAM tracks static red blocks and moving blue cylinders."
+    "title": "G1 lateral motion with static red obstacles and moving NPCs",
+    "description": "The humanoid traverses the MuJoCo navigation corridor while SLAM tracks static red blocks and lightweight pedestrian NPCs."
   },
   "start": {
     "x": -3.8,
@@ -35,9 +35,10 @@
     ]
   },
   "dynamic_obstacles": {
-    "blue_cylinders": true,
-    "blue_cylinder_seed": 11,
-    "blue_cylinder_count": 3
+    "mode": "npcs",
+    "seed": 11,
+    "count": 3,
+    "npc_policy": "social_patrol"
   },
   "controller": {
     "lookahead": 0.6,

@@ -23,9 +23,11 @@ class LocomotionConfig:
 
 @dataclass(frozen=True)
 class DynamicObstaclesConfig:
+    mode: str
     blue_cylinders: bool
     blue_cylinder_seed: int
     blue_cylinder_count: int | None
+    npc_policy: str
 
 
 @dataclass(frozen=True)
@@ -67,9 +69,11 @@ DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
     ),
     world=None,
     dynamic_obstacles=DynamicObstaclesConfig(
+        mode="none",
         blue_cylinders=False,
         blue_cylinder_seed=7,
         blue_cylinder_count=None,
+        npc_policy="social_patrol",
     ),
     visualization=VisualizationConfig(
         camera_lookat=None,
@@ -173,14 +177,23 @@ def _read_obstacle(payload: dict[str, Any]) -> RectObstacle:
 
 def _read_dynamic_obstacles(payload: dict[str, Any]) -> DynamicObstaclesConfig:
     defaults = DEFAULT_NAVIGATION_CONFIG.dynamic_obstacles
+    raw_mode = payload.get("mode")
+    if raw_mode is None:
+        raw_mode = "blue_cylinders" if payload.get("blue_cylinders", defaults.blue_cylinders) else defaults.mode
+    mode = _normalize_dynamic_obstacle_mode(str(raw_mode))
+    count = _read_optional_int(
+        payload,
+        "count",
+        _read_optional_int(payload, "blue_cylinder_count", defaults.blue_cylinder_count),
+    )
     return DynamicObstaclesConfig(
-        blue_cylinders=bool(payload.get("blue_cylinders", defaults.blue_cylinders)),
-        blue_cylinder_seed=int(payload.get("blue_cylinder_seed", defaults.blue_cylinder_seed)),
-        blue_cylinder_count=_read_optional_int(
-            payload,
-            "blue_cylinder_count",
-            defaults.blue_cylinder_count,
+        mode=mode,
+        blue_cylinders=mode == "blue_cylinders",
+        blue_cylinder_seed=int(
+            payload.get("seed", payload.get("blue_cylinder_seed", defaults.blue_cylinder_seed))
         ),
+        blue_cylinder_count=count,
+        npc_policy=str(payload.get("npc_policy", defaults.npc_policy)),
     )
 
 
@@ -226,3 +239,17 @@ def _read_optional_int(
 ) -> int | None:
     value = payload.get(key, default)
     return int(value) if value is not None else None
+
+
+def _normalize_dynamic_obstacle_mode(mode: str) -> str:
+    normalized = mode.replace("-", "_")
+    if normalized in {"", "off", "false", "none"}:
+        return "none"
+    if normalized in {"blue", "cylinders", "blue_cylinder", "blue_cylinders"}:
+        return "blue_cylinders"
+    if normalized in {"npc", "npcs", "people", "persons", "pedestrians"}:
+        return "npcs"
+    raise ValueError(
+        f"Unsupported dynamic_obstacles.mode: {mode}. "
+        "Use 'none', 'blue_cylinders', or 'npcs'."
+    )
