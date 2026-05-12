@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -70,6 +71,19 @@ def _validate_episode(episode: EpisodeDefinition) -> None:
         entity_ids.add(entity.id)
         if entity.radius <= 0:
             raise EpisodePackError(f"entity {entity.id} in episode {episode.id} needs radius > 0")
+        if entity.shape not in {"circle", "rectangle"}:
+            raise EpisodePackError(
+                f"entity {entity.id} in episode {episode.id} has unsupported shape {entity.shape}"
+            )
+        if entity.shape == "rectangle":
+            if entity.half_width is None or entity.half_depth is None:
+                raise EpisodePackError(
+                    f"rectangle entity {entity.id} in episode {episode.id} needs half extents"
+                )
+            if entity.half_width <= 0 or entity.half_depth <= 0:
+                raise EpisodePackError(
+                    f"rectangle entity {entity.id} in episode {episode.id} needs positive half extents"
+                )
 
     for cue in episode.cues:
         if cue.source not in entity_ids:
@@ -135,17 +149,84 @@ def _entity_from_mapping(data: dict[str, Any], *, kind: str) -> EntityDefinition
         role = "human"
     if role is None and kind == "obstacle":
         role = "obstacle"
+    geometry = _entity_geometry_from_mapping(data)
+    metadata = dict(data.get("metadata", {}))
+    if geometry["shape"] == "rectangle":
+        metadata.setdefault("shape", "rectangle")
+        metadata.setdefault("half_width", geometry["half_width"])
+        metadata.setdefault("half_depth", geometry["half_depth"])
+        metadata.setdefault("x_min", geometry["x"] - geometry["half_width"])
+        metadata.setdefault("y_min", geometry["y"] - geometry["half_depth"])
+        metadata.setdefault("x_max", geometry["x"] + geometry["half_width"])
+        metadata.setdefault("y_max", geometry["y"] + geometry["half_depth"])
     return EntityDefinition(
         id=_required_str(data, "id"),
         kind=kind,
-        x=float(data["x"]),
-        y=float(data["y"]),
-        radius=float(data["radius"]),
+        x=geometry["x"],
+        y=geometry["y"],
+        radius=geometry["radius"],
+        shape=geometry["shape"],
+        half_width=geometry["half_width"],
+        half_depth=geometry["half_depth"],
         role=role,
         posture=data.get("posture"),
         public_before_cue=bool(data.get("public_before_cue", True)),
-        metadata=dict(data.get("metadata", {})),
+        metadata=metadata,
     )
+
+
+def _entity_geometry_from_mapping(data: dict[str, Any]) -> dict[str, Any]:
+    has_rect_bounds = all(key in data for key in ("x_min", "y_min", "x_max", "y_max"))
+    shape = str(data.get("shape", "rectangle" if has_rect_bounds else "circle"))
+    if shape not in {"circle", "rectangle"}:
+        raise EpisodePackError(f"unsupported entity shape: {shape}")
+
+    if has_rect_bounds:
+        x_min = float(data["x_min"])
+        y_min = float(data["y_min"])
+        x_max = float(data["x_max"])
+        y_max = float(data["y_max"])
+        if x_max <= x_min or y_max <= y_min:
+            raise EpisodePackError("rectangle bounds must have max values greater than min values")
+        half_width = 0.5 * (x_max - x_min)
+        half_depth = 0.5 * (y_max - y_min)
+        x = 0.5 * (x_min + x_max)
+        y = 0.5 * (y_min + y_max)
+        radius = float(data.get("radius", math.hypot(half_width, half_depth)))
+        return {
+            "shape": "rectangle",
+            "x": x,
+            "y": y,
+            "radius": radius,
+            "half_width": half_width,
+            "half_depth": half_depth,
+        }
+
+    x = float(data["x"])
+    y = float(data["y"])
+    if shape == "rectangle":
+        half_width = _optional_float(data, "half_width")
+        half_depth = _optional_float(data, "half_depth")
+        if half_width is None or half_depth is None:
+            raise EpisodePackError("rectangle entities require half_width and half_depth")
+        radius = float(data.get("radius", math.hypot(half_width, half_depth)))
+        return {
+            "shape": "rectangle",
+            "x": x,
+            "y": y,
+            "radius": radius,
+            "half_width": half_width,
+            "half_depth": half_depth,
+        }
+
+    return {
+        "shape": "circle",
+        "x": x,
+        "y": y,
+        "radius": float(data["radius"]),
+        "half_width": None,
+        "half_depth": None,
+    }
 
 
 def _cue_from_mapping(data: dict[str, Any]) -> CueDefinition:

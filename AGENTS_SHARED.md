@@ -63,3 +63,11 @@ adding or changing benchmark claims, requirements, or metric definitions.
 - Prefer project-grounded changes over inventing new benchmark scope.
 - Keep local-only instructions, private links, absolute paths, credentials, and
   machine-specific notes in untracked local files such as `AGENTS.md`.
+
+## Sim Episode Runner
+
+- Use the repo venv: never run Python package commands outside `.venv`.
+- Visual G1 suite: `.venv/bin/asimovbm-server sim-episodes --episode-robot g1 --render --trace-root artifacts/sim-traces/g1`
+- Visual Go2 suite: `.venv/bin/asimovbm-server sim-episodes --episode-robot go2 --render --trace-root artifacts/sim-traces/go2`
+- One episode: add `--episodes lateral_static_dynamic_obstacles`.
+- Traces use `asimovbm.sim_trace.v1` and are written under `--trace-root`.

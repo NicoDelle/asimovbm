@@ -104,6 +104,10 @@ termination logic around that simulation.
 This keeps orchestration and metric validation unblocked while preserving a path
 to physical human/obstacle bodies later.
 
+Static obstacles should be represented as rectangles when the source simulation
+uses red blocks. The public observation may still carry a coarse radius for
+agent compatibility, but trace metadata should preserve the rectangle extents.
+
 ## Implemented Episode Replacements
 
 `obstacle_navigation` is no longer served by the generic overlay smoke scenario.
@@ -113,5 +117,46 @@ interface. It follows the `g1_slam` static world and lidar behavior locally so
 the `local-validation` launcher works without relying on pytest-only import
 paths.
 
-The human-obstacle and social-cue episodes still use smoke overlay scaffolding
-until their real scenario implementations land.
+`human_obstacle_navigation` is now registered to
+`DynamicObstacleNavigationScenario`. It mirrors the deterministic
+`g1_slam` dynamic blue-cylinder logic inside the server-local scenario
+boundary, emits moving public entities with velocity metadata on every step,
+includes static rectangular obstacles when the episode pack defines them, and
+can render overlay-first MuJoCo cylinders and boxes when MuJoCo is available.
+
+`social_cue_target_approach` is now registered to `SocialCueTargetScenario`.
+The target human is visible before the cue only as a generic human; public goal
+target identity and public entity role switch to target only after the cue is
+emitted. Full trace evidence still records target/cue timing for later metrics.
+
+## Robot Profiles and Canonical Commands
+
+Robot profile config lives in `examples/robot_profiles/local_validation.json`.
+Canonical local-validation profile ids are:
+
+- `minimal-mobile-base`: marker-only CI/smoke profile.
+- `g1-kinematic`: asset-backed G1 profile using `g1_slam/assets/g1_kinematic.xml`.
+- `g1-robojudo`: optional RoboJudo-backed G1 profile. It must fail with a clear
+  setup diagnostic if the external RoboJudo checkout or G1 policy asset is
+  absent; do not silently substitute a marker profile.
+- `go2-kinematic`: marker-only Go2-shaped kinematic profile until a repo-local
+  Go2 MJCF is added.
+
+The RoboJudo-derived validation pack lives at
+`examples/episode_packs/robojudo_navigation_validation.json`. It normalizes the
+paired G1/Go2 demo configs into robot-neutral episode definitions; robot policy,
+controller, and visualization details stay in per-robot metadata/profile seams.
+
+Use the ergonomic local-validation CLI for manual work:
+
+```bash
+asimovbm-server local-validation list robots
+asimovbm-server local-validation list episodes
+asimovbm-server local-validation run --tier-id obstacle_only --episode-id obstacle_slalom_001 --visible
+asimovbm-server local-validation --episode-pack robojudo list episodes
+asimovbm-server local-validation --episode-pack robojudo run --tier-id static_dynamic_obstacles --episode-id lateral_static_dynamic_obstacles --robot-profile go2-kinematic
+asimovbm-server local-validation matrix --tier-id obstacle_only --episode-id obstacle_slalom_001 --robot-profile g1-kinematic --robot-profile go2-kinematic
+```
+
+The legacy `--orchestrator local-validation` path remains available for scripts,
+but new handoffs should prefer the subcommands above.

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from .config import LocomotionConfig, load_navigation_config
 from .dynamic_obstacles import (
@@ -12,6 +12,7 @@ from .dynamic_obstacles import (
     make_default_dynamic_cylinders,
     make_dynamic_cylinder_world,
 )
+from .episode_runner import discover_episode_configs, run_episode_suite
 from .geometry import Pose2D
 from .mujoco_runner import run_mujoco_navigation
 from .simulation import run_navigation, save_trajectory
@@ -20,9 +21,38 @@ from .world import default_world
 DEFAULT_GO2_POLICY_PATH = Path("policies/go2/unitree_rl_mjlab/policy.onnx")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="SLAM and navigation for Unitree robots in MuJoCo.")
     parser.add_argument("--config", type=Path, default=Path("config/navigation.json"))
+    parser.add_argument(
+        "--run-episodes",
+        action="store_true",
+        help="run g1_slam/config/episodes sequentially as the sim testbench",
+    )
+    parser.add_argument(
+        "--episode-config-dir",
+        type=Path,
+        default=Path("config/episodes"),
+        help="directory containing episode JSON configs for --run-episodes",
+    )
+    parser.add_argument(
+        "--episodes",
+        nargs="*",
+        default=(),
+        help="optional episode ids/stems to run with --run-episodes",
+    )
+    parser.add_argument(
+        "--episode-robot",
+        choices=("g1", "go2"),
+        default="g1",
+        help="robot episode config prefix to run with --run-episodes",
+    )
+    parser.add_argument(
+        "--trace-root",
+        type=Path,
+        default=Path("runs/episode_traces"),
+        help="where sim-native episode traces and summaries are written",
+    )
     parser.add_argument("--steps", type=int)
     parser.add_argument("--start", nargs=3, type=float, metavar=("X", "Y", "YAW"))
     parser.add_argument("--goal", nargs=2, type=float, metavar=("X", "Y"))
@@ -32,7 +62,7 @@ def main() -> None:
     parser.add_argument("--locomotion", choices=("kinematic", "policy", "robojudo"), help="override config locomotion.mode")
     parser.add_argument("--policy-path", type=Path, help="override config locomotion.policy_path")
     parser.add_argument("--model-path", type=Path, help="optional path to a MuJoCo XML/MJCF file")
-    parser.add_argument("--robojudo-repo", type=Path, default=Path("third_party/RoboJuDo"))
+    parser.add_argument("--robojudo-repo", type=Path, default=Path("g1_slam/third_party/RoboJuDo"))
     parser.add_argument("--robojudo-config", default="g1_asap_loco")
     parser.add_argument(
         "--dynamic-blue-cylinders",
@@ -46,7 +76,27 @@ def main() -> None:
         help="seed used for deterministic dynamic-cylinder phases",
     )
     parser.add_argument("--render", action="store_true", help="open the MuJoCo viewer")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+
+    if args.run_episodes:
+        config_paths = discover_episode_configs(
+            args.episode_config_dir,
+            robot=args.episode_robot,
+            episode_ids=tuple(args.episodes),
+        )
+        if not config_paths:
+            raise SystemExit(f"No episode configs found in {args.episode_config_dir}")
+        result = run_episode_suite(
+            config_paths,
+            robot_id=args.episode_robot,
+            trace_root=args.trace_root,
+            render=args.render,
+            robojudo_repo=args.robojudo_repo,
+            robojudo_config=args.robojudo_config,
+            continue_on_error=False,
+        )
+        print(f"Ran {len(result.records)} sim episode(s). Traces: {args.trace_root}")
+        return
 
     nav_config = load_navigation_config(args.config)
     enable_dynamic_cylinders = (
@@ -129,6 +179,11 @@ def main() -> None:
                 dynamic_cylinder_count=nav_config.dynamic_obstacles.blue_cylinder_count,
                 visualization=nav_config.visualization,
             ),
+            trace_path=args.trace_root / f"{args.config.stem}-trace.json",
+            episode_id=args.config.stem,
+            robot_id="g1",
+            policy_id=f"robojudo:{locomotion_config.policy_path}",
+            render=args.render,
         )
         return
 
@@ -145,6 +200,14 @@ def main() -> None:
             visualization_config=nav_config.visualization,
             render=args.render,
             dynamic_cylinders=dynamic_cylinders,
+            trace_path=args.trace_root / f"{args.config.stem}-trace.json",
+            episode_id=args.config.stem,
+            robot_id=args.robot,
+            policy_id=(
+                locomotion_config.mode
+                if locomotion_config.policy_path is None
+                else f"{locomotion_config.mode}:{locomotion_config.policy_path}"
+            ),
         )
         return
 

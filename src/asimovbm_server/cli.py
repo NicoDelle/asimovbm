@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 from .simulation.fake import fake_step
@@ -12,7 +13,15 @@ logger = logging.getLogger("asimovbm.server")
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="asimovbm-server")
+    parser = argparse.ArgumentParser(
+        prog="asimovbm-server",
+        epilog=(
+            "Local validation shortcuts: "
+            "asimovbm-server local-validation list robots; "
+            "asimovbm-server local-validation run --tier-id obstacle_only --visible; "
+            "asimovbm-server local-validation matrix --robot-profile g1-kinematic --robot-profile go2-kinematic"
+        ),
+    )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument(
@@ -47,6 +56,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--robot-profile",
         default="minimal-mobile-base",
         help="Robot profile for local-validation mode.",
+    )
+    parser.add_argument(
+        "--robot-profiles",
+        default=None,
+        help="Comma-separated robot profiles for local-validation matrix mode.",
     )
     parser.add_argument(
         "--agent-profile",
@@ -120,6 +134,19 @@ def _redacted_log_value(token: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["local-validation"]:
+        from asimovbm_server.validation_cli import main as validation_main
+
+        return validation_main(argv[1:])
+    if argv[:1] == ["sim-episodes"]:
+        g1_src = Path(__file__).resolve().parents[2] / "g1_slam" / "src"
+        if g1_src.as_posix() not in sys.path:
+            sys.path.insert(0, g1_src.as_posix())
+        from g1_slam.__main__ import main as g1_main
+
+        g1_main(["--run-episodes", *argv[1:]])
+        return 0
     parser = _build_parser()
     args = parser.parse_args(argv)
     logging.basicConfig(level=args.log_level.upper())
@@ -138,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
             pack,
             BenchmarkRunConfig(
                 robot_profile_id=args.robot_profile,
+                robot_profile_ids=tuple(args.robot_profiles.split(",")) if args.robot_profiles else (),
                 agent_id=args.agent_profile,
                 visible=args.visible,
                 realtime=args.realtime,

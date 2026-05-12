@@ -66,6 +66,21 @@ def test_local_validation_runner_can_filter_to_one_episode() -> None:
     assert result.records[0].episode_id == "obstacle_slalom_001"
 
 
+def test_dynamic_episode_reports_static_rectangles_and_dynamic_entities() -> None:
+    pack = load_episode_pack(Path("examples/episode_packs/social_navigation_mvp.json"))
+
+    result = EpisodicValidationRunner().run(
+        pack,
+        BenchmarkRunConfig(tier_id="human_obstacles", episode_id="dynamic_crossing_001"),
+    )
+
+    first_step = result.records[0].trace.steps[0]
+    entity_ids = {entity.id for entity in first_step.entities}
+    assert {"static_box_left", "static_box_right"} <= entity_ids
+    assert any(entity.id.startswith("blue_cylinder_") for entity in first_step.entities)
+    assert first_step.collision_summary["static_collisions"] == []
+
+
 def test_technical_policy_failure_retries_episode_attempt() -> None:
     class FailingOncePolicy:
         id = "failing-once"

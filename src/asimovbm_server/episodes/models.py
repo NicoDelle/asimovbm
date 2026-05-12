@@ -45,6 +45,9 @@ class EntityDefinition:
     x: float
     y: float
     radius: float
+    shape: str = "circle"
+    half_width: float | None = None
+    half_depth: float | None = None
     role: str | None = None
     posture: str | None = None
     public_before_cue: bool = True
@@ -103,6 +106,10 @@ class PublicEntityObservation:
     y: float
     radius: float
     role: str | None = None
+    velocity: tuple[float, float] = (0.0, 0.0)
+    posture: str | None = None
+    public: bool = True
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

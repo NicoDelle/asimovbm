@@ -245,24 +245,22 @@ The launcher writes:
 <artifact-root>/<episode-pack-id>-validation-result.json
 ```
 
-What is intentionally smoke/placeholder right now:
+Current real implementations and remaining placeholders:
 
 - `obstacle_navigation` now has a first concrete implementation in
   `StaticObstacleNavigationScenario`. It uses the approved episode protocol and
   g1_slam-style static world/lidar behavior for the first MVP episode.
-- `examples/episode_packs/social_navigation_mvp.json` is still a smoke MVP pack. The
-  episode implementer should replace or evolve it into the actual episode pack
-  used for research validation.
-- `OverlayEpisodeScenario` remains an overlay-first smoke scenario for
-  `human_obstacle_navigation` and `social_cue_target_approach`. It is acceptable
-  as scaffolding, but the episode implementer should replace those scenario
-  registrations with actual implementations when they land.
-- `minimal-mobile-base`, `placeholder-humanoid`, and `placeholder-robot-dog`
-  are placeholder robot profiles. The robot implementer should replace these
-  with real adapters/assets and implement `viewer_target()` so `--visible`
-  opens the MuJoCo viewer.
-- `ReferenceSocialNavigationPolicy` is only a deterministic smoke policy. It
-  proves the observation/action loop, not final agent behavior.
+- `human_obstacle_navigation` now maps to `DynamicObstacleNavigationScenario`
+  and the MVP pack uses `dynamic_crossing_001`, based on the deterministic
+  `g1_slam` dynamic blue-cylinder logic.
+- `social_cue_target_approach` now maps to `SocialCueTargetScenario`, which
+  hides target identity until a public cue is emitted.
+- Robot profiles are configured in `examples/robot_profiles/local_validation.json`.
+  `g1-kinematic` is asset-backed, while `minimal-mobile-base` and
+  `go2-kinematic` are marker-only validation profiles.
+- `ReferenceSocialNavigationPolicy`, `ObstacleAwareNavigationPolicy`, and
+  `SocialCueNavigationPolicy` are deterministic validation policies. They prove
+  public-observation/action mechanics, not final research baselines.
 - `PlaceholderMetricFunction` modules deliberately return `not_implemented`
   when trace evidence exists. The metric implementer should replace those
   functions with the real formulas from
@@ -304,13 +302,12 @@ tiers:
 
   - id: human_obstacles
     episodes:
-      - id: static_bystanders_001
+      - id: dynamic_crossing_001
         scenario_type: human_obstacle_navigation
-        robot_start: {x: 0.0, y: 0.0, yaw: 0.0}
-        goal: {x: 4.0, y: 0.0}
-        humans:
-          - {id: human_a, x: 1.7, y: 0.35, radius: 0.35, posture: standing}
-          - {id: human_b, x: 2.7, y: -0.35, radius: 0.35, posture: standing}
+        robot_start: {x: -6.0, y: 0.0, yaw: 0.0}
+        goal: {x: 10.0, y: 0.0, stop_distance_m: 0.55}
+        bounds: [-12.0, -7.0, 14.0, 7.0]
+        metadata: {dynamic_seed: 7}
 
   - id: social_cue_target
     episodes:

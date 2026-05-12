@@ -203,8 +203,8 @@ def _world_from_definition(definition: EpisodeDefinition) -> StaticObstacleWorld
 
 
 def _rect_from_obstacle(entity: EntityDefinition) -> RectObstacle:
-    half_width = float(entity.metadata.get("half_width", entity.radius))
-    half_depth = float(entity.metadata.get("half_depth", entity.radius))
+    half_width = float(entity.half_width or entity.metadata.get("half_width", entity.radius))
+    half_depth = float(entity.half_depth or entity.metadata.get("half_depth", entity.radius))
     return RectObstacle(
         entity.x - half_width,
         entity.y - half_depth,
@@ -260,6 +260,11 @@ def _collision_summary(
 
 
 def _public_obstacle(entity: EntityDefinition) -> PublicEntityObservation:
+    metadata = dict(entity.metadata)
+    metadata.setdefault("shape", entity.shape)
+    if entity.shape == "rectangle":
+        metadata.setdefault("half_width", entity.half_width)
+        metadata.setdefault("half_depth", entity.half_depth)
     return PublicEntityObservation(
         id=entity.id,
         kind=entity.kind,
@@ -267,6 +272,7 @@ def _public_obstacle(entity: EntityDefinition) -> PublicEntityObservation:
         y=entity.y,
         radius=entity.radius,
         role=entity.role,
+        metadata=metadata,
     )
 
 
@@ -393,7 +399,7 @@ def _mujoco_scene_xml(definition: EpisodeDefinition, world: StaticObstacleWorld)
   </asset>
   <worldbody>
     <light name="top_light" directional="true" pos="0 0 8" dir="0 0 -1" ambient="0.35 0.35 0.35" diffuse="0.45 0.45 0.45"/>
-    <camera name="overview" pos="2 -5 4.5" xyaxes="1 0 0 0 0.67 0.74"/>
+    <camera name="overview" pos="{floor_center_x:.4f} {floor_center_y - 7.0:.4f} 8.0" xyaxes="1 0 0 0 0.82 0.57"/>
     <geom name="floor" type="plane" pos="{floor_center_x:.4f} {floor_center_y:.4f} 0" size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>
     <geom name="goal_agent" type="cylinder" pos="{goal_x:.4f} {goal_y:.4f} 0.45" size="0.20 0.45" material="nav_goal_mat"/>
 {obstacles}

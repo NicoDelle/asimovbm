@@ -1,5 +1,9 @@
 # Run a G1 SLAM Episode
 
+This page is for the sim-native G1 episode path: the real RoboJuDo-backed
+MuJoCo simulation, run sequentially from the `g1_slam/config/episodes` JSON
+configs, with JSON traces written for the metrics consumer.
+
 This guide is intentionally beginner-friendly. It assumes you want to open the
 G1 RoboJuDo simulation, run SLAM/navigation, and watch the humanoid react to
 dynamic blue cylinders.
@@ -9,14 +13,10 @@ dynamic blue cylinders.
 Go to the repository:
 
 ```bash
-cd ~/palingenesys/asimovbm
+cd /home/nico/Code/asimovbm
 ```
 
-Activate the Python environment:
-
-```bash
-conda activate asimovbm
-```
+Use the repo virtualenv for every Python command in this repository.
 
 ## 2. Install the RoboJuDo Viewer Dependency
 
@@ -26,82 +26,98 @@ Run this once:
 
 ```bash
 cd g1_slam/third_party/RoboJuDo
-python3 submodule_install.py mujoco_viewer
+/home/nico/Code/asimovbm/.venv/bin/python submodule_install.py mujoco_viewer
 ```
 
-Go back to the G1 SLAM package:
+Go back to the repository root:
 
 ```bash
-cd ~/palingenesys/asimovbm/g1_slam
+cd /home/nico/Code/asimovbm
 ```
 
 Quick check:
 
 ```bash
-python3 -c "import mujoco_viewer; print('mujoco_viewer OK')"
+.venv/bin/python -c "import mujoco_viewer; print('mujoco_viewer OK')"
 ```
 
 If this prints `mujoco_viewer OK`, the viewer dependency is installed.
 
-## 3. Run the Default Dynamic Episode
+## 3. Run the G1 Episode Suite Sequentially
 
 Use this command:
 
 ```bash
-python3 -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --render
+.venv/bin/asimovbm-server sim-episodes \
+  --episode-robot g1 \
+  --render \
+  --trace-root artifacts/sim-traces/g1
 ```
 
 What this does:
 
-- Uses the RoboJuDo locomotion policy.
-- Opens the MuJoCo viewer.
-- Starts the G1 farther away from the obstacles.
-- Removes the static red blocks.
-- Adds dynamic blue cylinders.
-- Sends the robot toward a farther goal so you can observe its behavior.
+- Loads the G1 episode configs from `g1_slam/config/episodes`.
+- Runs them sequentially for easier visualization.
+- Uses the real RoboJuDo-backed G1 loop instead of the server-local marker sim.
+- Writes per-episode traces and `episode_suite_summary.json` under the trace root.
 
 ## 4. Run Without the Viewer
 
 If you only want the episode to execute without opening a window:
 
 ```bash
-python3 -m g1_slam --locomotion robojudo --dynamic-blue-cylinders
+.venv/bin/asimovbm-server sim-episodes \
+  --episode-robot g1 \
+  --trace-root artifacts/sim-traces/g1
 ```
 
-## 5. Change the Random Cylinder Motion
+## 5. Run One Episode
 
-Use a different seed:
+Use either the full config stem or the suffix without `g1_`:
 
 ```bash
-python3 -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --dynamic-cylinder-seed 42 --render
+.venv/bin/asimovbm-server sim-episodes \
+  --episode-robot g1 \
+  --episodes lateral_static_dynamic_obstacles \
+  --render \
+  --trace-root artifacts/sim-traces/g1
 ```
 
-The same seed gives the same cylinder motion every time.
+## 6. Run the Older Single-Config Demo
 
-## 6. Override Start, Goal, or Duration
+The older one-off entry point still exists for quick debugging:
+
+```bash
+PYTHONPATH=g1_slam/src .venv/bin/python -m g1_slam \
+  --config g1_slam/config/episodes/g1_lateral_static_dynamic_obstacles.json \
+  --render \
+  --trace-root artifacts/sim-traces/g1
+```
+
+## 7. Override Start, Goal, or Duration
 
 Start position:
 
 ```bash
-python3 -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --start -8 0 0 --render
+PYTHONPATH=g1_slam/src .venv/bin/python -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --start -8 0 0 --render
 ```
 
 Farther goal:
 
 ```bash
-python3 -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --goal 14 0 --render
+PYTHONPATH=g1_slam/src .venv/bin/python -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --goal 14 0 --render
 ```
 
 More steps:
 
 ```bash
-python3 -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --steps 2500 --render
+PYTHONPATH=g1_slam/src .venv/bin/python -m g1_slam --locomotion robojudo --dynamic-blue-cylinders --steps 2500 --render
 ```
 
 You can combine them:
 
 ```bash
-python3 -m g1_slam \
+PYTHONPATH=g1_slam/src .venv/bin/python -m g1_slam \
   --locomotion robojudo \
   --dynamic-blue-cylinders \
   --start -8 0 0 \
@@ -110,15 +126,27 @@ python3 -m g1_slam \
   --render
 ```
 
-## 7. Common Problems
+## 8. Trace Output
+
+Each episode writes `<episode-id>-trace.json` with schema
+`asimovbm.sim_trace.v1`. The metrics consumer should read:
+
+- `episode_id`, `robot_id`, `policy_id`, `status`, `reached_goal`
+- `goal`, `final_pose`, `step_count`
+- `steps[]`, containing `time_s`, `robot_pose`, `command`,
+  `distance_to_goal`, `entities`, and `path`
+
+The suite also writes `episode_suite_summary.json`.
+
+## 9. Common Problems
 
 ### `No module named 'mujoco_viewer'`
 
 Install the RoboJuDo viewer dependency:
 
 ```bash
-cd ~/palingenesys/asimovbm/g1_slam/third_party/RoboJuDo
-python3 submodule_install.py mujoco_viewer
+cd /home/nico/Code/asimovbm/g1_slam/third_party/RoboJuDo
+/home/nico/Code/asimovbm/.venv/bin/python submodule_install.py mujoco_viewer
 ```
 
 ### `Failed to open display :0`
@@ -133,17 +161,18 @@ RoboJuDo config is being used, or the simulation is starting before the policy
 has stabilized. First try the default command in this guide before changing
 start, goal, or step count.
 
-## 8. Quick Smoke Test
+## 10. Quick Smoke Test
 
 Before opening the full viewer, check that the command-line entry point works:
 
 ```bash
-python3 -m g1_slam --help
+.venv/bin/asimovbm-server sim-episodes --help
 ```
 
 You should see options including:
 
-- `--locomotion`
-- `--dynamic-blue-cylinders`
-- `--dynamic-cylinder-seed`
+- `--run-episodes`
+- `--episode-robot`
+- `--episodes`
+- `--trace-root`
 - `--render`

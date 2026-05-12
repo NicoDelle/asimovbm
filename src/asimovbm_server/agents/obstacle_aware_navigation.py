@@ -27,8 +27,9 @@ class ObstacleAwareNavigationPolicy:
             return ActionMessage(observation.step_id, [0.0, 0.0], latency_ms=0.0)
 
         pose = observation.robot_pose
-        if not self._path:
+        if not self._path or _has_moving_entities(observation):
             self._path = _detour_path(observation, target)
+            self._waypoint_index = 0
         path = self._path
         if path:
             self._waypoint_index = min(self._waypoint_index, len(path) - 1)
@@ -66,6 +67,10 @@ def _goal_target(observation: EpisodeObservation) -> tuple[float, float] | None:
         if target is not None:
             return target.x, target.y
     return None
+
+
+def _has_moving_entities(observation: EpisodeObservation) -> bool:
+    return any(math.hypot(entity.velocity[0], entity.velocity[1]) > 1e-6 for entity in observation.visible_entities)
 
 
 def _detour_path(

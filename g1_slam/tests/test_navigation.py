@@ -1,20 +1,30 @@
+import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from g1_slam.__main__ import DEFAULT_GO2_POLICY_PATH, _fallback_missing_default_go2_policy
-from g1_slam.config import LocomotionConfig, load_navigation_config
 from g1_slam.dynamic_obstacles import make_default_dynamic_cylinders, make_dynamic_cylinder_world
+from g1_slam.episode_runner import discover_episode_configs, run_episode_config, write_dry_run_trace
 from g1_slam.geometry import Pose2D
 from g1_slam.lidar import simulate_lidar
 from g1_slam.locomotion import _is_git_lfs_pointer
 from g1_slam.mapping import GridSpec, OccupancyGrid
-from g1_slam.mujoco_runner import _official_g1_scene_xml, _official_go2_scene_xml, _robot_spec
+from g1_slam.mujoco_runner import (
+    _official_g1_scene_xml,
+    _official_go2_scene_xml,
+    _robot_spec,
+)
 from g1_slam.planner import AStarPlanner
-from g1_slam.robojudo_backend import _robojudo_navigation_scene_tail, _world_with_dynamic_cylinders
+from g1_slam.robojudo_backend import (
+    _robojudo_navigation_scene_tail,
+    _world_with_dynamic_cylinders,
+)
 from g1_slam.simulation import run_navigation
 from g1_slam.world import RectObstacle, World2D, default_world
+
+from g1_slam.config import LocomotionConfig, load_navigation_config
 
 
 class NavigationTests(unittest.TestCase):
@@ -150,6 +160,59 @@ class NavigationTests(unittest.TestCase):
             self.assertFalse(config.visualization.show_trajectory)
         self.assertLess(configs["g1_approach_user"].goal[0], 0.0)
         self.assertLess(configs["go2_approach_user"].goal[0], 0.0)
+
+    def test_sim_episode_runner_discovers_g1_configs_in_sequence(self):
+        config_dir = Path(__file__).resolve().parents[1] / "config" / "episodes"
+
+        configs = discover_episode_configs(config_dir, robot="g1")
+
+        self.assertEqual(
+            [path.stem for path in configs],
+            [
+                "g1_approach_user",
+                "g1_lateral_open",
+                "g1_lateral_static_dynamic_obstacles",
+            ],
+        )
+
+    def test_sim_trace_schema_is_metrics_consumer_friendly(self):
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "trace.json"
+            write_dry_run_trace(path, episode_id="trace_contract")
+            payload = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["schema"], "asimovbm.sim_trace.v1")
+        self.assertEqual(payload["episode_id"], "trace_contract")
+        self.assertIn("robot_pose", payload["steps"][0])
+        self.assertIn("entities", payload["steps"][0])
+        self.assertIn("distance_to_goal", payload["steps"][0])
+
+    def test_sim_episode_runner_dispatches_go2_policy_configs_to_mujoco(self):
+        config_dir = Path(__file__).resolve().parents[1] / "config" / "episodes"
+        config_path = config_dir / "go2_lateral_open.json"
+        with TemporaryDirectory() as tmp:
+            with patch("g1_slam.episode_runner.run_mujoco_navigation") as run_mujoco:
+                run_mujoco.return_value = {
+                    "status": "success",
+                    "reached_goal": True,
+                    "step_count": 12,
+                    "final_pose": {"x": -3.0, "y": 2.2, "yaw": 1.57},
+                }
+
+                record = run_episode_config(
+                    config_path,
+                    robot_id="go2",
+                    trace_root=Path(tmp),
+                    render=False,
+                    robojudo_repo=Path("third_party/RoboJuDo"),
+                    robojudo_config="g1_asap_loco",
+                )
+
+        self.assertEqual(record.robot_id, "go2")
+        self.assertEqual(record.status, "success")
+        run_mujoco.assert_called_once()
+        self.assertEqual(run_mujoco.call_args.kwargs["robot"], "official_go2")
+        self.assertEqual(run_mujoco.call_args.kwargs["robot_id"], "go2")
 
     def test_robot_spec_supports_official_g1(self):
         spec = _robot_spec("official_g1")

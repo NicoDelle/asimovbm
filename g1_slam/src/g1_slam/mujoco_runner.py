@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from math import cos, sin
 from pathlib import Path
@@ -11,6 +12,8 @@ from .dynamic_obstacles import DynamicCylinder
 from .geometry import Pose2D
 from .simulation import make_grid_for_world
 from .world import World2D
+
+G1_SLAM_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass(frozen=True)
@@ -24,19 +27,33 @@ class RobotSpec:
 ROBOT_SPECS = {
     "kinematic": RobotSpec(
         name="kinematic",
-        default_model_path=Path("assets/g1_kinematic.xml"),
+        default_model_path=G1_SLAM_ROOT / "assets" / "g1_kinematic.xml",
         base_height=0.72,
         use_physics_step=True,
     ),
     "official_g1": RobotSpec(
         name="official_g1",
-        default_model_path=Path("third_party/unitree_mujoco/unitree_robots/g1/g1_nav_generated.xml"),
+        default_model_path=(
+            G1_SLAM_ROOT
+            / "third_party"
+            / "unitree_mujoco"
+            / "unitree_robots"
+            / "g1"
+            / "g1_nav_generated.xml"
+        ),
         base_height=0.80,
         use_physics_step=False,
     ),
     "official_go2": RobotSpec(
         name="official_go2",
-        default_model_path=Path("third_party/unitree_mujoco/unitree_robots/go2/go2_nav_generated.xml"),
+        default_model_path=(
+            G1_SLAM_ROOT
+            / "third_party"
+            / "unitree_mujoco"
+            / "unitree_robots"
+            / "go2"
+            / "go2_nav_generated.xml"
+        ),
         base_height=0.27,
         use_physics_step=False,
     ),
@@ -56,11 +73,15 @@ def run_mujoco_navigation(
     render: bool,
     visualization_config: VisualizationConfig | None = None,
     dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
-) -> None:
+    trace_path: Path | None = None,
+    episode_id: str = "mujoco_navigation",
+    robot_id: str | None = None,
+    policy_id: str | None = None,
+) -> dict[str, object]:
     try:
         import mujoco
     except ModuleNotFoundError as exc:
-        raise RuntimeError("Install mujoco to use --mujoco: pip install mujoco") from exc
+        raise RuntimeError("Install mujoco to use --mujoco: .venv/bin/python -m pip install mujoco") from exc
 
     from .controller import PurePursuitController
     from .lidar import simulate_lidar
@@ -90,6 +111,9 @@ def run_mujoco_navigation(
     pose = start
     path: list[tuple[float, float]] = []
     dt = model.opt.timestep
+    trace_steps: list[dict[str, object]] = []
+    status = "timeout"
+    reached_goal = False
 
     viewer_context = _viewer(model, data) if render else _null_context()
     with viewer_context as viewer:
@@ -123,9 +147,43 @@ def run_mujoco_navigation(
                     pose = _read_freejoint_pose(mujoco, model, data, fallback=pose)
             else:
                 mujoco.mj_forward(model, data)
+            distance_to_goal = _distance_xy((pose.x, pose.y), goal)
+            trace_steps.append(
+                {
+                    "step_id": step + 1,
+                    "time_s": (step + 1) * dt,
+                    "robot_pose": _pose_trace(pose),
+                    "goal": [goal[0], goal[1]],
+                    "command": {"linear": command.linear, "yaw_rate": command.yaw_rate},
+                    "distance_to_goal": distance_to_goal,
+                    "entities": _trace_entities(world, dynamic_cylinders, sim_time),
+                    "path": [[x, y] for x, y in path],
+                }
+            )
+            if distance_to_goal < controller.config.goal_tolerance:
+                status = "success"
+                reached_goal = True
+                break
             if render:
                 viewer.sync()
                 sleep(dt)
+
+    result: dict[str, object] = {
+        "schema": "asimovbm.sim_trace.v1",
+        "episode_id": episode_id,
+        "robot_id": robot_id or robot,
+        "policy_id": policy_id or _policy_id(locomotion_config),
+        "status": status,
+        "reached_goal": reached_goal,
+        "step_count": len(trace_steps),
+        "goal": [goal[0], goal[1]],
+        "final_pose": _pose_trace(pose),
+        "steps": trace_steps,
+    }
+    if trace_path is not None:
+        trace_path.parent.mkdir(parents=True, exist_ok=True)
+        trace_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    return result
 
 
 def _robot_spec(robot: str) -> RobotSpec:
@@ -161,10 +219,10 @@ def _ensure_official_g1_nav_scene(
     if not robot_xml.exists() or not meshes_dir.exists():
         raise FileNotFoundError(
             "Could not find the official Unitree G1 model. Clone it with:\n"
-            "mkdir -p third_party\n"
+            "mkdir -p g1_slam/third_party\n"
             "git clone --depth 1 --filter=blob:none --sparse "
-            "https://github.com/unitreerobotics/unitree_mujoco.git third_party/unitree_mujoco\n"
-            "cd third_party/unitree_mujoco\n"
+            "https://github.com/unitreerobotics/unitree_mujoco.git g1_slam/third_party/unitree_mujoco\n"
+            "cd g1_slam/third_party/unitree_mujoco\n"
             "git sparse-checkout set unitree_robots/g1"
         )
     scene_path.write_text(_official_g1_scene_xml(world, dynamic_cylinders), encoding="utf-8")
@@ -195,10 +253,10 @@ def _ensure_official_go2_nav_scene(
     if not robot_xml.exists() or not assets_dir.exists():
         raise FileNotFoundError(
             "Could not find the official Unitree Go2 model. Clone it with:\n"
-            "mkdir -p third_party\n"
+            "mkdir -p g1_slam/third_party\n"
             "git clone --depth 1 --filter=blob:none --sparse "
-            "https://github.com/unitreerobotics/unitree_mujoco.git third_party/unitree_mujoco\n"
-            "cd third_party/unitree_mujoco\n"
+            "https://github.com/unitreerobotics/unitree_mujoco.git g1_slam/third_party/unitree_mujoco\n"
+            "cd g1_slam/third_party/unitree_mujoco\n"
             "git sparse-checkout set unitree_robots/go2"
         )
     scene_path.write_text(_official_go2_scene_xml(world, dynamic_cylinders), encoding="utf-8")
@@ -323,6 +381,57 @@ def _world_with_dynamic_cylinders(
         y_max=world.y_max,
         obstacles=world.obstacles + tuple(cylinder.rect_at(sim_time) for cylinder in cylinders),
     )
+
+
+def _pose_trace(pose: Pose2D) -> dict[str, float]:
+    return {"x": pose.x, "y": pose.y, "yaw": pose.yaw}
+
+
+def _trace_entities(
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    sim_time: float,
+) -> list[dict[str, object]]:
+    entities: list[dict[str, object]] = []
+    for index, obstacle in enumerate(world.obstacles):
+        entities.append(
+            {
+                "id": f"static_obstacle_{index}",
+                "kind": "static_obstacle",
+                "shape": "rectangle",
+                "x_min": obstacle.x_min,
+                "y_min": obstacle.y_min,
+                "x_max": obstacle.x_max,
+                "y_max": obstacle.y_max,
+            }
+        )
+    for cylinder in dynamic_cylinders:
+        x, y = cylinder.xy_at(sim_time)
+        vx, vy = cylinder.velocity_at(sim_time)
+        entities.append(
+            {
+                "id": cylinder.name,
+                "kind": "dynamic_obstacle",
+                "shape": "cylinder",
+                "x": x,
+                "y": y,
+                "radius": cylinder.radius,
+                "velocity": [vx, vy],
+            }
+        )
+    return entities
+
+
+def _distance_xy(a: tuple[float, float], b: tuple[float, float]) -> float:
+    dx = a[0] - b[0]
+    dy = a[1] - b[1]
+    return (dx * dx + dy * dy) ** 0.5
+
+
+def _policy_id(config: LocomotionConfig) -> str:
+    if config.policy_path is None:
+        return config.mode
+    return f"{config.mode}:{config.policy_path}"
 
 
 def _set_home_keyframe_pose(mujoco, model, data) -> None:

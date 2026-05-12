@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from .dynamic_obstacles import DynamicObstacleNavigationScenario
 from .models import EpisodeDefinition, EpisodeScenario
-from .overlay import OverlayEpisodeScenario
+from .social_cue_target import SocialCueTargetScenario
 from .static_obstacles import StaticObstacleNavigationScenario
 
 ScenarioFactory = Callable[[EpisodeDefinition], EpisodeScenario]
@@ -28,6 +29,7 @@ class ScenarioRegistry:
 def default_scenario_registry() -> ScenarioRegistry:
     registry = ScenarioRegistry()
     registry.register("obstacle_navigation", StaticObstacleNavigationScenario)
-    registry.register("human_obstacle_navigation", OverlayEpisodeScenario)
-    registry.register("social_cue_target_approach", OverlayEpisodeScenario)
+    registry.register("human_obstacle_navigation", DynamicObstacleNavigationScenario)
+    registry.register("dynamic_obstacle_navigation", DynamicObstacleNavigationScenario)
+    registry.register("social_cue_target_approach", SocialCueTargetScenario)
     return registry

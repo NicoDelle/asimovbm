@@ -20,6 +20,10 @@ from .models import (
     TierDefinition,
 )
 from .registry import ScenarioRegistry, default_scenario_registry
+from .robojudo_config_normalizer import (
+    load_robojudo_navigation_pack,
+    robojudo_navigation_pack_mapping,
+)
 
 __all__ = [
     "CueDefinition",
@@ -42,5 +46,7 @@ __all__ = [
     "default_scenario_registry",
     "episode_pack_from_mapping",
     "load_episode_pack",
+    "load_robojudo_navigation_pack",
+    "robojudo_navigation_pack_mapping",
     "validate_episode_pack",
 ]

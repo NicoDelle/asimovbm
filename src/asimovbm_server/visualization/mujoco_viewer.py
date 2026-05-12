@@ -26,9 +26,12 @@ def maybe_open_viewer(*targets, enabled: bool) -> ViewerHandle:
     if target is None:
         return ViewerHandle()
     model, data = target
+    import mujoco
     import mujoco.viewer
 
-    return ViewerHandle(mujoco.viewer.launch_passive(model, data))
+    viewer = mujoco.viewer.launch_passive(model, data)
+    _configure_default_camera(viewer, model, mujoco)
+    return ViewerHandle(viewer)
 
 
 def _first_viewer_target(targets) -> tuple[Any, Any] | None:
@@ -43,3 +46,22 @@ def _first_viewer_target(targets) -> tuple[Any, Any] | None:
             if resolved is not None:
                 return resolved
     return None
+
+
+def _configure_default_camera(viewer: Any, model: Any, mujoco: Any) -> None:
+    cam = getattr(viewer, "cam", None)
+    if cam is None:
+        return
+    try:
+        cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+    except AttributeError:
+        pass
+    center = getattr(getattr(model, "stat", None), "center", None)
+    if center is not None:
+        cam.lookat[0] = float(center[0])
+        cam.lookat[1] = float(center[1])
+        cam.lookat[2] = float(center[2])
+    extent = float(getattr(getattr(model, "stat", None), "extent", 6.0) or 6.0)
+    cam.distance = max(8.0, 1.7 * extent)
+    cam.azimuth = 90.0
+    cam.elevation = -65.0

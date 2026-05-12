@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "id": "minimal-mobile-base",
+      "embodiment_kind": "mobile_base",
+      "action_mode": "mobile_base_velocity",
+      "body_radius": 0.25,
+      "asset_backed": false,
+      "marker_only": true,
+      "adapter_kind": "fake_mobile_base",
+      "metadata": {"label": "Minimal mobile-base marker"}
+    },
+    {
+      "id": "g1-kinematic",
+      "embodiment_kind": "humanoid",
+      "action_mode": "mobile_base_velocity",
+      "model_path": "g1_slam/assets/g1_kinematic.xml",
+      "body_radius": 0.28,
+      "asset_backed": true,
+      "marker_only": false,
+      "adapter_kind": "kinematic_mujoco",
+      "metadata": {"label": "Unitree G1 kinematic profile"}
+    },
+    {
+      "id": "g1-robojudo",
+      "embodiment_kind": "robojudo_humanoid",
+      "action_mode": "mobile_base_velocity",
+      "body_radius": 0.28,
+      "asset_backed": true,
+      "marker_only": false,
+      "adapter_kind": "robojudo",
+      "metadata": {
+        "label": "Unitree G1 RoboJudo profile",
+        "config_name": "g1",
+        "robojudo_repo_path": "third_party/RoboJuDo",
+        "policy_path": "g1_slam/policies/g1/policy.onnx",
+        "setup_note": "Requires the external RoboJudo checkout and G1 policy asset."
+      }
+    },
+    {
+      "id": "go2-kinematic",
+      "embodiment_kind": "quadruped",
+      "action_mode": "mobile_base_velocity",
+      "body_radius": 0.32,
+      "asset_backed": false,
+      "marker_only": true,
+      "adapter_kind": "kinematic_marker",
+      "metadata": {
+        "label": "Go2 marker-only kinematic profile",
+        "setup_note": "No repo-local Go2 MJCF is currently available."
+      }
+    }
+  ]
+}

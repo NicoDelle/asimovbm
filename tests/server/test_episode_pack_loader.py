@@ -67,6 +67,43 @@ def test_episode_pack_loads_three_mvp_tiers_from_mapping() -> None:
     assert pack.tiers[2].episodes[0].goal.target_human_id == "target"
 
 
+def test_rectangle_obstacle_loads_from_center_extents() -> None:
+    data = _pack_data()
+    obstacle = data["tiers"][0]["episodes"][0]["obstacles"][0]
+    obstacle.pop("radius")
+    obstacle.update({"shape": "rectangle", "half_width": 0.2, "half_depth": 0.5})
+
+    pack = episode_pack_from_mapping(data)
+    validate_episode_pack(pack)
+
+    loaded = pack.tiers[0].episodes[0].obstacles[0]
+    assert loaded.shape == "rectangle"
+    assert loaded.half_width == 0.2
+    assert loaded.half_depth == 0.5
+    assert loaded.radius > 0.5
+
+
+def test_rectangle_obstacle_loads_from_bounds() -> None:
+    data = _pack_data()
+    data["tiers"][0]["episodes"][0]["obstacles"][0] = {
+        "id": "box",
+        "x_min": -1.0,
+        "y_min": -0.5,
+        "x_max": 1.0,
+        "y_max": 0.5,
+    }
+
+    pack = episode_pack_from_mapping(data)
+    validate_episode_pack(pack)
+
+    loaded = pack.tiers[0].episodes[0].obstacles[0]
+    assert loaded.x == 0.0
+    assert loaded.y == 0.0
+    assert loaded.shape == "rectangle"
+    assert loaded.half_width == 1.0
+    assert loaded.half_depth == 0.5
+
+
 def test_duplicate_entity_ids_fail_validation() -> None:
     data = _pack_data()
     episode = data["tiers"][1]["episodes"][0]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import time
 from collections.abc import Callable
@@ -19,7 +20,7 @@ from .world import World2D
 
 @dataclass(frozen=True)
 class RoboJuDoBackendConfig:
-    repo_path: Path = Path("third_party/RoboJuDo")
+    repo_path: Path = Path("g1_slam/third_party/RoboJuDo")
     config_name: str = "g1_asap_loco"
     max_vx: float = 0.5
     max_vy: float = 0.5
@@ -269,8 +270,8 @@ class RoboJuDoBackend:
         if not repo_path.exists():
             raise FileNotFoundError(
                 f"No se encontro RoboJuDo en {repo_path}. Clonalo con:\n"
-                "mkdir -p third_party\n"
-                "git clone -b release https://github.com/HansZ8/RoboJuDo.git third_party/RoboJuDo"
+                "mkdir -p g1_slam/third_party\n"
+                "git clone -b release https://github.com/HansZ8/RoboJuDo.git g1_slam/third_party/RoboJuDo"
             )
         repo_path_text = repo_path.as_posix()
         if repo_path_text not in sys.path:
@@ -285,7 +286,7 @@ class RoboJuDoBackend:
         except ModuleNotFoundError as exc:
             raise RuntimeError(
                 "No pude importar RoboJuDo. Instala sus dependencias en tu entorno con "
-                "`pip install -e third_party/RoboJuDo`."
+                "`.venv/bin/python -m pip install -e g1_slam/third_party/RoboJuDo`."
             ) from exc
 
         _JOYSTICK_STATE.max_vx = config.max_vx
@@ -361,9 +362,16 @@ def run_robojudo_navigation(
     steps: int,
     controller_config: PurePursuitConfig,
     backend_config: RoboJuDoBackendConfig | None = None,
-) -> None:
+    trace_path: Path | None = None,
+    episode_id: str = "robojudo_navigation",
+    robot_id: str = "g1",
+    policy_id: str = "robojudo",
+    render: bool = True,
+) -> dict[str, object]:
     backend = RoboJuDoBackend.__new__(RoboJuDoBackend)
     backend.config = backend_config or RoboJuDoBackendConfig()
+    if not render:
+        backend.config = replace(backend.config, run_fullspeed=True)
     backend.config = replace(backend.config, repo_path=backend._install_repo_path(backend.config.repo_path))
     backend._install_virtual_joystick_controller(backend.config)
     backend.pipeline = backend._build_pipeline(backend.config, world)
@@ -384,8 +392,11 @@ def run_robojudo_navigation(
     controller = PurePursuitController(controller_config)
     path: list[tuple[float, float]] = []
     dt = float(getattr(backend.pipeline, "dt", 0.02))
+    trace_steps: list[dict[str, object]] = []
 
     trajectory_marker_index = 0
+    status = "timeout"
+    reached_goal = False
     for step in range(steps):
         sim_time = step * dt
         backend.set_dynamic_cylinders(dynamic_cylinders, sim_time=sim_time)
@@ -398,16 +409,89 @@ def run_robojudo_navigation(
 
         command = controller.command(pose, path, goal)
         pose = backend.step(command)
-        interval = max(1, backend.config.visualization.trajectory_interval_steps)
-        if step % interval == 0:
+        distance_to_goal = distance_xy((pose.x, pose.y), goal)
+        trace_steps.append(
+            {
+                "step_id": step + 1,
+                "time_s": (step + 1) * dt,
+                "robot_pose": _pose_trace(pose),
+                "goal": [goal[0], goal[1]],
+                "command": {"linear": command.linear, "yaw_rate": command.yaw_rate},
+                "distance_to_goal": distance_to_goal,
+                "entities": _trace_entities(world, dynamic_cylinders, sim_time),
+                "path": [[x, y] for x, y in path],
+            }
+        )
+        visualization = backend.config.visualization
+        interval = max(1, visualization.trajectory_interval_steps) if visualization is not None else 1
+        if visualization is not None and step % interval == 0:
             backend.add_trajectory_marker(pose, trajectory_marker_index)
             trajectory_marker_index += 1
 
-        if distance_xy((pose.x, pose.y), goal) < controller.config.goal_tolerance:
+        if distance_to_goal < controller.config.goal_tolerance:
+            status = "success"
+            reached_goal = True
             print(f"Meta alcanzada con RoboJuDo en {step + 1} pasos. Pose final: {pose}")
-            return
+            break
 
-    print(f"Meta no alcanzada con RoboJuDo en {steps} pasos. Pose final: {pose}")
+    if not reached_goal:
+        print(f"Meta no alcanzada con RoboJuDo en {steps} pasos. Pose final: {pose}")
+
+    result: dict[str, object] = {
+        "schema": "asimovbm.sim_trace.v1",
+        "episode_id": episode_id,
+        "robot_id": robot_id,
+        "policy_id": policy_id,
+        "status": status,
+        "reached_goal": reached_goal,
+        "step_count": len(trace_steps),
+        "goal": [goal[0], goal[1]],
+        "final_pose": _pose_trace(pose),
+        "steps": trace_steps,
+    }
+    if trace_path is not None:
+        trace_path.parent.mkdir(parents=True, exist_ok=True)
+        trace_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    return result
+
+
+def _pose_trace(pose: Pose2D) -> dict[str, float]:
+    return {"x": pose.x, "y": pose.y, "yaw": pose.yaw}
+
+
+def _trace_entities(
+    world: World2D,
+    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    sim_time: float,
+) -> list[dict[str, object]]:
+    entities: list[dict[str, object]] = []
+    for index, obstacle in enumerate(world.obstacles):
+        entities.append(
+            {
+                "id": f"static_obstacle_{index}",
+                "kind": "static_obstacle",
+                "shape": "rectangle",
+                "x_min": obstacle.x_min,
+                "y_min": obstacle.y_min,
+                "x_max": obstacle.x_max,
+                "y_max": obstacle.y_max,
+            }
+        )
+    for cylinder in dynamic_cylinders:
+        x, y = cylinder.xy_at(sim_time)
+        vx, vy = cylinder.velocity_at(sim_time)
+        entities.append(
+            {
+                "id": cylinder.name,
+                "kind": "dynamic_obstacle",
+                "shape": "cylinder",
+                "x": x,
+                "y": y,
+                "radius": cylinder.radius,
+                "velocity": [vx, vy],
+            }
+        )
+    return entities
 
 
 def _axis(value: float, max_abs: float) -> float:
@@ -420,9 +504,14 @@ def _resolve_robojudo_repo_path(repo_path: Path) -> Path:
     candidate = repo_path.resolve()
     if candidate.exists():
         return candidate
-    package_root_candidate = Path(__file__).resolve().parents[2] / "third_party" / "RoboJuDo"
-    if package_root_candidate.exists():
-        return package_root_candidate
+    g1_slam_root = Path(__file__).resolve().parents[2]
+    fallback_candidates = (
+        g1_slam_root / "third_party" / "RoboJuDo",
+        g1_slam_root.parent / "third_party" / "RoboJuDo",
+    )
+    for fallback_candidate in fallback_candidates:
+        if fallback_candidate.exists():
+            return fallback_candidate
     return candidate
 
 

@@ -41,6 +41,8 @@ class EpisodicValidationRunner:
 
     def run(self, pack: EpisodePack, config: BenchmarkRunConfig | None = None) -> BenchmarkRunResult:
         config = config or BenchmarkRunConfig()
+        robot_profile_ids = _selected_robot_profile_ids(config)
+        self.robot_registry.validate_profile_ids(robot_profile_ids)
         records: list[EpisodeRunRecord] = []
         tier_summaries: list[TierRunSummary] = []
 
@@ -56,42 +58,46 @@ class EpisodicValidationRunner:
             for episode in tier.episodes:
                 if config.episode_id is not None and episode.id != config.episode_id:
                     continue
-                for attempt in range(1, max_attempts + 1):
-                    tier_attempts += 1
-                    robot = self.robot_registry.create(config.robot_profile_id)
-                    agent = self.agent_registry.create(config.agent_id)
-                    scenario = self.scenario_registry.create(episode)
-                    world = scenario.create_world()
-                    trace = self._run_episode(
-                        pack_id=pack.id,
-                        tier_id=tier.id,
-                        attempt=attempt,
-                        robot=robot,
-                        agent=agent,
-                        scenario=scenario,
-                        world=world,
-                        config=config,
-                    )
-                    metrics = (
-                        self.metric_registry.compute(trace)
-                        if trace.technical_valid
-                        else {}
-                    )
-                    records.append(
-                        EpisodeRunRecord(
+                for robot_profile_id in robot_profile_ids:
+                    for attempt in range(1, max_attempts + 1):
+                        tier_attempts += 1
+                        robot = self.robot_registry.create(robot_profile_id)
+                        agent = self.agent_registry.create(config.agent_id)
+                        scenario = self.scenario_registry.create(episode)
+                        world = scenario.create_world()
+                        trace = self._run_episode(
+                            pack_id=pack.id,
                             tier_id=tier.id,
-                            episode_id=episode.id,
                             attempt=attempt,
-                            trace=trace,
-                            metrics=metrics,
+                            robot=robot,
+                            agent=agent,
+                            scenario=scenario,
+                            world=world,
+                            config=config,
                         )
-                    )
-                    if trace.technical_valid:
-                        tier_valid += 1
-                        status_counter.update(value.status for value in metrics.values())
-                        break
-                    else:
-                        tier_technical_failures += 1
+                        metrics = (
+                            self.metric_registry.compute(trace)
+                            if trace.technical_valid
+                            else {}
+                        )
+                        records.append(
+                            EpisodeRunRecord(
+                                tier_id=tier.id,
+                                episode_id=episode.id,
+                                attempt=attempt,
+                                trace=trace,
+                                robot_profile_id=robot.profile.id,
+                                robot_embodiment_kind=robot.profile.embodiment_kind,
+                                robot_metadata=robot.profile.setup_metadata(),
+                                metrics=metrics,
+                            )
+                        )
+                        if trace.technical_valid:
+                            tier_valid += 1
+                            status_counter.update(value.status for value in metrics.values())
+                            break
+                        else:
+                            tier_technical_failures += 1
 
             tier_summaries.append(
                 TierRunSummary(
@@ -157,6 +163,7 @@ class EpisodicValidationRunner:
                         status_after_step=status,
                         collision_summary=scenario_sample.collision_summary,
                         distance_to_goal=scenario_sample.distance_to_goal,
+                        metadata=scenario_sample.metadata,
                     )
                 )
                 observation = next_observation
@@ -180,6 +187,7 @@ class EpisodicValidationRunner:
             terminal_status=status,
             robot_profile_id=robot.profile.id,
             agent_id=agent.id,
+            metadata={"robot": robot.profile.setup_metadata()},
         )
 
 
@@ -223,3 +231,11 @@ def _placeholder_axis_summary(records: list[EpisodeRunRecord]) -> dict[str, floa
         "perceived_social_awareness": None,
         "impression": None,
     }
+
+
+def _selected_robot_profile_ids(config: BenchmarkRunConfig) -> tuple[str, ...]:
+    if config.robot_profile_ids:
+        return tuple(profile_id for profile_id in config.robot_profile_ids if profile_id)
+    if not config.robot_profile_id:
+        return ()
+    return (config.robot_profile_id,)
