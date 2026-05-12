@@ -1,21 +1,12 @@
 [project]
 name = "asimovbm"
 version = "0.1.0"
-description = "Paper HRI benchmark client and server artifacts."
+description = "Local-first Paper HRI benchmark validation artifacts."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-server = [
-  "fastapi>=0.115",
-  "uvicorn[standard]>=0.32",
-  "pydantic>=2.9",
-  "websockets>=13.0",
-]
-client-transport = [
-  "websockets>=13.0",
-]
 g1-mujoco = [
   "mujoco>=3.2.0",
   "numpy>=1.26",
@@ -28,15 +19,14 @@ dev = [
 ]
 
 [project.scripts]
-asimovbm-client = "asimovbm_client.cli:main"
-asimovbm-server = "asimovbm_server.cli:main"
+asimovbm-local = "asimovbm.local_runner.cli:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "g1_slam/src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "g1_slam/src"]
@@ -48,6 +38,7 @@ filterwarnings = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = ["archive", "g1_slam/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]

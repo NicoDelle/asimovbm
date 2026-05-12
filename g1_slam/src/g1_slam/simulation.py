@@ -10,6 +10,8 @@ from .mapping import GridSpec, OccupancyGrid
 from .planner import AStarPlanner
 from .world import World2D
 
+DEFAULT_START_POSE = Pose2D(-4.2, -3.2, 0.0)
+
 
 @dataclass(frozen=True)
 class SimulationResult:
@@ -30,7 +32,7 @@ def make_grid_for_world(world: World2D, resolution: float = 0.10) -> OccupancyGr
 def run_navigation(
     world: World2D,
     *,
-    start: Pose2D = Pose2D(-4.2, -3.2, 0.0),
+    start: Pose2D | None = None,
     goal: tuple[float, float] = (6.2, 3.1),
     steps: int = 900,
     dt: float = 0.08,
@@ -38,7 +40,7 @@ def run_navigation(
     grid: OccupancyGrid | None = None,
     controller_config: PurePursuitConfig | None = None,
 ) -> SimulationResult:
-    pose = start
+    pose = start or DEFAULT_START_POSE
     grid = grid or make_grid_for_world(world)
     planner = AStarPlanner(grid)
     controller = PurePursuitController(controller_config)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from math import cos, sin
 from pathlib import Path
@@ -8,8 +7,16 @@ from time import sleep
 
 from .config import LocomotionConfig, VisualizationConfig
 from .controller import PurePursuitConfig
-from .dynamic_obstacles import DynamicCylinder
+from .dynamic_obstacles import DynamicObstacle
 from .geometry import Pose2D
+from .scene_visuals import (
+    dynamic_obstacle_scene_body,
+    environment_scene_geoms,
+    navigation_lights_and_camera,
+    navigation_scene_assets,
+    navigation_visual_settings,
+    static_obstacle_geom,
+)
 from .simulation import make_grid_for_world
 from .world import World2D
 
@@ -33,27 +40,23 @@ ROBOT_SPECS = {
     ),
     "official_g1": RobotSpec(
         name="official_g1",
-        default_model_path=(
-            G1_SLAM_ROOT
-            / "third_party"
-            / "unitree_mujoco"
-            / "unitree_robots"
-            / "g1"
-            / "g1_nav_generated.xml"
-        ),
+        default_model_path=G1_SLAM_ROOT
+        / "third_party"
+        / "unitree_mujoco"
+        / "unitree_robots"
+        / "g1"
+        / "g1_nav_generated.xml",
         base_height=0.80,
         use_physics_step=False,
     ),
     "official_go2": RobotSpec(
         name="official_go2",
-        default_model_path=(
-            G1_SLAM_ROOT
-            / "third_party"
-            / "unitree_mujoco"
-            / "unitree_robots"
-            / "go2"
-            / "go2_nav_generated.xml"
-        ),
+        default_model_path=G1_SLAM_ROOT
+        / "third_party"
+        / "unitree_mujoco"
+        / "unitree_robots"
+        / "go2"
+        / "go2_nav_generated.xml",
         base_height=0.27,
         use_physics_step=False,
     ),
@@ -72,29 +75,28 @@ def run_mujoco_navigation(
     locomotion_config: LocomotionConfig,
     render: bool,
     visualization_config: VisualizationConfig | None = None,
-    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
-    trace_path: Path | None = None,
-    episode_id: str = "mujoco_navigation",
-    robot_id: str | None = None,
-    policy_id: str | None = None,
-) -> dict[str, object]:
+    dynamic_obstacles: tuple[DynamicObstacle, ...] = (),
+    dynamic_cylinders: tuple[DynamicObstacle, ...] | None = None,
+) -> None:
     try:
         import mujoco
     except ModuleNotFoundError as exc:
-        raise RuntimeError("Install mujoco to use --mujoco: .venv/bin/python -m pip install mujoco") from exc
+        raise RuntimeError("Install mujoco to use --mujoco: pip install mujoco") from exc
 
     from .controller import PurePursuitController
     from .lidar import simulate_lidar
     from .locomotion import OnnxPolicyLocomotion
     from .planner import AStarPlanner
 
+    if dynamic_cylinders is not None:
+        dynamic_obstacles = dynamic_cylinders
     spec = _robot_spec(robot)
-    resolved_model_path = _resolve_model_path(spec, model_path, world, dynamic_cylinders)
+    resolved_model_path = _resolve_model_path(spec, model_path, world, dynamic_obstacles)
     model = mujoco.MjModel.from_xml_path(str(resolved_model_path))
     data = mujoco.MjData(model)
     _set_home_keyframe_pose(mujoco, model, data)
     _set_goal_marker(mujoco, model, data, goal)
-    _set_dynamic_cylinder_positions(mujoco, model, data, dynamic_cylinders, 0.0)
+    _set_dynamic_obstacle_positions(mujoco, model, data, dynamic_obstacles, 0.0)
     _set_freejoint_pose(mujoco, model, data, start, spec.base_height)
     mujoco.mj_forward(model, data)
     grid = make_grid_for_world(world)
@@ -111,9 +113,6 @@ def run_mujoco_navigation(
     pose = start
     path: list[tuple[float, float]] = []
     dt = model.opt.timestep
-    trace_steps: list[dict[str, object]] = []
-    status = "timeout"
-    reached_goal = False
 
     viewer_context = _viewer(model, data) if render else _null_context()
     with viewer_context as viewer:
@@ -121,8 +120,8 @@ def run_mujoco_navigation(
             _configure_viewer_camera(viewer, visualization_config)
         for step in range(steps):
             sim_time = step * dt
-            active_world = _world_with_dynamic_cylinders(world, dynamic_cylinders, sim_time)
-            _set_dynamic_cylinder_positions(mujoco, model, data, dynamic_cylinders, sim_time)
+            active_world = _world_with_dynamic_obstacles(world, dynamic_obstacles, sim_time)
+            _set_dynamic_obstacle_positions(mujoco, model, data, dynamic_obstacles, sim_time)
             scan = simulate_lidar(active_world, pose)
             grid.update_from_scan(pose, scan)
             if step % 10 == 0 or not path or controller.waypoint_index >= len(path):
@@ -147,43 +146,9 @@ def run_mujoco_navigation(
                     pose = _read_freejoint_pose(mujoco, model, data, fallback=pose)
             else:
                 mujoco.mj_forward(model, data)
-            distance_to_goal = _distance_xy((pose.x, pose.y), goal)
-            trace_steps.append(
-                {
-                    "step_id": step + 1,
-                    "time_s": (step + 1) * dt,
-                    "robot_pose": _pose_trace(pose),
-                    "goal": [goal[0], goal[1]],
-                    "command": {"linear": command.linear, "yaw_rate": command.yaw_rate},
-                    "distance_to_goal": distance_to_goal,
-                    "entities": _trace_entities(world, dynamic_cylinders, sim_time),
-                    "path": [[x, y] for x, y in path],
-                }
-            )
-            if distance_to_goal < controller.config.goal_tolerance:
-                status = "success"
-                reached_goal = True
-                break
             if render:
                 viewer.sync()
                 sleep(dt)
-
-    result: dict[str, object] = {
-        "schema": "asimovbm.sim_trace.v1",
-        "episode_id": episode_id,
-        "robot_id": robot_id or robot,
-        "policy_id": policy_id or _policy_id(locomotion_config),
-        "status": status,
-        "reached_goal": reached_goal,
-        "step_count": len(trace_steps),
-        "goal": [goal[0], goal[1]],
-        "final_pose": _pose_trace(pose),
-        "steps": trace_steps,
-    }
-    if trace_path is not None:
-        trace_path.parent.mkdir(parents=True, exist_ok=True)
-        trace_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
-    return result
 
 
 def _robot_spec(robot: str) -> RobotSpec:
@@ -198,21 +163,21 @@ def _resolve_model_path(
     spec: RobotSpec,
     model_path: str | Path | None,
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    dynamic_obstacles: tuple[DynamicObstacle, ...],
 ) -> Path:
     if model_path is not None:
         return Path(model_path)
     if spec.name == "official_g1":
-        return _ensure_official_g1_nav_scene(spec.default_model_path, world, dynamic_cylinders)
+        return _ensure_official_g1_nav_scene(spec.default_model_path, world, dynamic_obstacles)
     if spec.name == "official_go2":
-        return _ensure_official_go2_nav_scene(spec.default_model_path, world, dynamic_cylinders)
+        return _ensure_official_go2_nav_scene(spec.default_model_path, world, dynamic_obstacles)
     return spec.default_model_path
 
 
 def _ensure_official_g1_nav_scene(
     scene_path: Path,
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    dynamic_obstacles: tuple[DynamicObstacle, ...],
 ) -> Path:
     robot_xml = scene_path.parent / "g1_29dof.xml"
     meshes_dir = scene_path.parent / "meshes"
@@ -225,13 +190,13 @@ def _ensure_official_g1_nav_scene(
             "cd g1_slam/third_party/unitree_mujoco\n"
             "git sparse-checkout set unitree_robots/g1"
         )
-    scene_path.write_text(_official_g1_scene_xml(world, dynamic_cylinders), encoding="utf-8")
+    scene_path.write_text(_official_g1_scene_xml(world, dynamic_obstacles), encoding="utf-8")
     return scene_path
 
 
 def _official_g1_scene_xml(
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
+    dynamic_obstacles: tuple[DynamicObstacle, ...] = (),
 ) -> str:
     return _official_unitree_nav_scene_xml(
         world,
@@ -239,14 +204,14 @@ def _official_g1_scene_xml(
         include_file="g1_29dof.xml",
         statistic_center="0 0 0.8",
         statistic_extent=8.0,
-        dynamic_cylinders=dynamic_cylinders,
+        dynamic_obstacles=dynamic_obstacles,
     )
 
 
 def _ensure_official_go2_nav_scene(
     scene_path: Path,
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    dynamic_obstacles: tuple[DynamicObstacle, ...],
 ) -> Path:
     robot_xml = scene_path.parent / "go2.xml"
     assets_dir = scene_path.parent / "assets"
@@ -259,13 +224,13 @@ def _ensure_official_go2_nav_scene(
             "cd g1_slam/third_party/unitree_mujoco\n"
             "git sparse-checkout set unitree_robots/go2"
         )
-    scene_path.write_text(_official_go2_scene_xml(world, dynamic_cylinders), encoding="utf-8")
+    scene_path.write_text(_official_go2_scene_xml(world, dynamic_obstacles), encoding="utf-8")
     return scene_path
 
 
 def _official_go2_scene_xml(
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...] = (),
+    dynamic_obstacles: tuple[DynamicObstacle, ...] = (),
 ) -> str:
     return _official_unitree_nav_scene_xml(
         world,
@@ -273,7 +238,7 @@ def _official_go2_scene_xml(
         include_file="go2.xml",
         statistic_center="0 0 0.35",
         statistic_extent=6.0,
-        dynamic_cylinders=dynamic_cylinders,
+        dynamic_obstacles=dynamic_obstacles,
     )
 
 
@@ -284,154 +249,79 @@ def _official_unitree_nav_scene_xml(
     include_file: str,
     statistic_center: str,
     statistic_extent: float,
-    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    dynamic_obstacles: tuple[DynamicObstacle, ...],
 ) -> str:
-    obstacle_geoms = []
-    for index, obstacle in enumerate(world.obstacles):
-        center_x = 0.5 * (obstacle.x_min + obstacle.x_max)
-        center_y = 0.5 * (obstacle.y_min + obstacle.y_max)
-        size_x = 0.5 * (obstacle.x_max - obstacle.x_min)
-        size_y = 0.5 * (obstacle.y_max - obstacle.y_min)
-        obstacle_geoms.append(
-            f'    <geom name="obs_{index}" type="box" pos="{center_x:.4f} {center_y:.4f} 0.35" '
-            f'size="{size_x:.4f} {size_y:.4f} 0.35" material="nav_obstacle_mat"/>'
-        )
-
-    floor_size_x = 0.5 * (world.x_max - world.x_min) + 1.0
-    floor_size_y = 0.5 * (world.y_max - world.y_min) + 1.0
-    floor_center_x = 0.5 * (world.x_min + world.x_max)
-    floor_center_y = 0.5 * (world.y_min + world.y_max)
-    obstacles = "\n".join(obstacle_geoms)
-    dynamic_cylinder_geoms = "\n".join(
-        _dynamic_cylinder_scene_body(cylinder) for cylinder in dynamic_cylinders
+    assets = navigation_scene_assets()
+    environment = environment_scene_geoms(world)
+    lighting = navigation_lights_and_camera()
+    obstacles = "\n".join(
+        static_obstacle_geom(index, obstacle) for index, obstacle in enumerate(world.obstacles)
     )
+    dynamic_obstacle_bodies = "\n".join(
+        dynamic_obstacle_scene_body(obstacle) for obstacle in dynamic_obstacles
+    )
+    visual_settings = navigation_visual_settings()
     return f"""<mujoco model="{model_name}">
   <include file="{include_file}"/>
 
   <statistic center="{statistic_center}" extent="{statistic_extent:.1f}"/>
-  <visual>
-    <global azimuth="130" elevation="-35"/>
-    <headlight ambient="0.55 0.55 0.55" diffuse="0.35 0.35 0.35" specular="0.03 0.03 0.03"/>
-  </visual>
+{visual_settings}
 
   <asset>
-    <texture name="nav_grid" type="2d" builtin="checker" rgb1="0.18 0.19 0.20" rgb2="0.24 0.25 0.26" width="512" height="512"/>
-    <material name="nav_floor_mat" texture="nav_grid" texrepeat="4 4" reflectance="0.1"/>
-    <material name="nav_obstacle_mat" rgba="0.8 0.18 0.12 1"/>
-    <material name="nav_dynamic_cylinder_mat" rgba="0.05 0.35 1.0 1"/>
-    <material name="nav_goal_mat" rgba="0.1 0.8 0.35 1"/>
+{assets}
   </asset>
 
   <worldbody>
-    <light name="soft_top_light" directional="true" pos="0 0 8" dir="0 0 -1" ambient="0.35 0.35 0.35" diffuse="0.45 0.45 0.45" specular="0.02 0.02 0.02"/>
-    <light name="soft_front_light" directional="true" pos="0 -5 6" dir="0 0.45 -1" ambient="0.18 0.18 0.18" diffuse="0.28 0.28 0.28" specular="0.01 0.01 0.01"/>
-    <camera name="nav_overview" pos="1 -8 7" xyaxes="1 0 0 0 0.65 0.76"/>
-    <geom name="floor" type="plane" pos="{floor_center_x:.4f} {floor_center_y:.4f} 0" size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>
+{lighting}
+{environment}
     <geom name="goal" type="cylinder" pos="0 0 0.02" size="0.28 0.02" material="nav_goal_mat"/>
 {obstacles}
-{dynamic_cylinder_geoms}
+{dynamic_obstacle_bodies}
   </worldbody>
 </mujoco>
 """
 
 
-def _dynamic_cylinder_scene_body(cylinder: DynamicCylinder) -> str:
-    x, y = cylinder.center
-    return (
-        f'    <body name="{cylinder.name}" mocap="true" '
-        f'pos="{x:.4f} {y:.4f} {cylinder.half_height:.4f}">\n'
-        f'      <geom name="{cylinder.name}_geom" type="cylinder" '
-        f'size="{cylinder.radius:.4f} {cylinder.half_height:.4f}" '
-        'material="nav_dynamic_cylinder_mat"/>\n'
-        "    </body>"
-    )
-
-
-def _set_dynamic_cylinder_positions(
+def _set_dynamic_obstacle_positions(
     mujoco,
     model,
     data,
-    cylinders: tuple[DynamicCylinder, ...],
+    obstacles: tuple[DynamicObstacle, ...],
     sim_time: float,
 ) -> None:
-    for cylinder in cylinders:
-        body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, cylinder.name)
+    for obstacle in obstacles:
+        body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, obstacle.name)
         if body_id < 0:
             continue
         mocap_id = int(model.body_mocapid[body_id])
         if mocap_id < 0:
             continue
-        x, y = cylinder.xy_at(sim_time)
+        x, y = obstacle.xy_at(sim_time)
         data.mocap_pos[mocap_id][0] = x
         data.mocap_pos[mocap_id][1] = y
-        data.mocap_pos[mocap_id][2] = cylinder.half_height
+        data.mocap_pos[mocap_id][2] = 0.0 if obstacle.mode == "npc" else obstacle.half_height
+        data.mocap_quat[mocap_id] = _yaw_quat(obstacle.yaw_at(sim_time))
 
 
-def _world_with_dynamic_cylinders(
+def _world_with_dynamic_obstacles(
     world: World2D,
-    cylinders: tuple[DynamicCylinder, ...],
+    obstacles: tuple[DynamicObstacle, ...],
     sim_time: float,
 ) -> World2D:
-    if not cylinders:
+    if not obstacles:
         return world
     return World2D(
         x_min=world.x_min,
         y_min=world.y_min,
         x_max=world.x_max,
         y_max=world.y_max,
-        obstacles=world.obstacles + tuple(cylinder.rect_at(sim_time) for cylinder in cylinders),
+        obstacles=world.obstacles + tuple(obstacle.rect_at(sim_time) for obstacle in obstacles),
     )
 
 
-def _pose_trace(pose: Pose2D) -> dict[str, float]:
-    return {"x": pose.x, "y": pose.y, "yaw": pose.yaw}
-
-
-def _trace_entities(
-    world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...],
-    sim_time: float,
-) -> list[dict[str, object]]:
-    entities: list[dict[str, object]] = []
-    for index, obstacle in enumerate(world.obstacles):
-        entities.append(
-            {
-                "id": f"static_obstacle_{index}",
-                "kind": "static_obstacle",
-                "shape": "rectangle",
-                "x_min": obstacle.x_min,
-                "y_min": obstacle.y_min,
-                "x_max": obstacle.x_max,
-                "y_max": obstacle.y_max,
-            }
-        )
-    for cylinder in dynamic_cylinders:
-        x, y = cylinder.xy_at(sim_time)
-        vx, vy = cylinder.velocity_at(sim_time)
-        entities.append(
-            {
-                "id": cylinder.name,
-                "kind": "dynamic_obstacle",
-                "shape": "cylinder",
-                "x": x,
-                "y": y,
-                "radius": cylinder.radius,
-                "velocity": [vx, vy],
-            }
-        )
-    return entities
-
-
-def _distance_xy(a: tuple[float, float], b: tuple[float, float]) -> float:
-    dx = a[0] - b[0]
-    dy = a[1] - b[1]
-    return (dx * dx + dy * dy) ** 0.5
-
-
-def _policy_id(config: LocomotionConfig) -> str:
-    if config.policy_path is None:
-        return config.mode
-    return f"{config.mode}:{config.policy_path}"
+def _yaw_quat(yaw: float) -> tuple[float, float, float, float]:
+    half_yaw = 0.5 * yaw
+    return (cos(half_yaw), 0.0, 0.0, sin(half_yaw))
 
 
 def _set_home_keyframe_pose(mujoco, model, data) -> None:

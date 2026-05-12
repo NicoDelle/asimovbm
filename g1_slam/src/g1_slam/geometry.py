@@ -10,7 +10,7 @@ class Pose2D:
     y: float
     yaw: float = 0.0
 
-    def moved(self, linear_velocity: float, yaw_rate: float, dt: float) -> "Pose2D":
+    def moved(self, linear_velocity: float, yaw_rate: float, dt: float) -> Pose2D:
         next_yaw = wrap_angle(self.yaw + yaw_rate * dt)
         return Pose2D(
             self.x + linear_velocity * cos(next_yaw) * dt,
@@ -37,4 +37,3 @@ def distance_xy(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 def heading_to(source: tuple[float, float], target: tuple[float, float]) -> float:
     return atan2(target[1] - source[1], target[0] - source[0])
-

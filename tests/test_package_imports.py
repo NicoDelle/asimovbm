@@ -1,9 +1,4 @@
-"""Unit 0 import gate: planned package surfaces must import cleanly.
-
-Optional MuJoCo/ONNX paths must surface a clear setup diagnostic when the
-extras are not installed, never an import-time crash inside base server
-imports.
-"""
+"""Import gate for active local-first package surfaces."""
 
 from __future__ import annotations
 
@@ -12,23 +7,23 @@ import importlib
 import pytest
 
 
-def test_asimovbm_client_imports() -> None:
-    module = importlib.import_module("asimovbm_client")
+def test_asimovbm_package_imports() -> None:
+    module = importlib.import_module("asimovbm")
     assert module is not None
 
 
-def test_asimovbm_client_protocol_imports() -> None:
-    module = importlib.import_module("asimovbm_client.protocol")
+def test_asimovbm_metrics_imports() -> None:
+    module = importlib.import_module("asimovbm.metrics")
     assert module is not None
 
 
-def test_asimovbm_protocol_package_importable() -> None:
-    module = importlib.import_module("asimovbm_protocol")
+def test_asimovbm_local_runner_imports() -> None:
+    module = importlib.import_module("asimovbm.local_runner")
     assert module is not None
 
 
-def test_asimovbm_server_package_importable() -> None:
-    module = importlib.import_module("asimovbm_server")
+def test_asimovbm_reports_imports() -> None:
+    module = importlib.import_module("asimovbm.reports")
     assert module is not None
 
 
@@ -42,8 +37,7 @@ def test_g1_slam_pure_python_importable_without_mujoco() -> None:
 
 def test_optional_mujoco_runner_surface() -> None:
     """Importing the optional MuJoCo runner must either succeed or fail with
-    a recognizable dependency error, not a silent attribute crash inside the
-    server import path."""
+    a recognizable dependency error, not a silent attribute crash."""
     try:
         importlib.import_module("g1_slam.mujoco_runner")
     except ImportError as exc:
