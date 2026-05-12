@@ -14,6 +14,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--artifact-root", type=Path, default=Path("artifacts/local-validation"))
     parser.add_argument("--iterations", type=int, default=1)
     parser.add_argument(
+        "--viewer-speed",
+        type=float,
+        default=4.0,
+        help="Visible playback speed multiplier; use 1.0 for realtime.",
+    )
+    parser.add_argument(
         "--episode",
         action="append",
         choices=DEFAULT_EPISODE_IDS,
@@ -36,6 +42,7 @@ def main(argv: list[str] | None = None) -> int:
             iterations=args.iterations,
             episode_ids=tuple(args.episodes or ()),
             visible=visible,
+            viewer_speed=args.viewer_speed,
             run_id=args.run_id,
         )
     )

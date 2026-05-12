@@ -36,6 +36,7 @@ class LocalTraceBackend(Protocol):
         *,
         iteration: int,
         viewer_enabled: bool,
+        viewer_speed: float,
     ) -> LocalEpisodeTrace:
         ...
 
@@ -75,10 +76,17 @@ class G1SlamReferenceBackend:
         *,
         iteration: int,
         viewer_enabled: bool,
+        viewer_speed: float = 4.0,
     ) -> LocalEpisodeTrace:
         world = _episode_world(spec)
         dynamic_obstacles = _dynamic_obstacles(spec)
-        viewer_proof = _maybe_run_real_viewer(spec, world, dynamic_obstacles, viewer_enabled)
+        viewer_proof = _maybe_run_real_viewer(
+            spec,
+            world,
+            dynamic_obstacles,
+            viewer_enabled,
+            viewer_speed,
+        )
         pose = spec.config.start
         goal = spec.config.goal
         grid = make_grid_for_world(world)
@@ -151,6 +159,7 @@ class G1SlamReferenceBackend:
             viewer_mode="visible" if viewer_enabled else "headless",
             metadata={
                 "reference_backend": True,
+                "viewer_speed": viewer_speed,
                 "viewer_proof": viewer_proof,
                 "canonical_backend_proof": backend_proof_for(spec).to_dict(),
             },
@@ -251,13 +260,14 @@ def _maybe_run_real_viewer(
     world: World2D,
     dynamic_obstacles,
     viewer_enabled: bool,
+    viewer_speed: float,
 ) -> dict[str, object]:
     if not viewer_enabled:
         return {"viewer_requested": False, "viewer_status": "not_requested"}
     try:
         if spec.locomotion_mode == "robojudo":
-            return _run_robojudo_viewer(spec, world)
-        return _run_mujoco_viewer(spec, world, dynamic_obstacles)
+            return _run_robojudo_viewer(spec, world, viewer_speed)
+        return _run_mujoco_viewer(spec, world, dynamic_obstacles, viewer_speed)
     except Exception as exc:
         return {
             "viewer_requested": True,
@@ -266,7 +276,7 @@ def _maybe_run_real_viewer(
         }
 
 
-def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D) -> dict[str, object]:
+def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D, viewer_speed: float) -> dict[str, object]:
     from g1_slam.robojudo_backend import RoboJuDoBackendConfig, run_robojudo_navigation
 
     run_robojudo_navigation(
@@ -279,7 +289,7 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D) -> dict[str, ob
             max_vx=spec.config.controller.max_linear_speed,
             max_vy=spec.config.controller.max_linear_speed,
             max_yaw_rate=spec.config.controller.max_yaw_rate,
-            run_fullspeed=False,
+            run_fullspeed=viewer_speed > 1.0,
             enable_dynamic_cylinders=spec.config.dynamic_obstacles.blue_cylinders,
             dynamic_cylinder_seed=spec.config.dynamic_obstacles.blue_cylinder_seed,
             dynamic_cylinder_count=spec.config.dynamic_obstacles.blue_cylinder_count,
@@ -290,10 +300,20 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D) -> dict[str, ob
             visualization=spec.config.visualization,
         ),
     )
-    return {"viewer_requested": True, "viewer_status": "launched", "path": "g1_robojudo"}
+    return {
+        "viewer_requested": True,
+        "viewer_status": "launched",
+        "path": "g1_robojudo",
+        "viewer_speed": viewer_speed,
+    }
 
 
-def _run_mujoco_viewer(spec: LocalEpisodeSpec, world: World2D, dynamic_obstacles) -> dict[str, object]:
+def _run_mujoco_viewer(
+    spec: LocalEpisodeSpec,
+    world: World2D,
+    dynamic_obstacles,
+    viewer_speed: float,
+) -> dict[str, object]:
     from g1_slam.mujoco_runner import run_mujoco_navigation
 
     run_mujoco_navigation(
@@ -308,8 +328,14 @@ def _run_mujoco_viewer(spec: LocalEpisodeSpec, world: World2D, dynamic_obstacles
         render=True,
         visualization_config=spec.config.visualization,
         dynamic_obstacles=dynamic_obstacles,
+        realtime_factor=viewer_speed,
     )
-    return {"viewer_requested": True, "viewer_status": "launched", "path": "mujoco"}
+    return {
+        "viewer_requested": True,
+        "viewer_status": "launched",
+        "path": "mujoco",
+        "viewer_speed": viewer_speed,
+    }
 
 
 def _viewer_locomotion_config(spec: LocalEpisodeSpec) -> LocomotionConfig:

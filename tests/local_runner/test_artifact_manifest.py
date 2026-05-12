@@ -10,7 +10,7 @@ from asimovbm.local_runner.traces import LocalEpisodeTrace, LocalStepTrace
 class FakeTraceBackend:
     backend_id = "fake_trace_backend"
 
-    def run_episode(self, spec, *, iteration: int, viewer_enabled: bool):
+    def run_episode(self, spec, *, iteration: int, viewer_enabled: bool, viewer_speed: float):
         return LocalEpisodeTrace(
             episode_id=spec.id,
             iteration=iteration,

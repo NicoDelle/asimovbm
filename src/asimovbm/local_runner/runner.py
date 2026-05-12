@@ -23,6 +23,7 @@ class LocalRunConfig:
     iterations: int = 1
     episode_ids: tuple[str, ...] = ()
     visible: bool | None = None
+    viewer_speed: float = 4.0
     run_id: str | None = None
     catalog: EpisodeCatalog | None = None
     backend: LocalTraceBackend | None = None
@@ -36,6 +37,8 @@ class LocalRunConfig:
     def validate(self) -> None:
         if self.iterations < 1:
             raise ValueError("iterations must be >= 1")
+        if self.viewer_speed <= 0.0:
+            raise ValueError("viewer_speed must be > 0")
 
 
 @dataclass(frozen=True)
@@ -59,7 +62,12 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
 
     for iteration in range(config.iterations):
         for spec in catalog.select(config.episode_ids):
-            trace = backend.run_episode(spec, iteration=iteration, viewer_enabled=visible)
+            trace = backend.run_episode(
+                spec,
+                iteration=iteration,
+                viewer_enabled=visible,
+                viewer_speed=config.viewer_speed,
+            )
             trace = _with_episode_metadata(trace, spec)
             episode_dir = paths.run_dir / spec.id / f"iteration-{iteration:03d}"
             trace_path = episode_dir / "trace.json"
@@ -151,6 +159,7 @@ def _build_manifest(
         "created_at": datetime.now(tz=UTC).isoformat(),
         "iterations": config.iterations,
         "viewer_mode": "visible" if config.resolved_visible() else "headless",
+        "viewer_speed": config.viewer_speed,
         "canonical_episode_ids": catalog.episode_ids,
         "selected_episode_ids": tuple(spec.id for spec in selected_specs),
         "episodes": [spec.to_manifest() for spec in selected_specs],

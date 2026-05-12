@@ -1,0 +1,10 @@
+05-13 00:03:30.228 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-13 00:03:30.233 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-13 00:03:31.452 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-13 00:03:32.776 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-13 00:54:32.616 [DEBUG] [robojudo] ========== robojudo-1.5.0 init done ==========
+
+05-13 00:54:32.622 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-13 00:54:33.938 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu
+05-13 00:54:35.267 [INFO] [robojudo.pipeline.base_pipeline] Using device: cpu

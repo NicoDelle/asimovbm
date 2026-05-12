@@ -61,6 +61,12 @@ def main() -> None:
         default=None,
         help="NPC movement policy. Default: config value, usually social_patrol",
     )
+    parser.add_argument(
+        "--realtime-factor",
+        type=float,
+        default=1.0,
+        help="MuJoCo render playback speed multiplier; use 1.0 for realtime.",
+    )
     parser.add_argument("--render", action="store_true", help="open the MuJoCo viewer")
     args = parser.parse_args()
 
@@ -170,6 +176,7 @@ def main() -> None:
             visualization_config=nav_config.visualization,
             render=args.render,
             dynamic_obstacles=dynamic_obstacles,
+            realtime_factor=args.realtime_factor,
         )
         return
 

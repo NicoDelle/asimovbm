@@ -13,6 +13,12 @@ def test_iteration_count_controls_default_viewer_mode() -> None:
     assert LocalRunConfig(iterations=1, visible=False).resolved_visible() is False
 
 
+def test_viewer_speed_defaults_fast_but_can_be_realtime() -> None:
+    assert LocalRunConfig().viewer_speed == 4.0
+    assert build_parser().parse_args([]).viewer_speed == 4.0
+    assert build_parser().parse_args(["--viewer-speed", "1"]).viewer_speed == 1.0
+
+
 def test_visible_and_headless_flags_are_mutually_exclusive() -> None:
     parser = build_parser()
 

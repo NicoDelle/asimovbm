@@ -77,7 +77,10 @@ def run_mujoco_navigation(
     visualization_config: VisualizationConfig | None = None,
     dynamic_obstacles: tuple[DynamicObstacle, ...] = (),
     dynamic_cylinders: tuple[DynamicObstacle, ...] | None = None,
+    realtime_factor: float = 1.0,
 ) -> None:
+    if realtime_factor <= 0.0:
+        raise ValueError("realtime_factor must be > 0")
     try:
         import mujoco
     except ModuleNotFoundError as exc:
@@ -148,7 +151,7 @@ def run_mujoco_navigation(
                 mujoco.mj_forward(model, data)
             if render:
                 viewer.sync()
-                sleep(dt)
+                sleep(dt / realtime_factor)
 
 
 def _robot_spec(robot: str) -> RobotSpec:
