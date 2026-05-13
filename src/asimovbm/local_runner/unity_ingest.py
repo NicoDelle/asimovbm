@@ -15,7 +15,6 @@ from .artifacts import prepare_run_dir, relative_to_run, write_json
 from .metrics_bridge import build_trace_metric_report
 from .traces import LocalEpisodeTrace, LocalRunRecord, LocalStepTrace
 
-
 UNITY_TRACE_SCHEMA_VERSION = "asimovbm.unity_trace.v1"
 UNITY_VALIDATION_SCHEMA_VERSION = "asimovbm.unity_validation.v1"
 

@@ -17,9 +17,6 @@ from asimovbm.metrics.scoring import (
     default_axis_scoring_model,
     global_score_from_axes,
 )
-from asimovbm.metrics.weights import (
-    WEIGHT_MODEL_KIND,
-)
 
 
 class MetricFreezeRequiredError(RuntimeError):

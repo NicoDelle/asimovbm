@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import asimovbm.local_runner.backends as local_backends
 from g1_slam.controller import PurePursuitConfig
 from g1_slam.geometry import Pose2D
 from g1_slam.world import World2D
 
+import asimovbm.local_runner.backends as local_backends
 from asimovbm.local_runner.backends import G1SlamReferenceBackend
 from asimovbm.local_runner.catalog import LocalEpisodeSpec
 from g1_slam.config import (

@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-
 MODULE_PATH = Path(__file__).resolve().parents[2] / "tools/unity/prepare_mujoco_unity_project.py"
 SPEC = importlib.util.spec_from_file_location("prepare_mujoco_unity_project", MODULE_PATH)
 assert SPEC is not None

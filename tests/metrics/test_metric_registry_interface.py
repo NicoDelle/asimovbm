@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from asimovbm.local_runner.traces import LocalEpisodeTrace, LocalStepTrace
 from asimovbm.metrics import (
     SOCIAL_NAVIGATION_METRIC_IDS,
     default_metric_registry,
 )
-from asimovbm.local_runner.traces import LocalEpisodeTrace, LocalStepTrace
 
 
 def test_default_metric_registry_exposes_all_social_navigation_metric_ids() -> None:

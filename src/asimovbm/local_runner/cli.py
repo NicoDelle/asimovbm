@@ -5,7 +5,13 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .catalog import DEFAULT_EPISODE_IDS, DEFAULT_POLICY_BY_ROBOT, POLICY_IDS, ROBOT_IDS, EpisodeCatalogError
+from .catalog import (
+    DEFAULT_EPISODE_IDS,
+    DEFAULT_POLICY_BY_ROBOT,
+    POLICY_IDS,
+    ROBOT_IDS,
+    EpisodeCatalogError,
+)
 from .runner import LocalRunConfig, run_local_validation
 
 

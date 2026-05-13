@@ -116,7 +116,7 @@ class LocalEpisodeSpec:
             "visualization": dict(self.raw_config.get("visualization", {})),
         }
 
-    def with_policy(self, policy_id: str, policy_path: Path | None = None) -> "LocalEpisodeSpec":
+    def with_policy(self, policy_id: str, policy_path: Path | None = None) -> LocalEpisodeSpec:
         profile = _policy_profile_for(self.robot_id, policy_id)
         profile_locomotion = dict(profile["locomotion"])
         if policy_path is not None:

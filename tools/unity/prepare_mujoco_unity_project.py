@@ -18,7 +18,6 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path, PurePosixPath
 
-
 DEFAULT_MUJOCO_VERSION = "3.8.1"
 MUJOCO_REPO_GIT_URL = "https://github.com/google-deepmind/mujoco.git"
 MUJOCO_RELEASE_BASE_URL = "https://github.com/google-deepmind/mujoco/releases/download"
