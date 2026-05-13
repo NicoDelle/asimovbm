@@ -5,6 +5,8 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from functools import wraps
+from inspect import signature
 from math import atan2, cos, sin
 from pathlib import Path
 
@@ -26,10 +28,13 @@ from .simulation import make_grid_for_world
 from .world import World2D
 
 
+DEFAULT_ROBOJUDO_CONFIG = "g1"
+
+
 @dataclass(frozen=True)
 class RoboJuDoBackendConfig:
     repo_path: Path = Path("g1_slam/third_party/RoboJuDo")
-    config_name: str = "g1_asap_loco"
+    config_name: str = DEFAULT_ROBOJUDO_CONFIG
     max_vx: float = 0.5
     max_vy: float = 0.5
     max_yaw_rate: float = 1.0
@@ -84,6 +89,7 @@ class RoboJuDoBackend:
     def __init__(self, config: RoboJuDoBackendConfig | None = None) -> None:
         self.config = config or RoboJuDoBackendConfig()
         self.config = replace(self.config, repo_path=self._install_repo_path(self.config.repo_path))
+        self._install_mujoco_viewer_compat()
         self._install_virtual_joystick_controller(self.config)
         self.pipeline = self._build_pipeline(self.config)
 
@@ -288,7 +294,99 @@ class RoboJuDoBackend:
         repo_path_text = repo_path.as_posix()
         if repo_path_text not in sys.path:
             sys.path.insert(0, repo_path_text)
+        mujoco_viewer_path = repo_path / "third_party" / "mujoco_viewer"
+        if mujoco_viewer_path.exists():
+            mujoco_viewer_path_text = mujoco_viewer_path.as_posix()
+            if mujoco_viewer_path_text not in sys.path:
+                sys.path.insert(0, mujoco_viewer_path_text)
         return repo_path
+
+    @staticmethod
+    def _install_mujoco_viewer_compat() -> None:
+        try:
+            import mujoco_viewer
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "No pude importar mujoco_viewer. Instala las dependencias en tu entorno con "
+                "`.venv/bin/python -m pip install -e g1_slam/third_party/RoboJuDo "
+                "imageio`."
+            ) from exc
+
+        viewer_class = mujoco_viewer.MujocoViewer
+        if getattr(viewer_class, "_g1_slam_accepts_diable_key_callbacks", False):
+            RoboJuDoBackend._install_marker_compat(viewer_class)
+            return
+        if "diable_key_callbacks" in signature(viewer_class.__init__).parameters:
+            viewer_class._g1_slam_accepts_diable_key_callbacks = True
+            RoboJuDoBackend._install_marker_compat(viewer_class)
+            return
+
+        original_init = viewer_class.__init__
+
+        @wraps(original_init)
+        def init_with_robojudo_typo(self, *args, diable_key_callbacks=False, **kwargs):
+            return original_init(self, *args, **kwargs)
+
+        viewer_class.__init__ = init_with_robojudo_typo
+        viewer_class._g1_slam_accepts_diable_key_callbacks = True
+        RoboJuDoBackend._install_marker_compat(viewer_class)
+
+    @staticmethod
+    def _install_marker_compat(viewer_class) -> None:
+        if getattr(viewer_class, "_g1_slam_marker_compat", False):
+            return
+
+        def add_marker_to_scene_compat(self, marker):
+            import mujoco
+            import numpy as np
+
+            if self.scn.ngeom >= self.scn.maxgeom:
+                raise RuntimeError(f"Ran out of geoms. maxgeom: {self.scn.maxgeom}")
+
+            geom = self.scn.geoms[self.scn.ngeom]
+            geom.dataid = -1
+            geom.objtype = mujoco.mjtObj.mjOBJ_UNKNOWN
+            geom.objid = -1
+            geom.category = mujoco.mjtCatBit.mjCAT_DECOR
+            if hasattr(geom, "texid"):
+                geom.texid = -1
+            if hasattr(geom, "texuniform"):
+                geom.texuniform = 0
+            if hasattr(geom, "texrepeat"):
+                geom.texrepeat[0] = 1
+                geom.texrepeat[1] = 1
+            geom.emission = 0
+            geom.specular = 0.5
+            geom.shininess = 0.5
+            geom.reflectance = 0
+            geom.type = mujoco.mjtGeom.mjGEOM_BOX
+            geom.size[:] = np.ones(3) * 0.1
+            geom.mat[:] = np.eye(3)
+            geom.rgba[:] = np.ones(4)
+
+            for key, value in marker.items():
+                if key == "id":
+                    continue
+                if isinstance(value, (int, float, mujoco._enums.mjtGeom)):
+                    setattr(geom, key, value)
+                elif isinstance(value, (tuple, list, np.ndarray)):
+                    attr = getattr(geom, key)
+                    attr[:] = np.asarray(value).reshape(attr.shape)
+                elif isinstance(value, str):
+                    if key != "label":
+                        raise AssertionError("Only label is a string in mjtGeom.")
+                    geom.label = value
+                elif hasattr(geom, key):
+                    raise ValueError(
+                        f"mjtGeom has attr {key} but type {type(value)} is invalid"
+                    )
+                else:
+                    raise ValueError(f"mjtGeom doesn't have field {key}")
+
+            self.scn.ngeom += 1
+
+        viewer_class._add_marker_to_scene = add_marker_to_scene_compat
+        viewer_class._g1_slam_marker_compat = True
 
     @staticmethod
     def _install_virtual_joystick_controller(config: RoboJuDoBackendConfig) -> None:
@@ -385,6 +483,7 @@ def run_robojudo_navigation(
     if not render:
         backend.config = replace(backend.config, run_fullspeed=True)
     backend.config = replace(backend.config, repo_path=backend._install_repo_path(backend.config.repo_path))
+    backend._install_mujoco_viewer_compat()
     backend._install_virtual_joystick_controller(backend.config)
     backend.pipeline = backend._build_pipeline(backend.config, world)
     backend.reset()
@@ -430,7 +529,7 @@ def run_robojudo_navigation(
                 "goal": [goal[0], goal[1]],
                 "command": {"linear": command.linear, "yaw_rate": command.yaw_rate},
                 "distance_to_goal": distance_to_goal,
-                "entities": _trace_entities(world, dynamic_cylinders, sim_time),
+                "entities": _trace_entities(world, dynamic_obstacles, sim_time),
                 "path": [[x, y] for x, y in path],
             }
         )
@@ -473,7 +572,7 @@ def _pose_trace(pose: Pose2D) -> dict[str, float]:
 
 def _trace_entities(
     world: World2D,
-    dynamic_cylinders: tuple[DynamicCylinder, ...],
+    dynamic_obstacles: tuple[DynamicObstacle, ...],
     sim_time: float,
 ) -> list[dict[str, object]]:
     entities: list[dict[str, object]] = []
@@ -489,17 +588,20 @@ def _trace_entities(
                 "y_max": obstacle.y_max,
             }
         )
-    for cylinder in dynamic_cylinders:
-        x, y = cylinder.xy_at(sim_time)
-        vx, vy = cylinder.velocity_at(sim_time)
+    for obstacle in dynamic_obstacles:
+        x, y = obstacle.xy_at(sim_time)
+        next_x, next_y = obstacle.xy_at(sim_time + 0.1)
+        vx = (next_x - x) / 0.1
+        vy = (next_y - y) / 0.1
         entities.append(
             {
-                "id": cylinder.name,
+                "id": obstacle.name,
                 "kind": "dynamic_obstacle",
-                "shape": "cylinder",
+                "shape": "capsule" if obstacle.mode == "npc" else "cylinder",
                 "x": x,
                 "y": y,
-                "radius": cylinder.radius,
+                "radius": obstacle.radius,
+                "policy": obstacle.policy,
                 "velocity": [vx, vy],
             }
         )

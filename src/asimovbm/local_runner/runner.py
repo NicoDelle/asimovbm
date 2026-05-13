@@ -4,15 +4,28 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from math import fsum
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from asimovbm.metrics import SOCIAL_NAVIGATION_AXIS_IDS
+from asimovbm.metrics.scoring import global_score_from_axes, snap_score
+from asimovbm.metrics.weights import (
+    WEIGHT_MODEL_KIND,
+    WEIGHT_MODEL_SOURCE,
+    WEIGHT_MODEL_VERSION,
+)
 from asimovbm.reports import JsonReportInput, build_json_report
 
 from .artifacts import prepare_run_dir, relative_to_run, write_json
 from .backends import G1SlamReferenceBackend, LocalTraceBackend, backend_proof_for
-from .catalog import EpisodeCatalog, load_default_catalog
+from .catalog import (
+    DEFAULT_POLICY_BY_ROBOT,
+    ROBOT_IDS,
+    EpisodeCatalog,
+    load_default_catalog,
+)
 from .metrics_bridge import build_trace_metric_report
 from .traces import LocalRunRecord
 
@@ -21,6 +34,9 @@ from .traces import LocalRunRecord
 class LocalRunConfig:
     artifact_root: Path = Path("artifacts/local-validation")
     iterations: int = 1
+    robot_id: str | None = None
+    policy_id: str | None = None
+    policy_path: Path | None = None
     episode_ids: tuple[str, ...] = ()
     visible: bool | None = None
     viewer_speed: float = 4.0
@@ -39,6 +55,13 @@ class LocalRunConfig:
             raise ValueError("iterations must be >= 1")
         if self.viewer_speed <= 0.0:
             raise ValueError("viewer_speed must be > 0")
+        if self.robot_id not in ROBOT_IDS:
+            raise ValueError(f"robot_id must be one of {', '.join(ROBOT_IDS)}")
+
+    def effective_policy_id(self) -> str:
+        if self.robot_id is None:
+            raise ValueError("robot_id is required")
+        return self.policy_id or DEFAULT_POLICY_BY_ROBOT[self.robot_id]
 
 
 @dataclass(frozen=True)
@@ -61,7 +84,7 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
     records: list[LocalRunRecord] = []
 
     for iteration in range(config.iterations):
-        for spec in catalog.select(config.episode_ids):
+        for spec in _selected_specs(config, catalog):
             trace = backend.run_episode(
                 spec,
                 iteration=iteration,
@@ -106,6 +129,11 @@ def _with_episode_metadata(trace, spec):
             "goal": spec.config.goal,
             "episode_title": spec.title,
             "config_checksum_sha256": spec.checksum_sha256,
+            "robot_id": spec.robot_id,
+            "policy_id": spec.policy_id,
+            "policy_path": spec.config.locomotion.policy_path.as_posix()
+            if spec.config.locomotion.policy_path is not None
+            else None,
         }
     )
     return trace.__class__(
@@ -126,7 +154,6 @@ def _with_episode_metadata(trace, spec):
 
 
 def _build_run_report(run_id: str, records: list[LocalRunRecord]) -> dict[str, Any]:
-    scored = [record.metrics["behavioral_metrics"] for record in records]
     reliability = {
         "total_episode_runs": len(records),
         "technical_valid_episode_runs": sum(1 for record in records if record.trace.technical_valid),
@@ -137,12 +164,147 @@ def _build_run_report(run_id: str, records: list[LocalRunRecord]) -> dict[str, A
             run_id=run_id,
             maturity="local_g1_slam_validation",
             reliability=reliability,
-            behavioral_metrics={
-                "status": "per_episode",
-                "episode_blocks": scored,
-            },
+            behavioral_metrics=_build_suite_behavioral_metrics(records),
         )
     )
+
+
+def _build_suite_behavioral_metrics(records: list[LocalRunRecord]) -> dict[str, Any]:
+    episode_blocks = [_episode_behavioral_block(record) for record in records]
+    axes = {
+        axis_id: _aggregate_suite_axis(axis_id, episode_blocks)
+        for axis_id in SOCIAL_NAVIGATION_AXIS_IDS
+    }
+    status = _suite_behavioral_status(axes)
+    global_score = global_score_from_axes(
+        axes,
+        cap_key="source_episode_caps",
+        axis_model="equal_weight_episode_axis_mean",
+        extra_model_metadata={"episode_axis_model": WEIGHT_MODEL_KIND},
+    )
+    if global_score["status"] == "insufficient_evidence":
+        status = "insufficient_evidence"
+    return {
+        "status": status,
+        "aggregation_scope": "suite",
+        "scoring_model": _suite_scoring_model(),
+        "global_score": global_score,
+        "axes": axes,
+        "features": {},
+        "macro_indicators": list(axes.values()),
+        "sub_indicators": [],
+        "episode_blocks": episode_blocks,
+    }
+
+
+def _episode_behavioral_block(record: LocalRunRecord) -> dict[str, Any]:
+    block = dict(record.metrics["behavioral_metrics"])
+    block["episode_id"] = record.metrics.get("episode_id", record.trace.episode_id)
+    block["iteration"] = record.metrics.get("iteration", record.trace.iteration)
+    return block
+
+
+def _aggregate_suite_axis(axis_id: str, episode_blocks: list[dict[str, Any]]) -> dict[str, Any]:
+    scores: list[float] = []
+    contributing: list[dict[str, Any]] = []
+    omitted: list[dict[str, Any]] = []
+    source_caps: list[dict[str, Any]] = []
+    source_evidence_gaps: list[dict[str, Any]] = []
+    for block in episode_blocks:
+        axis = block.get("axes", {}).get(axis_id, {})
+        score = axis.get("score")
+        run_ref = {
+            "episode_id": block.get("episode_id"),
+            "iteration": block.get("iteration"),
+        }
+        if axis.get("status") == "computed" and isinstance(score, int | float):
+            scores.append(float(score))
+            contributing.append(run_ref)
+            for cap in axis.get("applied_caps", ()):
+                source_caps.append({**run_ref, **dict(cap)})
+            gaps = _axis_evidence_gaps(axis)
+            if gaps:
+                source_evidence_gaps.append({**run_ref, "evidence_gaps": gaps})
+        else:
+            omitted.append(
+                {
+                    **run_ref,
+                    "status": axis.get("status", "missing"),
+                    "reason": axis.get("reason"),
+                }
+            )
+    if not scores:
+        status = _unscored_suite_axis_status(omitted)
+        return {
+            "axis_id": axis_id,
+            "status": status,
+            "score": None,
+            "confidence": status,
+            "contributing_episode_runs": (),
+            "omitted_episode_runs": tuple(omitted),
+            "model_metadata": _suite_scoring_model(),
+            "reason": _unscored_suite_axis_reason(status),
+        }
+    score = snap_score(fsum(scores) / len(scores))
+    return {
+        "axis_id": axis_id,
+        "status": "computed",
+        "score": score,
+        "confidence": "sufficient" if not omitted and not source_evidence_gaps else "partial",
+        "contributing_episode_runs": tuple(contributing),
+        "omitted_episode_runs": tuple(omitted),
+        "model_metadata": _suite_scoring_model(),
+        "source_episode_caps": tuple(source_caps),
+        "source_episode_evidence_gaps": tuple(source_evidence_gaps),
+    }
+
+
+def _suite_scoring_model() -> dict[str, str]:
+    return {
+        "kind": "equal_weight_episode_axis_mean",
+        "version": WEIGHT_MODEL_VERSION,
+        "source": WEIGHT_MODEL_SOURCE,
+        "episode_axis_model": WEIGHT_MODEL_KIND,
+    }
+
+
+def _axis_evidence_gaps(axis: dict[str, Any]) -> tuple[str, ...]:
+    omitted = axis.get("omitted_feature_statuses", {})
+    if not isinstance(omitted, dict):
+        return ()
+    return tuple(
+        feature_id
+        for feature_id, status in omitted.items()
+        if status in {"insufficient_evidence", "invalid_input", "missing"}
+    )
+
+
+def _suite_behavioral_status(axes: dict[str, dict[str, Any]]) -> str:
+    statuses = {axis["status"] for axis in axes.values()}
+    if "computed" in statuses:
+        return "scored"
+    if statuses and statuses <= {"not_applicable"}:
+        return "not_applicable"
+    if "invalid_input" in statuses:
+        return "invalid_input"
+    return "insufficient_evidence"
+
+
+def _unscored_suite_axis_status(omitted: list[dict[str, Any]]) -> str:
+    statuses = {str(run.get("status")) for run in omitted}
+    if statuses and statuses <= {"not_applicable"}:
+        return "not_applicable"
+    if "invalid_input" in statuses:
+        return "invalid_input"
+    return "insufficient_evidence"
+
+
+def _unscored_suite_axis_reason(status: str) -> str:
+    if status == "not_applicable":
+        return "no episode-level axis scores were applicable"
+    if status == "invalid_input":
+        return "no episode-level axis scores were computed and at least one had invalid input"
+    return "no episode-level axis scores had enough evidence to score"
 
 
 def _build_manifest(
@@ -152,12 +314,15 @@ def _build_manifest(
     run_id: str,
     report_path: str,
 ) -> dict[str, Any]:
-    selected_specs = catalog.select(config.episode_ids)
+    selected_specs = _selected_specs(config, catalog)
     return {
         "schema_version": "asimovbm.local_validation.v1",
         "run_id": run_id,
         "created_at": datetime.now(tz=UTC).isoformat(),
         "iterations": config.iterations,
+        "robot_id": config.robot_id,
+        "policy_id": config.effective_policy_id(),
+        "policy_path": config.policy_path.as_posix() if config.policy_path is not None else None,
         "viewer_mode": "visible" if config.resolved_visible() else "headless",
         "viewer_speed": config.viewer_speed,
         "canonical_episode_ids": catalog.episode_ids,
@@ -172,3 +337,12 @@ def _build_manifest(
 
 def _new_run_id() -> str:
     return f"local-{datetime.now(tz=UTC).strftime('%Y%m%dT%H%M%SZ')}-{uuid4().hex[:8]}"
+
+
+def _selected_specs(config: LocalRunConfig, catalog: EpisodeCatalog):
+    return catalog.select(
+        config.episode_ids,
+        robot_id=config.robot_id,
+        policy_id=config.effective_policy_id(),
+        policy_path=config.policy_path,
+    )

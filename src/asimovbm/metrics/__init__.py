@@ -10,9 +10,8 @@ from .models import (
     MetricValue,
 )
 from .registry import (
+    LocalTraceMetricFunction,
     MetricRegistry,
-    PlaceholderMetricFunction,
-    TraceMetricFunction,
     default_metric_registry,
 )
 
@@ -28,8 +27,7 @@ __all__ = [
     "MetricRegistry",
     "MetricStatus",
     "MetricValue",
-    "PlaceholderMetricFunction",
-    "TraceMetricFunction",
+    "LocalTraceMetricFunction",
     "aggregate_axes",
     "default_metric_registry",
 ]

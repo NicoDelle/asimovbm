@@ -13,6 +13,13 @@ from asimovbm.metrics import (
     MetricStatus,
     MetricValue,
 )
+from asimovbm.metrics.scoring import (
+    default_axis_scoring_model,
+    global_score_from_axes,
+)
+from asimovbm.metrics.weights import (
+    WEIGHT_MODEL_KIND,
+)
 
 
 class MetricFreezeRequiredError(RuntimeError):
@@ -31,7 +38,7 @@ class JsonReportInput:
     run_id: str
     maturity: str
     reliability: dict[str, Any] = field(default_factory=dict)
-    smoke_results: tuple[Mapping[str, Any] | Any, ...] = ()
+    validation_results: tuple[Mapping[str, Any] | Any, ...] = ()
     behavioral_metrics: dict[str, Any] | None = None
 
 
@@ -57,7 +64,7 @@ def build_json_report(
         if report_input.behavioral_metrics is not None
         else _behavioral_metric_block(config),
         "technical_reliability": dict(report_input.reliability),
-        "smoke_results": [_smoke_to_report_context(smoke) for smoke in report_input.smoke_results],
+        "validation_results": [_validation_result_to_report_context(result) for result in report_input.validation_results],
     }
 
 
@@ -68,8 +75,8 @@ def _behavioral_metric_block(config: JsonReportConfig) -> dict[str, Any]:
             "macro_indicators": [],
         }
     return {
-        "status": "not_applicable_smoke_context",
-        "reason": "behavioral metric engines are gated by metric freeze and social-navigation telemetry",
+        "status": "not_applicable",
+        "reason": "behavioral metrics were not supplied for this report",
         "macro_indicators": [],
     }
 
@@ -96,6 +103,7 @@ def build_behavioral_metric_block(
     return {
         "status": _behavioral_status(axis_scores, metric_values),
         "scoring_model": _scoring_model(axes),
+        "global_score": global_score_from_axes(axes),
         "axes": axes,
         "features": features,
         "macro_indicators": list(axes.values()),
@@ -150,16 +158,12 @@ def _scoring_model(axes: Mapping[str, dict[str, Any]]) -> dict[str, str]:
 
 
 def _default_scoring_model() -> dict[str, str]:
-    return {
-        "kind": "manual_v0_evidence_weights",
-        "version": "v0",
-        "source": "docs/specs/social-navigation-metrics.md",
-    }
+    return default_axis_scoring_model()
 
 
-def _smoke_to_report_context(smoke: Mapping[str, Any] | Any) -> dict[str, Any]:
-    if isinstance(smoke, Mapping):
-        return dict(smoke)
-    if hasattr(smoke, "to_report_context"):
-        return dict(smoke.to_report_context())
-    return {"value": repr(smoke)}
+def _validation_result_to_report_context(result: Mapping[str, Any] | Any) -> dict[str, Any]:
+    if isinstance(result, Mapping):
+        return dict(result)
+    if hasattr(result, "to_report_context"):
+        return dict(result.to_report_context())
+    return {"value": repr(result)}

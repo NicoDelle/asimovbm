@@ -149,6 +149,7 @@ These are recommended as **pre-aggregation caps**, not ordinary matrix cells.
 ## Proposed score matrix
 
 This is my recommended hand-tuned prior, after downgrading the cells the audit flagged. Half-steps are retained intentionally; they express uncertainty better than forcing every weak prior to `1`.
+This matrix is the runtime `manual_v1_evidence_weights` model used by the local validation report path.
 
 Column sums:
 
@@ -209,7 +210,7 @@ When a metric is `not_applicable`, remove it for that tier and renormalize the r
 
 ---
 
-## Changes from the current v0 matrix
+## Changes from the superseded v0 matrix
 
 | metric/cell | change | reason |
 |---|---:|---|

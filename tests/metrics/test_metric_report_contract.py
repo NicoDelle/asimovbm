@@ -45,5 +45,29 @@ def test_behavioral_report_block_exposes_axes_and_all_metric_features() -> None:
     assert tuple(behavioral["features"]) == SOCIAL_NAVIGATION_METRIC_IDS
     assert len(behavioral["macro_indicators"]) == 4
     assert len(behavioral["sub_indicators"]) == 16
+    assert behavioral["scoring_model"]["kind"] == "manual_v1_evidence_weights"
+    assert behavioral["global_score"]["status"] == "computed"
+    assert behavioral["global_score"]["score"] == 0.75
     assert behavioral["features"]["task_success_rate"]["normalized_score"] == 0.75
     assert behavioral["axes"]["perceived_safety"]["status"] == "computed"
+
+
+def test_behavioral_report_global_score_honors_v1_safety_cap() -> None:
+    metrics = {
+        metric_id: _score(metric_id, 1.0)
+        for metric_id in SOCIAL_NAVIGATION_METRIC_IDS
+    }
+    metrics["stability"] = MetricValue(
+        metric_id="stability",
+        status=MetricStatus.COMPUTED,
+        raw_value=0.66,
+        normalized_score=0.66,
+        confidence="sufficient",
+        raw_inputs_summary={"collisions": 1},
+    )
+
+    block = build_behavioral_metric_block(aggregate_axes(metrics), metrics)
+
+    assert block["axes"]["perceived_safety"]["score"] == 0.2
+    assert block["global_score"]["score"] == 0.2
+    assert block["global_score"]["applied_caps"][0]["kind"] == "v1_safety_axis_global_cap"

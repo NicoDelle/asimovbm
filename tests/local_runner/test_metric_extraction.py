@@ -5,7 +5,7 @@ from asimovbm.local_runner.traces import LocalEpisodeTrace, LocalStepTrace
 from asimovbm.metrics import MetricStatus
 
 
-def test_metric_bridge_computes_core_metrics_and_marks_human_metrics_not_applicable() -> None:
+def test_metric_bridge_computes_core_metrics_and_marks_missing_human_telemetry_insufficient() -> None:
     trace = LocalEpisodeTrace(
         episode_id="g1_approach_user",
         iteration=0,
@@ -38,4 +38,6 @@ def test_metric_bridge_computes_core_metrics_and_marks_human_metrics_not_applica
     assert metrics["task_success_rate"].status == MetricStatus.COMPUTED
     assert metrics["task_completion_time"].status == MetricStatus.COMPUTED
     assert metrics["comfort_aware_path_efficiency"].status == MetricStatus.COMPUTED
-    assert metrics["min_human_robot_distance"].status == MetricStatus.NOT_APPLICABLE
+    assert metrics["min_human_robot_distance"].status == MetricStatus.INSUFFICIENT_EVIDENCE
+    assert metrics["proxemic_intrusion_dose"].status == MetricStatus.INSUFFICIENT_EVIDENCE
+    assert metrics["speed_near_humans_p95"].status == MetricStatus.INSUFFICIENT_EVIDENCE

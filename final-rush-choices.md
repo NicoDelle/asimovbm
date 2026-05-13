@@ -127,4 +127,13 @@ The portable default execution backend is `g1_slam_reference_trace_v1`, which
 instruments the existing `g1_slam` planner, lidar, controller, world, and
 dynamic-obstacle scripts. Manifests still record the canonical backend selector
 for each episode (`g1_robojudo` for G1 and `go2_mujoco_onnx` for Go2) so
-release-smoke runs with optional assets can prove those paths explicitly.
+visible runs with optional assets can prove those paths explicitly.
+
+## Metric Aggregation Model
+
+Runtime behavioral reports use `manual_v1_evidence_weights` from
+`docs/metrics_research/hri_metric_weighting_artifact.md`. Per-episode axes
+renormalize over computed features, preserve insufficient/invalid evidence
+instead of calling it not-applicable, and apply the v1 safety/dexterity caps.
+Suite reports equal-weight episode axis scores and propagate source safety caps
+to the global score using the strictest source cap.

@@ -1,10 +1,4 @@
-"""Metric registry for the social-navigation contract.
-
-The registry is kept for callers that need a stable list of metric ids. The
-local runner uses :mod:`asimovbm.local_runner.metrics_bridge` for real formula
-extraction because each formula accepts specific typed inputs rather than a raw
-trace object.
-"""
+"""Metric registry for the social-navigation contract."""
 
 from __future__ import annotations
 
@@ -20,8 +14,8 @@ from .models import (
 )
 
 
-class TraceMetricFunction:
-    """Runner-facing compatibility adapter until full trace extraction lands."""
+class LocalTraceMetricFunction:
+    """Registry adapter that delegates local traces to the real metric bridge."""
 
     def __init__(
         self,
@@ -42,20 +36,28 @@ class TraceMetricFunction:
                 reason=f"missing required trace fields: {', '.join(missing)}",
                 raw_inputs_summary={"missing_fields": tuple(missing)},
             )
-        return MetricValue(
-            metric_id=self.id,
-            status=MetricStatus.INSUFFICIENT_EVIDENCE,
-            confidence="insufficient",
-            reason="metric extraction for v1 formula inputs is not implemented yet",
-            raw_inputs_summary={
-                "available_steps": len(trace.steps),
-                "trace_adapter": "pending",
-            },
-            metadata={"tier_id": context.tier_id, "episode_id": context.episode_id},
-        )
-
-
-PlaceholderMetricFunction = TraceMetricFunction
+        try:
+            from asimovbm.local_runner.metrics_bridge import compute_metrics_for_trace
+            from asimovbm.local_runner.traces import LocalEpisodeTrace
+        except ImportError as exc:
+            return MetricValue(
+                metric_id=self.id,
+                status=MetricStatus.INSUFFICIENT_EVIDENCE,
+                confidence="insufficient",
+                reason=f"local trace metric bridge is unavailable: {exc}",
+                raw_inputs_summary={"available_steps": len(trace.steps)},
+                metadata={"tier_id": context.tier_id, "episode_id": context.episode_id},
+            )
+        if not isinstance(trace, LocalEpisodeTrace):
+            return MetricValue(
+                metric_id=self.id,
+                status=MetricStatus.INSUFFICIENT_EVIDENCE,
+                confidence="insufficient",
+                reason=f"unsupported trace type for default registry: {type(trace).__name__}",
+                raw_inputs_summary={"available_steps": len(trace.steps)},
+                metadata={"tier_id": context.tier_id, "episode_id": context.episode_id},
+            )
+        return compute_metrics_for_trace(trace)[self.id]
 
 
 class MetricRegistry:
@@ -84,7 +86,7 @@ class MetricRegistry:
 
 def default_metric_registry() -> MetricRegistry:
     return MetricRegistry(
-        TraceMetricFunction(metric_id)
+        LocalTraceMetricFunction(metric_id)
         for metric_id in SOCIAL_NAVIGATION_METRIC_IDS
     )
 
