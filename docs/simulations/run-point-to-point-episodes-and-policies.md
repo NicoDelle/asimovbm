@@ -45,11 +45,30 @@ for these point-to-point episodes is `g1_asap_loco`. Use
 `--robojudo-config g1` to run the same episode with the Unitree G1 RoboJuDo
 policy config.
 
-The three G1 point-to-point JSON files also set `controller.start_delay_s` to
-`2.0`, so the simulation starts, holds the robot in place for two seconds, and
-then begins sending navigation commands.
+Each episode JSON sets `controller.start_delay_s` to `1.0`, so the simulation
+starts, holds the robot in place for one second, and then begins sending
+navigation commands.
 
-Open floor, no obstacles:
+For the humanoid, run the full 12-command sweep when you want every combination
+of the three environments, two RoboJuDo configs, and two named camera views:
+
+- Environments: open floor, static obstacles, dynamic NPCs.
+- RoboJuDo configs: `g1_asap_loco`, `g1`.
+- Camera views: `arrival`, `bystander`.
+
+### Open Floor
+
+Open floor, `g1_asap_loco`, arrival view:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/g1_point_to_point_open.json \
+  --robojudo-config g1_asap_loco \
+  --camera-view arrival \
+  --render
+```
+
+Open floor, `g1_asap_loco`, bystander view:
 
 ```bash
 python3 -m g1_slam \
@@ -59,7 +78,17 @@ python3 -m g1_slam \
   --render
 ```
 
-Open floor with `g1`:
+Open floor, `g1`, arrival view:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/g1_point_to_point_open.json \
+  --robojudo-config g1 \
+  --camera-view arrival \
+  --render
+```
+
+Open floor, `g1`, bystander view:
 
 ```bash
 python3 -m g1_slam \
@@ -69,7 +98,19 @@ python3 -m g1_slam \
   --render
 ```
 
-Static obstacles, two red blocks:
+### Static Obstacles
+
+Static obstacles, `g1_asap_loco`, arrival view:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/g1_point_to_point_static_obstacles.json \
+  --robojudo-config g1_asap_loco \
+  --camera-view arrival \
+  --render
+```
+
+Static obstacles, `g1_asap_loco`, bystander view:
 
 ```bash
 python3 -m g1_slam \
@@ -79,7 +120,17 @@ python3 -m g1_slam \
   --render
 ```
 
-Static obstacles with `g1`:
+Static obstacles, `g1`, arrival view:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/g1_point_to_point_static_obstacles.json \
+  --robojudo-config g1 \
+  --camera-view arrival \
+  --render
+```
+
+Static obstacles, `g1`, bystander view:
 
 ```bash
 python3 -m g1_slam \
@@ -89,7 +140,19 @@ python3 -m g1_slam \
   --render
 ```
 
-Dynamic obstacles, two pedestrian NPCs:
+### Dynamic NPCs
+
+Dynamic obstacles, `g1_asap_loco`, arrival view:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/g1_point_to_point_dynamic_npcs.json \
+  --robojudo-config g1_asap_loco \
+  --camera-view arrival \
+  --render
+```
+
+Dynamic obstacles, `g1_asap_loco`, bystander view:
 
 ```bash
 python3 -m g1_slam \
@@ -99,7 +162,17 @@ python3 -m g1_slam \
   --render
 ```
 
-Dynamic obstacles with `g1`:
+Dynamic obstacles, `g1`, arrival view:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/g1_point_to_point_dynamic_npcs.json \
+  --robojudo-config g1 \
+  --camera-view arrival \
+  --render
+```
+
+Dynamic obstacles, `g1`, bystander view:
 
 ```bash
 python3 -m g1_slam \

@@ -21,20 +21,13 @@ from g1_slam.mapping import GridSpec, OccupancyGrid
 from g1_slam.mujoco_runner import _official_g1_scene_xml, _official_go2_scene_xml, _robot_spec
 from g1_slam.planner import AStarPlanner
 from g1_slam.robojudo_backend import (
-<<<<<<< HEAD
     DEFAULT_ROBOJUDO_CONFIG,
-    RoboJuDoBackend,
-    RoboJuDoBackendConfig,
-    _robojudo_navigation_scene_tail,
-    _world_with_dynamic_obstacles,
-=======
     RoboJuDoBackend,
     RoboJuDoBackendConfig,
     _robojudo_navigation_scene_tail,
     _trace_entities,
     _world_with_dynamic_obstacles,
     run_robojudo_navigation,
->>>>>>> 61a2468 (Added episodes)
 )
 from g1_slam.simulation import run_navigation
 from g1_slam.world import RectObstacle, World2D, default_world
@@ -171,7 +164,7 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(configs["g1_point_to_point_open"].dynamic_obstacles.mode, "none")
         self.assertEqual(configs["g1_point_to_point_open"].world.x_min, -8.0)
         self.assertEqual(configs["g1_point_to_point_open"].world.x_max, 8.0)
-        self.assertEqual(configs["g1_point_to_point_open"].controller.start_delay_s, 2.0)
+        self.assertEqual(configs["g1_point_to_point_open"].controller.start_delay_s, 1.0)
         self.assertEqual(configs["g1_point_to_point_open"].locomotion.robojudo_config, "g1_asap_loco")
         self.assertEqual(
             len(configs["g1_point_to_point_static_obstacles"].world.obstacles),
@@ -181,7 +174,7 @@ class NavigationTests(unittest.TestCase):
             configs["g1_point_to_point_static_obstacles"].dynamic_obstacles.mode,
             "none",
         )
-        self.assertEqual(configs["g1_point_to_point_static_obstacles"].controller.start_delay_s, 2.0)
+        self.assertEqual(configs["g1_point_to_point_static_obstacles"].controller.start_delay_s, 1.0)
         self.assertEqual(configs["g1_point_to_point_dynamic_npcs"].world.obstacles, ())
         self.assertEqual(
             configs["g1_point_to_point_dynamic_npcs"].dynamic_obstacles.mode,
@@ -195,7 +188,7 @@ class NavigationTests(unittest.TestCase):
             tuple(obstacle.center for obstacle in configs["g1_point_to_point_dynamic_npcs"].dynamic_obstacles.obstacles),
             ((-1.0, -1.6), (2.0, -1.6)),
         )
-        self.assertEqual(configs["g1_point_to_point_dynamic_npcs"].controller.start_delay_s, 2.0)
+        self.assertEqual(configs["g1_point_to_point_dynamic_npcs"].controller.start_delay_s, 1.0)
         self.assertEqual(configs["go2_point_to_point_open"].world.obstacles, ())
         self.assertEqual(configs["go2_point_to_point_open"].dynamic_obstacles.mode, "none")
         self.assertEqual(configs["go2_point_to_point_open"].world.x_min, -8.0)
@@ -247,6 +240,7 @@ class NavigationTests(unittest.TestCase):
             3,
         )
         for config in configs.values():
+            self.assertEqual(config.controller.start_delay_s, 1.0)
             self.assertTrue(config.visualization.fixed_camera)
             self.assertIn("arrival", config.visualization.camera_views)
             self.assertIn("bystander", config.visualization.camera_views)
