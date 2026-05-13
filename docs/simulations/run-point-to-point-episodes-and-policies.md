@@ -45,9 +45,9 @@ for these point-to-point episodes is `g1_asap_loco`. Use
 `--robojudo-config g1` to run the same episode with the Unitree G1 RoboJuDo
 policy config.
 
-The three G1 point-to-point JSON files also set `controller.start_delay_s` to
-`2.0`, so the simulation starts, holds the robot in place for two seconds, and
-then begins sending navigation commands.
+Each episode JSON sets `controller.start_delay_s` to `1.0`, so the simulation
+starts, holds the robot in place for one second, and then begins sending
+navigation commands.
 
 For the humanoid, run the full 12-command sweep when you want every combination
 of the three environments, two RoboJuDo configs, and two named camera views:

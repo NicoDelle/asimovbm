@@ -31,7 +31,8 @@
     "waypoint_tolerance": 0.25,
     "goal_tolerance": 0.3,
     "max_linear_speed": 1.0,
-    "max_yaw_rate": 1.35
+    "max_yaw_rate": 1.35,
+    "start_delay_s": 1.0
   },
   "locomotion": {
     "mode": "policy",
