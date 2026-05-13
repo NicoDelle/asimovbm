@@ -20,6 +20,7 @@ dev = [
 
 [project.scripts]
 asimovbm-local = "asimovbm.local_runner.cli:main"
+asimovbm-unity = "asimovbm.local_runner.unity_runner:main"
 asimovbm-web = "asimovbm.web.server:main"
 
 [build-system]

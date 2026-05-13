@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-05-13 13:17:02Z" end-time="2026-05-13 13:17:04Z" duration="1,7755884">
+  <test-suite type="TestSuite" id="1009" name="AsimovBM" fullname="AsimovBM" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-05-13 13:17:02Z" end-time="2026-05-13 13:17:04Z" duration="1.775588" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1003" name="AsimovBM.PlayMode.Tests.dll" fullname="D:/_PROJECTS/Unity/AsimovBM/Library/ScriptAssemblies/AsimovBM.PlayMode.Tests.dll" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-05-13 13:17:02Z" end-time="2026-05-13 13:17:04Z" duration="1.766486" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="31916" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1004" name="AsimovBM" fullname="AsimovBM" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-05-13 13:17:02Z" end-time="2026-05-13 13:17:04Z" duration="1.765556" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1005" name="Tests" fullname="AsimovBM.Tests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-05-13 13:17:02Z" end-time="2026-05-13 13:17:04Z" duration="1.765198" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="AsimovGeneratedScenePlayModeTests" fullname="AsimovBM.Tests.AsimovGeneratedScenePlayModeTests" classname="AsimovBM.Tests.AsimovGeneratedScenePlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-05-13 13:17:02Z" end-time="2026-05-13 13:17:04Z" duration="1.763931" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1002" name="GeneratedScenesWriteTraceArtifacts" fullname="AsimovBM.Tests.AsimovGeneratedScenePlayModeTests.GeneratedScenesWriteTraceArtifacts" methodname="GeneratedScenesWriteTraceArtifacts" classname="AsimovBM.Tests.AsimovGeneratedScenePlayModeTests" runstate="Runnable" seed="546833437" result="Passed" start-time="2026-05-13 13:17:02Z" end-time="2026-05-13 13:17:04Z" duration="1.750936" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[AsimovBM Unity trace written: D:\_PROJECTS\Unity\AsimovBM\Temp\AsimovBMUnityTests\unity-playmode-test\g1_kinematic_smoke\iteration-000\raw-unity-trace.json
+Loaded AsimovBM G1 motion clip g1_walk: 125 frames at 120 fps.
+AsimovBM Unity trace written: D:\_PROJECTS\Unity\AsimovBM\Temp\AsimovBMUnityTests\unity-playmode-test\g1_real_motion\iteration-000\raw-unity-trace.json
+Saving results to: C:/Users/andre/AppData/LocalLow/DefaultCompany/AsimovBM\TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

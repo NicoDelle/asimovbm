@@ -117,6 +117,19 @@ That command writes:
 For multiple iterations, each episode gets `iteration-000`, `iteration-001`,
 and so on.
 
+## Unity Trace Ingest
+
+Unity is a separate visual validation producer. From WSL, run:
+
+```bash
+PYTHONPATH=src:g1_slam/src python -m asimovbm.local_runner.unity_runner run \
+  --unity-project /mnt/d/_PROJECTS/Unity/AsimovBM \
+  --run-id unity-smoke
+```
+
+That command writes `artifacts/unity-validation/<run-id>/manifest.json`,
+`report.json`, and one trace/metrics pair per Unity scene.
+
 ## What The Files Mean
 
 - `manifest.json` records selected episodes, config checksums, robot selectors,

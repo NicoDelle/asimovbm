@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-05-13T13:48:13.062572+00:00",
+  "metadata": {},
+  "raw_unity_traces": [
+    "/mnt/d/_PROJECTS/Unity/AsimovBM/Artifacts/AsimovBM/Unity/press-play/g1_kinematic_smoke/iteration-000/raw-unity-trace.json"
+  ],
+  "records": [
+    {
+      "canonical_backend_id": "g1_slam_kinematic",
+      "episode_id": "g1_kinematic_smoke",
+      "execution_backend_id": "unity_mujoco_trace_v1",
+      "iteration": 0,
+      "metrics_path": "g1_kinematic_smoke/iteration-000/metrics.json",
+      "technical_valid": true,
+      "terminal_status": "success",
+      "trace_path": "g1_kinematic_smoke/iteration-000/trace.json",
+      "viewer_mode": "unity_editor_play"
+    }
+  ],
+  "report_path": "report.json",
+  "run_id": "press-play",
+  "schema_version": "asimovbm.unity_validation.v1",
+  "selected_episode_ids": [
+    "g1_kinematic_smoke"
+  ],
+  "viewer_mode": "unity"
+}

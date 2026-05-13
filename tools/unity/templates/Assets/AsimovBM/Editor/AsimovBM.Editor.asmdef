@@ -1,0 +1,20 @@
+{
+  "name": "AsimovBM.Editor",
+  "rootNamespace": "AsimovBM.Editor",
+  "references": [
+    "AsimovBM.MujocoRuntime",
+    "Mujoco.Runtime",
+    "Mujoco.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

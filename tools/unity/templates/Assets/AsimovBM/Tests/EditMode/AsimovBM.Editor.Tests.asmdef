@@ -1,0 +1,26 @@
+{
+  "name": "AsimovBM.Editor.Tests",
+  "rootNamespace": "AsimovBM.Tests",
+  "references": [
+    "AsimovBM.Editor",
+    "AsimovBM.MujocoRuntime",
+    "Mujoco.Runtime",
+    "Mujoco.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

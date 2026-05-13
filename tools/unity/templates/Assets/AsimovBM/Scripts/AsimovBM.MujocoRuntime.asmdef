@@ -1,0 +1,16 @@
+{
+  "name": "AsimovBM.MujocoRuntime",
+  "rootNamespace": "AsimovBM.Mujoco",
+  "references": [
+    "Mujoco.Runtime"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

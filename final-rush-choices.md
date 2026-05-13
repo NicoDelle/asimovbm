@@ -128,3 +128,19 @@ instruments the existing `g1_slam` planner, lidar, controller, world, and
 dynamic-obstacle scripts. Manifests still record the canonical backend selector
 for each episode (`g1_robojudo` for G1 and `go2_mujoco_onnx` for Go2) so
 release-smoke runs with optional assets can prove those paths explicitly.
+
+## Unity MuJoCo Validation Add-On
+
+Unity validation is an additive visual/real-time trace producer, not a
+replacement for `asimovbm-local`. The active terminal path is:
+
+```bash
+PYTHONPATH=src:g1_slam/src python -m asimovbm.local_runner.unity_runner run \
+  --unity-project /mnt/d/_PROJECTS/Unity/AsimovBM \
+  --run-id unity-smoke
+```
+
+The runner generates Unity scenes, runs the PlayMode trace validation, ingests
+Unity raw JSON, and writes `artifacts/unity-validation/<run-id>/manifest.json`
+and `report.json`. Each Unity scene must use a distinct `episode_id` so metrics
+files do not overwrite each other.
