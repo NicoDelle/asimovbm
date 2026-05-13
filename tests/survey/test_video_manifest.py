@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from asimovbm.survey.video_manifest import VideoManifestError, parse_video_manifest
+from asimovbm.survey.video_manifest import (
+    VideoManifestError,
+    discover_sim_output_manifest,
+    parse_video_manifest,
+)
 
 
 def test_manifest_returns_group_videos_in_episode_order(tmp_path: Path) -> None:
@@ -82,3 +86,121 @@ def test_manifest_rejects_paths_outside_video_root(tmp_path: Path) -> None:
             },
             video_root=tmp_path,
         )
+
+
+def test_manifest_parses_prediction_source_under_artifact_root(tmp_path: Path) -> None:
+    manifest = parse_video_manifest(
+        {
+            "videos": [
+                {
+                    "video_id": "with-prediction",
+                    "path": "video.mp4",
+                    "policy_id": "policy_a",
+                    "viewpoint": "first_person",
+                    "robot_id": "g1",
+                    "episode_id": "g1_approach_user",
+                    "group_ids": ["policy_a_fp"],
+                    "prediction_source": {
+                        "kind": "episode_metrics_csv",
+                        "path": "run-1/episode-metrics-000.csv",
+                        "run_id": "run-1",
+                        "iteration": 0,
+                    },
+                }
+            ]
+        },
+        video_root=tmp_path / "videos",
+        artifact_root=tmp_path / "runs",
+    )
+
+    source = manifest.videos[0].prediction_source
+    assert source is not None
+    assert source.kind == "episode_metrics_csv"
+    assert source.iteration == 0
+
+
+def test_manifest_rejects_prediction_source_outside_artifact_root(tmp_path: Path) -> None:
+    with pytest.raises(VideoManifestError, match="prediction source path"):
+        parse_video_manifest(
+            {
+                "videos": [
+                    {
+                        "video_id": "escape",
+                        "path": "video.mp4",
+                        "policy_id": "policy_a",
+                        "viewpoint": "first_person",
+                        "robot_id": "g1",
+                        "episode_id": "g1_approach_user",
+                        "group_ids": ["policy_a_fp"],
+                        "prediction_source": {
+                            "kind": "metrics_json",
+                            "path": "../escape.json",
+                        },
+                    }
+                ]
+            },
+            video_root=tmp_path / "videos",
+            artifact_root=tmp_path / "runs",
+        )
+
+
+def test_discovers_sim_output_video_json_pair(tmp_path: Path) -> None:
+    video_root = tmp_path / "videos"
+    json_root = tmp_path / "json"
+    video_path = video_root / "policy_a" / "arrival" / "g1_point_to_point_open.mp4"
+    json_path = json_root / "policy_a" / "arrival" / "g1_point_to_point_open.json"
+    video_path.parent.mkdir(parents=True)
+    json_path.parent.mkdir(parents=True)
+    video_path.write_bytes(b"fake")
+    json_path.write_text(
+        """
+        {
+          "episode_id": "g1_point_to_point_open",
+          "robot_id": "g1",
+          "policy_id": "policy_a",
+          "camera_view": "arrival"
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    manifest = discover_sim_output_manifest(
+        study_id="pilot",
+        video_root=video_root,
+        json_root=json_root,
+    )
+
+    video = manifest.videos[0]
+    assert video.video_id == "policy_a_fp_g1_point_to_point_open"
+    assert video.path == "policy_a/arrival/g1_point_to_point_open.mp4"
+    assert video.viewpoint == "first_person"
+    assert video.group_ids == ("policy_a_fp",)
+    assert video.prediction_source is not None
+    assert video.prediction_source.root == "survey_json_root"
+    assert video.prediction_source.path == "policy_a/arrival/g1_point_to_point_open.json"
+
+
+def test_discovers_go2_sim_output_only_when_enabled(tmp_path: Path) -> None:
+    video_root = tmp_path / "videos"
+    json_root = tmp_path / "json"
+    video_path = video_root / "policy_a" / "bystander" / "go2_point_to_point_open.mp4"
+    json_path = json_root / "policy_a" / "bystander" / "go2_point_to_point_open.json"
+    video_path.parent.mkdir(parents=True)
+    json_path.parent.mkdir(parents=True)
+    video_path.write_bytes(b"fake")
+    json_path.write_text('{"robot_id": "go2"}', encoding="utf-8")
+
+    required_manifest = discover_sim_output_manifest(
+        study_id="pilot",
+        video_root=video_root,
+        json_root=json_root,
+    )
+    go2_manifest = discover_sim_output_manifest(
+        study_id="pilot",
+        video_root=video_root,
+        json_root=json_root,
+        include_go2=True,
+    )
+
+    assert required_manifest.videos == ()
+    assert go2_manifest.videos[0].group_ids == ("go2_policy_a_bystander",)

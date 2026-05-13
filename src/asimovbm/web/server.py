@@ -13,11 +13,13 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from asimovbm.survey import design_payload
 from asimovbm.survey.analysis import aggregate_video_scores
+from asimovbm.survey.comparison import compare_predictions_with_survey
 from asimovbm.survey.export import participants_csv_text, write_participants_csv
+from asimovbm.survey.prediction import load_video_predictions
 from asimovbm.survey.storage import SurveyStorageError, SurveyStore
 from asimovbm.survey.video_manifest import (
     VideoManifestError,
-    empty_video_manifest,
+    discover_sim_output_manifest,
     load_video_manifest,
 )
 
@@ -29,12 +31,14 @@ class WebConfig:
     artifact_root: Path = Path("artifacts/local-validation")
     survey_root: Path = Path("artifacts/survey")
     video_root: Path = Path("artifacts/survey/videos")
+    survey_json_root: Path = Path("artifacts/survey/json")
     study_id: str = "pilot"
     video_manifest_path: Path | None = None
     host: str = "127.0.0.1"
     port: int = 8765
     include_q5: bool = False
     include_go2: bool = False
+    survey_quota_per_group: int = 30
 
 
 @dataclass(frozen=True)
@@ -99,10 +103,46 @@ class WebApp:
             )
         if path == "/api/survey/analysis":
             store = self._store()
+            weight_preset = _single_query_default(query, "weight_preset", "equal")
             return _json_response(
                 {
                     "study_id": self.config.study_id,
-                    "aggregate": aggregate_video_scores(store.responses()),
+                    "aggregate": aggregate_video_scores(
+                        store.responses(),
+                        weight_preset=weight_preset,
+                    ),
+                }
+            )
+        if path == "/api/survey/predictions":
+            manifest = self._video_manifest()
+            return _json_response(
+                {
+                    "study_id": manifest.study_id,
+                    "predictions": load_video_predictions(
+                        manifest.videos,
+                        artifact_root=self.config.artifact_root,
+                        source_roots=self._prediction_roots(),
+                    ),
+                }
+            )
+        if path == "/api/survey/comparison":
+            store = self._store()
+            manifest = self._video_manifest()
+            weight_preset = _single_query_default(query, "weight_preset", "equal")
+            predictions = load_video_predictions(
+                manifest.videos,
+                artifact_root=self.config.artifact_root,
+                source_roots=self._prediction_roots(),
+            )
+            return _json_response(
+                {
+                    "study_id": manifest.study_id,
+                    "comparison": compare_predictions_with_survey(
+                        manifest.videos,
+                        predictions=predictions,
+                        responses=store.responses(),
+                        weight_preset=weight_preset,
+                    ),
                 }
             )
         if path == "/api/survey/participants.csv":
@@ -129,8 +169,13 @@ class WebApp:
         payload = _decode_json(body)
         store = self._store()
         if path == "/api/survey/participants":
-            group_id = str(payload.get("group_id", ""))
             manifest = self._video_manifest()
+            group_id = str(payload.get("group_id", ""))
+            if not group_id:
+                group_id = store.next_quota_group(
+                    self._eligible_group_ids(manifest),
+                    quota_per_group=self.config.survey_quota_per_group,
+                )
             videos = manifest.videos_for_group(group_id)
             record = store.start_participant(
                 group_id=group_id,
@@ -138,7 +183,13 @@ class WebApp:
                 assigned_video_ids=tuple(video.video_id for video in videos),
                 metadata=payload.get("metadata", {}),
             )
-            return _json_response({"participant": record}, status=201)
+            return _json_response(
+                {
+                    "participant": record,
+                    "videos": [video.to_dict() for video in videos],
+                },
+                status=201,
+            )
         if path == "/api/survey/responses":
             record = store.append_response(
                 payload,
@@ -153,10 +204,35 @@ class WebApp:
 
     def _video_manifest(self):
         if self.config.video_manifest_path is None:
-            return empty_video_manifest(study_id=self.config.study_id)
+            return discover_sim_output_manifest(
+                study_id=self.config.study_id,
+                video_root=self.config.video_root,
+                json_root=self.config.survey_json_root,
+                include_go2=self.config.include_go2,
+            )
         return load_video_manifest(
             self.config.video_manifest_path,
             video_root=self.config.video_root,
+            artifact_root=self.config.artifact_root,
+            prediction_roots=self._prediction_roots(),
+        )
+
+    def _prediction_roots(self) -> dict[str, Path]:
+        return {
+            "artifact_root": self.config.artifact_root,
+            "survey_json_root": self.config.survey_json_root,
+        }
+
+    def _eligible_group_ids(self, manifest) -> tuple[str, ...]:
+        group_ids: list[str] = []
+        for video in manifest.videos:
+            for group_id in video.group_ids:
+                if group_id not in group_ids:
+                    group_ids.append(group_id)
+        return tuple(
+            group_id
+            for group_id in group_ids
+            if manifest.videos_for_group(group_id)
         )
 
 
@@ -165,12 +241,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--artifact-root", type=Path, default=Path("artifacts/local-validation"))
     parser.add_argument("--survey-root", type=Path, default=Path("artifacts/survey"))
     parser.add_argument("--video-root", type=Path, default=Path("artifacts/survey/videos"))
+    parser.add_argument("--survey-json-root", type=Path, default=Path("artifacts/survey/json"))
     parser.add_argument("--video-manifest", type=Path)
     parser.add_argument("--study-id", default="pilot")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--include-q5", action="store_true")
     parser.add_argument("--include-go2", action="store_true")
+    parser.add_argument("--survey-quota-per-group", type=int, default=30)
     return parser
 
 
@@ -180,12 +258,14 @@ def main(argv: list[str] | None = None) -> int:
         artifact_root=args.artifact_root,
         survey_root=args.survey_root,
         video_root=args.video_root,
+        survey_json_root=args.survey_json_root,
         study_id=args.study_id,
         video_manifest_path=args.video_manifest,
         host=args.host,
         port=args.port,
         include_q5=args.include_q5,
         include_go2=args.include_go2,
+        survey_quota_per_group=args.survey_quota_per_group,
     )
     if config.video_manifest_path is not None and not config.video_manifest_path.exists():
         raise SystemExit(f"video manifest does not exist: {config.video_manifest_path}")
@@ -266,6 +346,13 @@ def _single_query(query: dict[str, list[str]], name: str) -> str:
     values = query.get(name)
     if not values or values[0] == "":
         raise ValueError(f"missing query parameter: {name}")
+    return values[0]
+
+
+def _single_query_default(query: dict[str, list[str]], name: str, default: str) -> str:
+    values = query.get(name)
+    if not values or values[0] == "":
+        return default
     return values[0]
 
 

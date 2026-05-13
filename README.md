@@ -63,6 +63,9 @@ Artifacts are written under `artifacts/local-validation/<run-id>/`:
   and backend proof metadata.
 - `report.json`: run-level technical reliability and per-episode behavioral
   metric blocks.
+- `episode-metrics-XXX.csv`: one row per episode run with metadata, four axis
+  scores, and normalized metric scores for spreadsheet and survey comparison
+  workflows.
 - `<episode>/iteration-XXX/trace.json`: per-step measurements.
 - `<episode>/iteration-XXX/metrics.json`: metric outputs for that trace.
 
@@ -106,11 +109,18 @@ asimovbm-web \
   --artifact-root artifacts/local-validation \
   --survey-root artifacts/survey \
   --video-root artifacts/survey/videos \
+  --survey-json-root artifacts/survey/json \
   --video-manifest examples/survey/video_manifest.example.json \
   --study-id pilot
 ```
 
-Survey responses are written under `artifacts/survey/<study-id>/`:
+The same page can also compare objective predictions from `metrics.json`,
+`episode-metrics-XXX.csv`, or trace JSON against survey outcomes. If no
+manifest is provided, the server discovers Unity video-generation outputs with
+matching stems under `artifacts/survey/videos/<policy>/<view>/<episode>.mp4`
+and `artifacts/survey/json/<policy>/<view>/<episode>.json`. Survey responses
+use anonymous hard quota-balanced assignment by robot/policy/viewpoint cell and
+are written under `artifacts/survey/<study-id>/`:
 
 - `participants.jsonl`: append-only participant/session metadata.
 - `responses.jsonl`: append-only per-video Likert responses.

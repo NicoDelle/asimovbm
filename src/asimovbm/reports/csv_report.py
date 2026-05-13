@@ -1,0 +1,87 @@
+"""CSV export helpers for per-episode metric reports."""
+
+from __future__ import annotations
+
+import csv
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
+
+from asimovbm.metrics import SOCIAL_NAVIGATION_AXIS_IDS, SOCIAL_NAVIGATION_METRIC_IDS
+
+EPISODE_METRICS_CSV_STEM = "episode-metrics"
+EPISODE_METRICS_METADATA_COLUMNS: tuple[str, ...] = (
+    "run_id",
+    "episode_id",
+    "episode_title",
+    "iteration",
+    "tier_id",
+    "technical_valid",
+    "terminal_status",
+)
+
+
+def episode_metrics_csv_header() -> tuple[str, ...]:
+    return (
+        EPISODE_METRICS_METADATA_COLUMNS
+        + SOCIAL_NAVIGATION_AXIS_IDS
+        + SOCIAL_NAVIGATION_METRIC_IDS
+    )
+
+
+def build_episode_metrics_csv_row(
+    run_id: str,
+    metric_report: Mapping[str, Any],
+    *,
+    episode_title: str | None = None,
+    tier_id: str | None = None,
+) -> dict[str, str]:
+    behavioral = _mapping(metric_report.get("behavioral_metrics"))
+    row = {
+        "run_id": run_id,
+        "episode_id": _string(metric_report.get("episode_id")),
+        "episode_title": _string(episode_title),
+        "iteration": _string(metric_report.get("iteration")),
+        "tier_id": _string(tier_id),
+        "technical_valid": _bool_string(metric_report.get("technical_valid")),
+        "terminal_status": _string(metric_report.get("terminal_status")),
+    }
+    axes = _mapping(behavioral.get("axes"))
+    for axis_id in SOCIAL_NAVIGATION_AXIS_IDS:
+        axis = _mapping(axes.get(axis_id))
+        row[axis_id] = _score_string(axis.get("score"))
+    features = _mapping(metric_report.get("metrics"))
+    for metric_id in SOCIAL_NAVIGATION_METRIC_IDS:
+        feature = _mapping(features.get(metric_id))
+        row[metric_id] = _score_string(feature.get("normalized_score"))
+    return row
+
+
+def append_episode_metrics_csv_row(path: Path, row: Mapping[str, str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    should_write_header = not path.exists() or path.stat().st_size == 0
+    with path.open("a", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=episode_metrics_csv_header())
+        if should_write_header:
+            writer.writeheader()
+        writer.writerow({column: row.get(column, "") for column in episode_metrics_csv_header()})
+
+
+def _mapping(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
+def _score_string(value: Any) -> str:
+    if not isinstance(value, int | float):
+        return ""
+    return repr(float(value))
+
+
+def _bool_string(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return _string(value)
+
+
+def _string(value: Any) -> str:
+    return "" if value is None else str(value)

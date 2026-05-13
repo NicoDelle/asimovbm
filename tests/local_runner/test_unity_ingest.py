@@ -83,12 +83,15 @@ def test_ingests_unity_trace_and_writes_local_artifacts(tmp_path: Path) -> None:
 
     assert manifest["schema_version"] == "asimovbm.unity_validation.v1"
     assert manifest["run_id"] == "unity-smoke"
+    assert manifest["metrics_csv_path"] == "episode-metrics-000.csv"
+    assert result.metrics_csv_path.name == "episode-metrics-000.csv"
     assert record["episode_id"] == "g1_approach_user"
     assert trace["execution_backend_id"] == "unity_mujoco_trace_v1"
     assert trace["steps"][1]["robot_pose"] == [0.5, 0.0, 0.0]
     assert metrics["metrics"]["task_success_rate"]["status"] == "computed"
     assert metrics["metrics"]["min_human_robot_distance"]["status"] == "insufficient_evidence"
     assert report["technical_reliability"]["technical_valid_episode_runs"] == 1
+    assert (result.run_dir / manifest["metrics_csv_path"]).exists()
 
 
 def test_technical_failure_trace_produces_insufficient_evidence_metrics(tmp_path: Path) -> None:

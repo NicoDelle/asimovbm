@@ -16,9 +16,19 @@ from asimovbm.metrics.weights import (
     WEIGHT_MODEL_SOURCE,
     WEIGHT_MODEL_VERSION,
 )
-from asimovbm.reports import JsonReportInput, build_json_report
+from asimovbm.reports import (
+    JsonReportInput,
+    append_episode_metrics_csv_row,
+    build_episode_metrics_csv_row,
+    build_json_report,
+)
 
-from .artifacts import prepare_run_dir, relative_to_run, write_json
+from .artifacts import (
+    allocate_episode_metrics_csv_path,
+    prepare_run_dir,
+    relative_to_run,
+    write_json,
+)
 from .backends import G1SlamReferenceBackend, LocalTraceBackend, backend_proof_for
 from .catalog import (
     DEFAULT_POLICY_BY_ROBOT,
@@ -71,6 +81,7 @@ class LocalRunResult:
     manifest_path: Path
     records: tuple[LocalRunRecord, ...]
     report_path: Path
+    metrics_csv_path: Path
 
 
 def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult:
@@ -81,6 +92,7 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
     visible = config.resolved_visible()
     run_id = config.run_id or _new_run_id()
     paths = prepare_run_dir(config.artifact_root, run_id)
+    metrics_csv_path = allocate_episode_metrics_csv_path(config.artifact_root, paths.run_dir)
     records: list[LocalRunRecord] = []
 
     for iteration in range(config.iterations):
@@ -98,6 +110,15 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
             metric_report = build_trace_metric_report(trace)
             write_json(trace_path, trace.to_dict())
             write_json(metrics_path, metric_report)
+            append_episode_metrics_csv_row(
+                metrics_csv_path,
+                build_episode_metrics_csv_row(
+                    run_id,
+                    metric_report,
+                    episode_title=spec.title,
+                    tier_id=trace.tier_id,
+                ),
+            )
             records.append(
                 LocalRunRecord(
                     trace=trace,
@@ -110,7 +131,14 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
     report_path = paths.run_dir / "report.json"
     report = _build_run_report(run_id, records)
     write_json(report_path, report)
-    manifest = _build_manifest(config, catalog, records, run_id, relative_to_run(report_path, paths.run_dir))
+    manifest = _build_manifest(
+        config,
+        catalog,
+        records,
+        run_id,
+        relative_to_run(report_path, paths.run_dir),
+        relative_to_run(metrics_csv_path, paths.run_dir),
+    )
     write_json(paths.manifest_path, manifest)
     return LocalRunResult(
         run_id=run_id,
@@ -118,6 +146,7 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
         manifest_path=paths.manifest_path,
         records=tuple(records),
         report_path=report_path,
+        metrics_csv_path=metrics_csv_path,
     )
 
 
@@ -313,6 +342,7 @@ def _build_manifest(
     records: list[LocalRunRecord],
     run_id: str,
     report_path: str,
+    metrics_csv_path: str,
 ) -> dict[str, Any]:
     selected_specs = _selected_specs(config, catalog)
     return {
@@ -330,6 +360,7 @@ def _build_manifest(
         "episodes": [spec.to_manifest() for spec in selected_specs],
         "backend_proof": [backend_proof_for(spec).to_dict() for spec in selected_specs],
         "report_path": report_path,
+        "metrics_csv_path": metrics_csv_path,
         "records": [record.to_manifest_entry() for record in records],
         "metadata": dict(config.extra_metadata),
     }

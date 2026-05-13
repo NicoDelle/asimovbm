@@ -1,5 +1,11 @@
 """Report builders for benchmark outputs."""
 
+from .csv_report import (
+    EPISODE_METRICS_CSV_STEM,
+    append_episode_metrics_csv_row,
+    build_episode_metrics_csv_row,
+    episode_metrics_csv_header,
+)
 from .json_report import (
     JsonReportConfig,
     JsonReportInput,
@@ -9,9 +15,13 @@ from .json_report import (
 )
 
 __all__ = [
+    "EPISODE_METRICS_CSV_STEM",
     "JsonReportConfig",
     "JsonReportInput",
     "MetricFreezeRequiredError",
+    "append_episode_metrics_csv_row",
     "build_behavioral_metric_block",
+    "build_episode_metrics_csv_row",
     "build_json_report",
+    "episode_metrics_csv_header",
 ]

@@ -11,7 +11,12 @@
       "episode_id": "g1_approach_user",
       "group_ids": ["policy_a_fp"],
       "episode_order": 1,
-      "title": "Policy A - First person - Approach user"
+      "title": "Policy A - First person - Approach user",
+      "prediction_source": {
+        "kind": "metrics_json",
+        "root": "artifact_root",
+        "path": "local-run-policy-a/g1_approach_user/iteration-000/metrics.json"
+      }
     },
     {
       "video_id": "policy_a_fp_g1_lateral_open",
@@ -22,7 +27,14 @@
       "episode_id": "g1_lateral_open",
       "group_ids": ["policy_a_fp"],
       "episode_order": 2,
-      "title": "Policy A - First person - Lateral open"
+      "title": "Policy A - First person - Lateral open",
+      "prediction_source": {
+        "kind": "episode_metrics_csv",
+        "root": "artifact_root",
+        "path": "local-run-policy-a/episode-metrics-000.csv",
+        "run_id": "local-run-policy-a",
+        "iteration": 0
+      }
     },
     {
       "video_id": "policy_a_fp_g1_lateral_static_dynamic_obstacles",
@@ -33,7 +45,12 @@
       "episode_id": "g1_lateral_static_dynamic_obstacles",
       "group_ids": ["policy_a_fp"],
       "episode_order": 3,
-      "title": "Policy A - First person - Static and dynamic obstacles"
+      "title": "Policy A - First person - Static and dynamic obstacles",
+      "prediction_source": {
+        "kind": "simulation_json",
+        "root": "survey_json_root",
+        "path": "policy_a/fp/g1_lateral_static_dynamic_obstacles.json"
+      }
     },
     {
       "video_id": "policy_b_bystander_g1_approach_user",

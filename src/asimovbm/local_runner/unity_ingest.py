@@ -9,9 +9,19 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from asimovbm.reports import JsonReportInput, build_json_report
+from asimovbm.reports import (
+    JsonReportInput,
+    append_episode_metrics_csv_row,
+    build_episode_metrics_csv_row,
+    build_json_report,
+)
 
-from .artifacts import prepare_run_dir, relative_to_run, write_json
+from .artifacts import (
+    allocate_episode_metrics_csv_path,
+    prepare_run_dir,
+    relative_to_run,
+    write_json,
+)
 from .metrics_bridge import build_trace_metric_report
 from .traces import LocalEpisodeTrace, LocalRunRecord, LocalStepTrace
 
@@ -37,6 +47,7 @@ class UnityIngestResult:
     run_dir: Path
     manifest_path: Path
     report_path: Path
+    metrics_csv_path: Path
     records: tuple[LocalRunRecord, ...]
 
 
@@ -59,6 +70,7 @@ def ingest_unity_trace_files(
 
     run_id = config.run_id or _new_run_id()
     paths = prepare_run_dir(config.artifact_root, run_id)
+    metrics_csv_path = allocate_episode_metrics_csv_path(config.artifact_root, paths.run_dir)
     records: list[LocalRunRecord] = []
 
     for index, raw_path in enumerate(trace_paths):
@@ -74,6 +86,15 @@ def ingest_unity_trace_files(
         metric_report = build_trace_metric_report(trace)
         write_json(trace_output_path, trace.to_dict())
         write_json(metrics_output_path, metric_report)
+        append_episode_metrics_csv_row(
+            metrics_csv_path,
+            build_episode_metrics_csv_row(
+                run_id,
+                metric_report,
+                episode_title=_string(trace.metadata, "episode_title", fallback=trace.episode_id),
+                tier_id=trace.tier_id,
+            ),
+        )
         records.append(
             LocalRunRecord(
                 trace=trace,
@@ -89,6 +110,7 @@ def ingest_unity_trace_files(
         run_id=run_id,
         records=records,
         report_path=relative_to_run(report_path, paths.run_dir),
+        metrics_csv_path=relative_to_run(metrics_csv_path, paths.run_dir),
         trace_paths=tuple(Path(path) for path in trace_paths),
         metadata=config.extra_metadata or {},
     )
@@ -98,6 +120,7 @@ def ingest_unity_trace_files(
         run_dir=paths.run_dir,
         manifest_path=paths.manifest_path,
         report_path=report_path,
+        metrics_csv_path=metrics_csv_path,
         records=tuple(records),
     )
 
@@ -215,6 +238,7 @@ def _build_manifest(
     run_id: str,
     records: list[LocalRunRecord],
     report_path: str,
+    metrics_csv_path: str,
     trace_paths: tuple[Path, ...],
     metadata: dict[str, Any],
 ) -> dict[str, Any]:
@@ -225,6 +249,7 @@ def _build_manifest(
         "viewer_mode": "unity",
         "selected_episode_ids": tuple(record.trace.episode_id for record in records),
         "report_path": report_path,
+        "metrics_csv_path": metrics_csv_path,
         "records": [record.to_manifest_entry() for record in records],
         "raw_unity_traces": [str(path) for path in trace_paths],
         "metadata": dict(metadata),

@@ -73,8 +73,11 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
     assert manifest["viewer_mode"] == "visible"
     assert manifest["selected_episode_ids"] == ["g1_approach_user"]
     assert manifest["records"][0]["trace_path"] == "g1_approach_user/iteration-000/trace.json"
+    assert manifest["metrics_csv_path"] == "episode-metrics-000.csv"
+    assert result.metrics_csv_path.name == "episode-metrics-000.csv"
     assert (result.run_dir / manifest["records"][0]["trace_path"]).exists()
     assert (result.run_dir / manifest["records"][0]["metrics_path"]).exists()
+    assert (result.run_dir / manifest["metrics_csv_path"]).exists()
     trace = json.loads((result.run_dir / manifest["records"][0]["trace_path"]).read_text(encoding="utf-8"))
     assert trace["metadata"]["robot_id"] == "g1"
     assert trace["metadata"]["policy_id"] == "g1_robojudo_asap"
@@ -96,6 +99,9 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
         {"episode_id": "g1_approach_user", "iteration": 0}
     ]
     assert behavioral["episode_blocks"][0]["episode_id"] == "g1_approach_user"
+    metrics_csv = (result.run_dir / manifest["metrics_csv_path"]).read_text(encoding="utf-8")
+    assert "perceived_dexterity" in metrics_csv
+    assert "g1_approach_user" in metrics_csv
     assert backend.calls == [
         {
             "episode_id": "g1_approach_user",

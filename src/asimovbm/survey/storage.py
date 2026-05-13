@@ -66,6 +66,35 @@ class SurveyStore:
         self._append_jsonl(self.participants_path, record)
         return record
 
+    def next_quota_group(
+        self,
+        eligible_group_ids: tuple[str, ...],
+        *,
+        quota_per_group: int,
+    ) -> str:
+        if not eligible_group_ids:
+            raise SurveyStorageError("no survey groups have assigned videos")
+        completed_counts = self.completed_counts_by_group()
+        candidates = [
+            (completed_counts.get(group_id, 0), index, group_id)
+            for index, group_id in enumerate(eligible_group_ids)
+            if completed_counts.get(group_id, 0) < quota_per_group
+        ]
+        if not candidates:
+            raise SurveyStorageError("survey quota is full")
+        _, _, group_id = min(candidates)
+        return group_id
+
+    def completed_counts_by_group(self) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for participant in self.latest_participants().values():
+            if participant.get("completion_status") != "completed":
+                continue
+            group_id = str(participant.get("group_id", ""))
+            if group_id:
+                counts[group_id] = counts.get(group_id, 0) + 1
+        return counts
+
     def append_response(
         self,
         payload: Mapping[str, Any],
@@ -96,6 +125,7 @@ class SurveyStore:
             "episode_id": video.episode_id,
             "episode_order": int(payload.get("episode_order", video.episode_order)),
             "answers": answers,
+            "video_completed": bool(payload.get("video_completed", False)),
             "submitted_at": timestamp,
         }
         self._append_jsonl(self.responses_path, record)

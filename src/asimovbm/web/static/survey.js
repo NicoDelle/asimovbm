@@ -2,134 +2,150 @@ let surveyDesign = null;
 let currentVideos = [];
 let currentParticipant = null;
 let currentVideoIndex = 0;
+let activeGroupId = "";
+let videoEnded = false;
 
 async function loadSurveyDesign() {
   const response = await fetch("/api/survey/design");
   surveyDesign = await response.json();
-  const select = document.getElementById("survey-group");
-  select.innerHTML = "";
-  for (const cell of surveyDesign.study_cells || []) {
-    const option = document.createElement("option");
-    option.value = cell.id;
-    option.textContent = cell.label;
-    select.appendChild(option);
-  }
-  select.addEventListener("change", () => loadSurveyVideos(select.value));
-  if (select.value) {
-    await loadSurveyVideos(select.value);
-  }
+  renderStartScreen();
 }
 
-async function loadSurveyVideos(groupId) {
-  const response = await fetch(`/api/survey/videos?group=${encodeURIComponent(groupId)}`);
-  const payload = await response.json();
+function renderStartScreen() {
   const status = document.getElementById("survey-status");
   const videos = document.getElementById("survey-videos");
   const form = document.getElementById("survey-form");
   videos.innerHTML = "";
-  form.innerHTML = "";
+  status.textContent = "";
+  form.innerHTML = `
+    <section class="start-screen" aria-labelledby="survey-start-title">
+      <h3 id="survey-start-title">Start anonymous survey</h3>
+      <p>
+        Your answers are used only for research on robot behavior. The survey does not ask for
+        name, surname, or email. You will be assigned one robot, one policy, and one viewpoint,
+        then rate three scenario videos.
+      </p>
+      <p>
+        Each video must be watched to the end before the four questions unlock.
+      </p>
+      <button id="start-survey" type="button">Start test</button>
+    </section>
+  `;
+  document.getElementById("start-survey")?.addEventListener("click", startSurvey);
+}
+
+async function startSurvey() {
+  const status = document.getElementById("survey-status");
+  status.textContent = "Assigning survey cell...";
+  const response = await fetch("/api/survey/participants", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({})
+  });
+  const payload = await response.json();
   if (!response.ok) {
-    status.textContent = payload.error || "Unable to load videos.";
+    status.textContent = payload.error || "Unable to start survey.";
     return;
   }
+  currentParticipant = payload.participant;
   currentVideos = payload.videos || [];
-  status.textContent = `${currentVideos.length} videos assigned to ${groupId}`;
+  activeGroupId = currentParticipant.group_id;
+  currentVideoIndex = 0;
+  renderAssignedVideos();
+  renderSurveyEpisode();
+}
+
+function renderAssignedVideos() {
+  const videos = document.getElementById("survey-videos");
+  const videoLabel = currentVideos.length === 1 ? "video" : "videos";
+  document.getElementById("survey-status").textContent =
+    `${currentVideos.length} ${videoLabel} assigned to ${activeGroupId}`;
+  videos.innerHTML = "";
   for (const video of currentVideos) {
     const card = document.createElement("article");
     card.className = "video-card";
-    card.innerHTML = `<h3>${video.title || video.video_id}</h3><p>${video.policy_id} · ${video.viewpoint} · ${video.robot_id}</p>`;
+    card.innerHTML = `<h3>${escapeHtml(video.title || video.video_id)}</h3><p>${escapeHtml(video.policy_id)} · ${escapeHtml(video.viewpoint)} · ${escapeHtml(video.robot_id)}</p>`;
     videos.appendChild(card);
   }
-  currentParticipant = null;
-  currentVideoIndex = 0;
-  renderSurveyForm(groupId);
 }
 
-function renderSurveyForm(groupId) {
+function renderSurveyEpisode() {
   const form = document.getElementById("survey-form");
-  if (currentVideos.length === 0 || !surveyDesign) {
+  if (currentVideos.length === 0 || !surveyDesign || !currentParticipant) {
     return;
   }
   if (currentVideoIndex >= currentVideos.length) {
     form.innerHTML = `
       <h3>Survey complete</h3>
-      <p>${currentParticipant?.participant_id || "Participant"} completed ${currentVideos.length} videos.</p>
-      <p><a href="/api/survey/participants.csv">Export participants.csv</a></p>
+      <p>Thank you. Your anonymous participant id is ${escapeHtml(currentParticipant.participant_id)}.</p>
     `;
+    document.getElementById("survey-status").textContent = "Survey complete.";
     return;
   }
+  videoEnded = false;
   const video = currentVideos[currentVideoIndex];
   form.innerHTML = `
     <h3>Episode ${currentVideoIndex + 1} of ${currentVideos.length}</h3>
-    <p>${video.title || video.video_id}</p>
-    <input name="participant_id" placeholder="Participant/session id" value="${currentParticipant?.participant_id || ""}">
-    <input type="hidden" name="group_id" value="${groupId}">
-    <input type="hidden" name="video_id" value="${video.video_id}">
+    <p>${escapeHtml(video.title || video.video_id)}</p>
+    <video class="episode-player" controls preload="metadata" src="${videoUrl(video.path)}"></video>
+    <p id="watch-status" class="watch-status">Watch the full video to unlock the questions.</p>
+    <div id="question-region" class="question-region" aria-live="polite"></div>
   `;
-  if (!currentParticipant) {
-    for (const field of surveyDesign.participant_fields || []) {
-      const wrapper = document.createElement("label");
-      wrapper.className = "question";
-      const select = document.createElement("select");
-      select.name = `meta:${field.id}`;
-      const empty = document.createElement("option");
-      empty.value = "";
-      empty.textContent = field.label;
-      select.appendChild(empty);
-      for (const optionValue of field.options || []) {
-        const option = document.createElement("option");
-        option.value = optionValue;
-        option.textContent = optionValue;
-        select.appendChild(option);
-      }
-      wrapper.appendChild(select);
-      form.appendChild(wrapper);
-    }
+  const player = form.querySelector("video");
+  player.addEventListener("ended", () => unlockQuestions(video));
+  if (player.ended) {
+    unlockQuestions(video);
+  } else {
+    renderQuestions(video, true);
   }
+}
+
+function unlockQuestions(video) {
+  videoEnded = true;
+  document.getElementById("watch-status").textContent = "Questions unlocked.";
+  renderQuestions(video, false);
+}
+
+function renderQuestions(video, locked) {
+  const region = document.getElementById("question-region");
+  region.innerHTML = "";
   for (const question of surveyDesign.questions || []) {
     const block = document.createElement("fieldset");
     block.className = "question";
-    block.innerHTML = `<legend>${question.text}</legend>`;
+    block.disabled = locked;
+    block.innerHTML = `<legend>${escapeHtml(question.text)}</legend>`;
     const likert = document.createElement("div");
     likert.className = "likert";
     for (let value = 1; value <= 7; value += 1) {
-      const id = `${question.id}-${value}`;
+      const id = `${question.id}-${currentVideoIndex}-${value}`;
       const label = document.createElement("label");
       label.innerHTML = `<input id="${id}" type="radio" name="${question.id}" value="${value}">${value}`;
       likert.appendChild(label);
     }
     block.appendChild(likert);
-    form.appendChild(block);
+    region.appendChild(block);
   }
   const submit = document.createElement("button");
-  submit.type = "submit";
+  submit.type = "button";
+  submit.disabled = true;
   submit.textContent = "Submit episode";
-  form.appendChild(submit);
-  form.onsubmit = (event) => submitSurveyResponse(event, video);
+  submit.addEventListener("click", () => submitSurveyResponse(video));
+  region.appendChild(submit);
+  if (!locked) {
+    region.addEventListener("change", () => {
+      submit.disabled = !allQuestionsAnswered();
+    });
+    submit.disabled = !allQuestionsAnswered();
+  }
 }
 
-async function submitSurveyResponse(event, video) {
-  event.preventDefault();
-  const data = new FormData(event.target);
-  const participantId = data.get("participant_id") || currentParticipant?.participant_id;
-  const groupId = data.get("group_id");
-  if (!currentParticipant) {
-    const metadata = {};
-    for (const field of surveyDesign.participant_fields || []) {
-      const value = data.get(`meta:${field.id}`);
-      if (value) {
-        metadata[field.id] = value;
-      }
-    }
-    const participantResponse = await fetch("/api/survey/participants", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({participant_id: participantId, group_id: groupId, metadata})
-    });
-    const participantPayload = await participantResponse.json();
-    currentParticipant = participantPayload.participant;
+async function submitSurveyResponse(video) {
+  if (!videoEnded) {
+    document.getElementById("survey-status").textContent = "Watch the full video before answering.";
+    return;
   }
-  const activeParticipantId = currentParticipant?.participant_id || participantId;
+  const form = document.getElementById("survey-form");
+  const data = new FormData(form);
   const answers = {};
   for (const question of surveyDesign.questions || []) {
     const value = data.get(question.id);
@@ -141,20 +157,41 @@ async function submitSurveyResponse(event, video) {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
-      participant_id: activeParticipantId,
-      group_id: groupId,
+      participant_id: currentParticipant.participant_id,
+      group_id: activeGroupId,
       video_id: video.video_id,
       episode_order: video.episode_order,
+      video_completed: true,
       answers
     })
   });
+  const payload = await response.json();
   if (response.ok) {
     currentVideoIndex += 1;
     document.getElementById("survey-status").textContent = "Response saved.";
-    renderSurveyForm(groupId);
+    renderSurveyEpisode();
   } else {
-    document.getElementById("survey-status").textContent = "Response was not saved.";
+    document.getElementById("survey-status").textContent = payload.error || "Response was not saved.";
   }
+}
+
+function videoUrl(path) {
+  return `/videos/${String(path || "").split("/").map(encodeURIComponent).join("/")}`;
+}
+
+function allQuestionsAnswered() {
+  const form = document.getElementById("survey-form");
+  const data = new FormData(form);
+  return (surveyDesign.questions || []).every((question) => Boolean(data.get(question.id)));
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 loadSurveyDesign();

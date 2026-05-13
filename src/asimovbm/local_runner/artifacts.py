@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from asimovbm.reports import EPISODE_METRICS_CSV_STEM
+
+_EPISODE_METRICS_CSV_RE = re.compile(rf"^{re.escape(EPISODE_METRICS_CSV_STEM)}-(\d+)\.csv$")
 
 
 @dataclass(frozen=True)
@@ -27,6 +32,16 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def relative_to_run(path: Path, run_dir: Path) -> str:
     return path.relative_to(run_dir).as_posix()
+
+
+def allocate_episode_metrics_csv_path(artifact_root: Path, run_dir: Path) -> Path:
+    highest = -1
+    if artifact_root.exists():
+        for candidate in artifact_root.rglob(f"{EPISODE_METRICS_CSV_STEM}-*.csv"):
+            match = _EPISODE_METRICS_CSV_RE.match(candidate.name)
+            if match:
+                highest = max(highest, int(match.group(1)))
+    return run_dir / f"{EPISODE_METRICS_CSV_STEM}-{highest + 1:03d}.csv"
 
 
 def _json_ready(value: Any) -> Any:
