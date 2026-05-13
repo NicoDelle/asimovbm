@@ -597,13 +597,7 @@ def _trace_entities(
         )
     for obstacle in dynamic_obstacles:
         x, y = obstacle.xy_at(sim_time)
-<<<<<<< HEAD
-        next_x, next_y = obstacle.xy_at(sim_time + 0.1)
-        vx = (next_x - x) / 0.1
-        vy = (next_y - y) / 0.1
-=======
         vx, vy = obstacle.velocity_at(sim_time)
->>>>>>> 61a2468 (Added episodes)
         entities.append(
             {
                 "id": obstacle.name,
@@ -612,10 +606,7 @@ def _trace_entities(
                 "x": x,
                 "y": y,
                 "radius": obstacle.radius,
-<<<<<<< HEAD
                 "policy": obstacle.policy,
-=======
->>>>>>> 61a2468 (Added episodes)
                 "velocity": [vx, vy],
             }
         )

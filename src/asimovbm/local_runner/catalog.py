@@ -38,6 +38,7 @@ POLICY_PROFILES: dict[str, dict[str, Any]] = {
         "locomotion": {
             "mode": "robojudo",
             "policy_path": Path("policies/g1/policy.onnx"),
+            "robojudo_config": "g1_asap_loco",
             "observation_size": None,
             "observation_profile": "generic",
             "action_scale": 0.25,
@@ -50,6 +51,7 @@ POLICY_PROFILES: dict[str, dict[str, Any]] = {
         "locomotion": {
             "mode": "policy",
             "policy_path": Path("policies/go2/unitree_rl_mjlab/policy.onnx"),
+            "robojudo_config": "g1_asap_loco",
             "observation_size": 45,
             "observation_profile": "dias_ai_master_go2_velocity_flat",
             "action_scale": 0.5,

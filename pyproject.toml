@@ -4,13 +4,15 @@ version = "0.1.0"
 description = "Local-first Paper HRI benchmark validation artifacts."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "numpy>=1.26",
+  "pillow>=10.0",
+]
 
 [project.optional-dependencies]
 g1-mujoco = [
   "imageio>=2.0",
   "mujoco>=3.2.0,<3.4.0",
-  "numpy>=1.26",
   "onnxruntime>=1.17",
 ]
 dev = [

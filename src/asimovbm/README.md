@@ -142,6 +142,35 @@ That command writes:
 For multiple iterations, each episode gets `iteration-000`, `iteration-001`,
 and so on.
 
+## Export Survey Videos
+
+Add `--survey-export` to render one direct MuJoCo MP4 per selected episode for
+each survey view (`arrival` and `bystander` by default). The exporter writes
+MP4/JSON pairs using the survey discovery contract plus a metric summary:
+
+```bash
+.venv/bin/asimovbm-local \
+  --robot g1 \
+  --survey-export \
+  --survey-policy-id policy_a \
+  --survey-root artifacts/survey \
+  --iterations 1
+```
+
+Defaults are bounded `426x240`, `2fps`, 15-second time-lapse clips; raise them
+with `--survey-video-width`, `--survey-video-height`, `--survey-video-fps`, and
+`--survey-video-max-duration 0` when you need full-duration, higher-fidelity
+exports.
+
+Outputs:
+
+```text
+artifacts/survey/videos/<policy>/<view>/<episode>.mp4
+artifacts/survey/json/<policy>/<view>/<episode>.json
+artifacts/survey/metrics-summary-<run-id>.json
+artifacts/survey/metrics-summary-<run-id>.csv
+```
+
 ## Unity Trace Ingest
 
 Unity is a separate visual validation producer. From WSL, run:

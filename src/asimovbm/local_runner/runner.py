@@ -37,6 +37,12 @@ from .catalog import (
     load_default_catalog,
 )
 from .metrics_bridge import build_trace_metric_report
+from .survey_export import (
+    DEFAULT_SURVEY_VIEWS,
+    SurveyExportResult,
+    SurveyVideoExportConfig,
+    export_survey_videos,
+)
 from .traces import LocalRunRecord
 
 
@@ -50,6 +56,14 @@ class LocalRunConfig:
     episode_ids: tuple[str, ...] = ()
     visible: bool | None = None
     viewer_speed: float = 4.0
+    survey_export: bool = False
+    survey_root: Path = Path("artifacts/survey")
+    survey_policy_id: str | None = None
+    survey_views: tuple[str, ...] = DEFAULT_SURVEY_VIEWS
+    survey_video_fps: int = 2
+    survey_video_width: int = 426
+    survey_video_height: int = 240
+    survey_video_max_duration_s: float | None = 15.0
     run_id: str | None = None
     catalog: EpisodeCatalog | None = None
     backend: LocalTraceBackend | None = None
@@ -58,6 +72,8 @@ class LocalRunConfig:
     def resolved_visible(self) -> bool:
         if self.visible is not None:
             return self.visible
+        if self.survey_export:
+            return False
         return self.iterations == 1
 
     def validate(self) -> None:
@@ -67,6 +83,16 @@ class LocalRunConfig:
             raise ValueError("viewer_speed must be > 0")
         if self.robot_id not in ROBOT_IDS:
             raise ValueError(f"robot_id must be one of {', '.join(ROBOT_IDS)}")
+        if self.survey_export:
+            SurveyVideoExportConfig(
+                survey_root=self.survey_root,
+                policy_id=self.survey_policy_id,
+                views=self.survey_views,
+                fps=self.survey_video_fps,
+                width=self.survey_video_width,
+                height=self.survey_video_height,
+                max_duration_s=self.survey_video_max_duration_s,
+            ).validate()
 
     def effective_policy_id(self) -> str:
         if self.robot_id is None:
@@ -82,6 +108,7 @@ class LocalRunResult:
     records: tuple[LocalRunRecord, ...]
     report_path: Path
     metrics_csv_path: Path
+    survey_export: SurveyExportResult | None = None
 
 
 def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult:
@@ -131,13 +158,31 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
     report_path = paths.run_dir / "report.json"
     report = _build_run_report(run_id, records)
     write_json(report_path, report)
+    selected_specs = _selected_specs(config, catalog)
+    survey_export = None
+    if config.survey_export:
+        survey_export = export_survey_videos(
+            run_id=run_id,
+            specs_by_id={spec.id: spec for spec in selected_specs},
+            records=records,
+            config=SurveyVideoExportConfig(
+                survey_root=config.survey_root,
+                policy_id=config.survey_policy_id,
+                views=config.survey_views,
+                fps=config.survey_video_fps,
+                width=config.survey_video_width,
+                height=config.survey_video_height,
+                max_duration_s=config.survey_video_max_duration_s,
+            ),
+        )
     manifest = _build_manifest(
         config,
-        catalog,
+        selected_specs,
         records,
         run_id,
         relative_to_run(report_path, paths.run_dir),
         relative_to_run(metrics_csv_path, paths.run_dir),
+        survey_export,
     )
     write_json(paths.manifest_path, manifest)
     return LocalRunResult(
@@ -147,6 +192,7 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
         records=tuple(records),
         report_path=report_path,
         metrics_csv_path=metrics_csv_path,
+        survey_export=survey_export,
     )
 
 
@@ -338,14 +384,14 @@ def _unscored_suite_axis_reason(status: str) -> str:
 
 def _build_manifest(
     config: LocalRunConfig,
-    catalog: EpisodeCatalog,
+    selected_specs,
     records: list[LocalRunRecord],
     run_id: str,
     report_path: str,
     metrics_csv_path: str,
+    survey_export: SurveyExportResult | None,
 ) -> dict[str, Any]:
-    selected_specs = _selected_specs(config, catalog)
-    return {
+    manifest = {
         "schema_version": "asimovbm.local_validation.v1",
         "run_id": run_id,
         "created_at": datetime.now(tz=UTC).isoformat(),
@@ -355,7 +401,7 @@ def _build_manifest(
         "policy_path": config.policy_path.as_posix() if config.policy_path is not None else None,
         "viewer_mode": "visible" if config.resolved_visible() else "headless",
         "viewer_speed": config.viewer_speed,
-        "canonical_episode_ids": catalog.episode_ids,
+        "canonical_episode_ids": tuple(spec.id for spec in selected_specs),
         "selected_episode_ids": tuple(spec.id for spec in selected_specs),
         "episodes": [spec.to_manifest() for spec in selected_specs],
         "backend_proof": [backend_proof_for(spec).to_dict() for spec in selected_specs],
@@ -364,6 +410,9 @@ def _build_manifest(
         "records": [record.to_manifest_entry() for record in records],
         "metadata": dict(config.extra_metadata),
     }
+    if survey_export is not None:
+        manifest["survey_export"] = survey_export.to_manifest_entry()
+    return manifest
 
 
 def _new_run_id() -> str:

@@ -56,6 +56,25 @@ Run one selected episode for the selected robot:
 .venv/bin/asimovbm-local --robot g1 --episode g1_approach_user --iterations 1
 ```
 
+Run the selected robot/policy and export direct MuJoCo-rendered survey videos
+plus metric sidecars:
+
+```bash
+.venv/bin/asimovbm-local \
+  --robot g1 \
+  --policy g1_robojudo_asap \
+  --survey-export \
+  --survey-policy-id policy_a \
+  --survey-root artifacts/survey \
+  --iterations 1
+```
+
+The default survey render is a bounded `426x240`, `2fps`, 15-second time-lapse
+so a full robot run completes without turning the export phase into a silent
+slog. Use `--survey-video-width`, `--survey-video-height`,
+`--survey-video-fps`, and `--survey-video-max-duration 0` for full-duration,
+higher-fidelity exports.
+
 Artifacts are written under `artifacts/local-validation/<run-id>/`:
 
 - `manifest.json`: selected robot and policy, selected episodes, config
@@ -66,6 +85,12 @@ Artifacts are written under `artifacts/local-validation/<run-id>/`:
 - `episode-metrics-XXX.csv`: one row per episode run with metadata, four axis
   scores, and normalized metric scores for spreadsheet and survey comparison
   workflows.
+- With `--survey-export`, survey MP4s are written as
+  `artifacts/survey/videos/<policy>/<view>/<episode>.mp4`, matching JSON
+  sidecars as `artifacts/survey/json/<policy>/<view>/<episode>.json`, and
+  metric summaries as `artifacts/survey/metrics-summary-<run-id>.{json,csv}`.
+  The videos are captured from MuJoCo offscreen cameras (`arrival` and
+  `bystander` by default), not from reconstructed trace drawings.
 - `<episode>/iteration-XXX/trace.json`: per-step measurements.
 - `<episode>/iteration-XXX/metrics.json`: metric outputs for that trace.
 
@@ -110,7 +135,6 @@ asimovbm-web \
   --survey-root artifacts/survey \
   --video-root artifacts/survey/videos \
   --survey-json-root artifacts/survey/json \
-  --video-manifest examples/survey/video_manifest.example.json \
   --study-id pilot
 ```
 

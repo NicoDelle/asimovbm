@@ -161,7 +161,6 @@ def main() -> None:
 
     if locomotion_config.mode == "robojudo":
         from .robojudo_backend import (
-            DEFAULT_ROBOJUDO_CONFIG,
             RoboJuDoBackendConfig,
             run_robojudo_navigation,
         )
@@ -175,11 +174,7 @@ def main() -> None:
             controller_config=nav_config.controller,
             backend_config=RoboJuDoBackendConfig(
                 repo_path=args.robojudo_repo,
-<<<<<<< HEAD
-                config_name=args.robojudo_config or DEFAULT_ROBOJUDO_CONFIG,
-=======
                 config_name=robojudo_config_name,
->>>>>>> 61a2468 (Added episodes)
                 max_vx=nav_config.controller.max_linear_speed,
                 max_vy=nav_config.controller.max_linear_speed,
                 max_yaw_rate=nav_config.controller.max_yaw_rate,
