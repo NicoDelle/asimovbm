@@ -51,6 +51,32 @@ Artifacts are written under `artifacts/local-validation/<run-id>/`:
 - `<episode>/iteration-XXX/trace.json`: per-step measurements.
 - `<episode>/iteration-XXX/metrics.json`: metric outputs for that trace.
 
+## Run Metrics Dashboard and Survey
+
+Start the local web dashboard over validation artifacts:
+
+```bash
+asimovbm-web --artifact-root artifacts/local-validation
+```
+
+Open `http://127.0.0.1:8765` to inspect metric runs. To enable the survey
+page, provide a video manifest and video root:
+
+```bash
+asimovbm-web \
+  --artifact-root artifacts/local-validation \
+  --survey-root artifacts/survey \
+  --video-root artifacts/survey/videos \
+  --video-manifest examples/survey/video_manifest.example.json \
+  --study-id pilot
+```
+
+Survey responses are written under `artifacts/survey/<study-id>/`:
+
+- `participants.jsonl`: append-only participant/session metadata.
+- `responses.jsonl`: append-only per-video Likert responses.
+- `participants.csv`: regenerated participant export for spreadsheet tooling.
+
 ## Canonical Episodes
 
 The local catalog is exactly the six JSON files under
@@ -88,9 +114,13 @@ imports, and `g1_slam` pure-Python imports.
 
 ```text
 src/asimovbm/                 # Active local runner, metrics, reports.
+src/asimovbm/web/             # Local metrics dashboard and survey server.
+src/asimovbm/survey/          # Survey design, storage, export, and analysis.
 g1_slam/                      # Canonical episode configs and navigation code.
 docs/specs/                   # Social-navigation metric specification.
 docs/plans/                   # Current planning and research notes.
+tests/web/                    # Local webserver and artifact-index tests.
+tests/survey/                 # Survey design/storage/export/analysis tests.
 tests/local_runner/           # Local validation tests.
 tests/metrics/                # Pure metric library tests.
 ```

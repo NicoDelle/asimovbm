@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Asimov Benchmark</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Asimov Benchmark</h1>
+        <p>Local metric artifacts and video survey collection</p>
+      </div>
+      <nav>
+        <a href="#metrics">Metrics</a>
+        <a href="#survey">Survey</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="metrics" class="panel">
+        <div class="panel-heading">
+          <h2>Runs</h2>
+          <button id="refresh-runs" type="button">Refresh</button>
+        </div>
+        <div id="run-list" class="run-list"></div>
+        <div id="run-detail" class="detail"></div>
+      </section>
+
+      <section id="survey" class="panel">
+        <div class="panel-heading">
+          <h2>Survey</h2>
+          <select id="survey-group" aria-label="Survey group"></select>
+        </div>
+        <div id="survey-status" class="detail"></div>
+        <div id="survey-videos" class="survey-videos"></div>
+        <form id="survey-form" class="survey-form"></form>
+      </section>
+    </main>
+
+    <script src="/static/metrics.js"></script>
+    <script src="/static/survey.js"></script>
+  </body>
+</html>

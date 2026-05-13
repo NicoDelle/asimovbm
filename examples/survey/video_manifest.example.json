@@ -1,0 +1,50 @@
+{
+  "schema_version": "asimovbm.survey_video_manifest.v1",
+  "study_id": "pilot",
+  "videos": [
+    {
+      "video_id": "policy_a_fp_g1_approach_user",
+      "path": "policy_a/fp/g1_approach_user.mp4",
+      "policy_id": "policy_a",
+      "viewpoint": "first_person",
+      "robot_id": "g1",
+      "episode_id": "g1_approach_user",
+      "group_ids": ["policy_a_fp"],
+      "episode_order": 1,
+      "title": "Policy A - First person - Approach user"
+    },
+    {
+      "video_id": "policy_a_fp_g1_lateral_open",
+      "path": "policy_a/fp/g1_lateral_open.mp4",
+      "policy_id": "policy_a",
+      "viewpoint": "first_person",
+      "robot_id": "g1",
+      "episode_id": "g1_lateral_open",
+      "group_ids": ["policy_a_fp"],
+      "episode_order": 2,
+      "title": "Policy A - First person - Lateral open"
+    },
+    {
+      "video_id": "policy_a_fp_g1_lateral_static_dynamic_obstacles",
+      "path": "policy_a/fp/g1_lateral_static_dynamic_obstacles.mp4",
+      "policy_id": "policy_a",
+      "viewpoint": "first_person",
+      "robot_id": "g1",
+      "episode_id": "g1_lateral_static_dynamic_obstacles",
+      "group_ids": ["policy_a_fp"],
+      "episode_order": 3,
+      "title": "Policy A - First person - Static and dynamic obstacles"
+    },
+    {
+      "video_id": "policy_b_bystander_g1_approach_user",
+      "path": "policy_b/bystander/g1_approach_user.mp4",
+      "policy_id": "policy_b",
+      "viewpoint": "bystander",
+      "robot_id": "g1",
+      "episode_id": "g1_approach_user",
+      "group_ids": ["policy_b_bystander"],
+      "episode_order": 1,
+      "title": "Policy B - Bystander - Approach user"
+    }
+  ]
+}

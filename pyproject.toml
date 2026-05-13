@@ -20,6 +20,7 @@ dev = [
 
 [project.scripts]
 asimovbm-local = "asimovbm.local_runner.cli:main"
+asimovbm-web = "asimovbm.web.server:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -27,6 +28,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src", "g1_slam/src"]
+
+[tool.setuptools.package-data]
+asimovbm = ["web/static/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "g1_slam/src"]
