@@ -46,11 +46,11 @@
       "lookat": {
         "x": -1.4,
         "y": 0.0,
-        "z": 0.9
+        "z": 1.35
       },
       "distance": 0.5,
       "azimuth": 180,
-      "elevation": 0.0
+      "elevation": -15.0
     },
     "show_trajectory": false,
     "trajectory_interval_steps": 20

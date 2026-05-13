@@ -1,0 +1,58 @@
+{
+  "episode": {
+    "id": "g1_approach_user",
+    "title": "G1 approaching the user viewpoint",
+    "description": "The humanoid starts several meters away and walks toward a laptop-like viewer position, stopping at a comfortable distance."
+  },
+  "start": {
+    "x": -5.0,
+    "y": 0.0,
+    "yaw": 0.0
+  },
+  "goal": {
+    "x": -0.9,
+    "y": 0.0
+  },
+  "steps": 1400,
+  "world": {
+    "x_min": -6.5,
+    "y_min": -3.0,
+    "x_max": 2.0,
+    "y_max": 3.0,
+    "obstacles": []
+  },
+  "dynamic_obstacles": {
+    "blue_cylinders": false,
+    "blue_cylinder_seed": 7
+  },
+  "controller": {
+    "lookahead": 0.5,
+    "waypoint_tolerance": 0.22,
+    "goal_tolerance": 0.35,
+    "max_linear_speed": 0.45,
+    "max_yaw_rate": 1.1
+  },
+  "locomotion": {
+    "mode": "robojudo",
+    "policy_path": "policies/g1/policy.onnx",
+    "observation_size": null,
+    "action_scale": 0.25,
+    "kp": 35.0,
+    "kd": 1.0
+  },
+  "visualization": {
+    "camera": {
+      "fixed": true,
+      "lookat": {
+        "x": -1.4,
+        "y": 0.0,
+        "z": 0.9
+      },
+      "distance": 0.5,
+      "azimuth": 180,
+      "elevation": 0.0
+    },
+    "show_trajectory": false,
+    "trajectory_interval_steps": 20
+  }
+}
