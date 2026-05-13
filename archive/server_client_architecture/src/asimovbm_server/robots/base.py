@@ -18,7 +18,22 @@ class RobotProfile:
     action_mode: str = "mobile_base_velocity"
     model_path: Path | None = None
     body_radius: float = 0.25
+    asset_backed: bool = False
+    marker_only: bool = True
+    adapter_kind: str = "fake_mobile_base"
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    def setup_metadata(self) -> dict[str, Any]:
+        return {
+            "robot_profile_id": self.id,
+            "embodiment_kind": self.embodiment_kind,
+            "action_mode": self.action_mode,
+            "asset_backed": self.asset_backed,
+            "marker_only": self.marker_only,
+            "adapter_kind": self.adapter_kind,
+            "model_path": str(self.model_path) if self.model_path else None,
+            **self.metadata,
+        }
 
 
 @dataclass(frozen=True)
@@ -74,6 +89,7 @@ class FakeMobileBaseRobot:
             time_s=self._time_s,
             pose=self._pose,
             velocity=self._velocity,
+            metadata=self.profile.setup_metadata(),
         )
 
     def apply_action(self, action: ActionMessage, dt: float) -> RobotState:

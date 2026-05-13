@@ -10,11 +10,11 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from g1_slam.config import NavigationConfig, load_navigation_config
+from g1_slam.config import LocomotionConfig, NavigationConfig, load_navigation_config
 
 DEFAULT_EPISODE_IDS: tuple[str, ...] = (
     "g1_approach_user",
@@ -24,6 +24,42 @@ DEFAULT_EPISODE_IDS: tuple[str, ...] = (
     "go2_lateral_open",
     "go2_lateral_static_dynamic_obstacles",
 )
+
+ROBOT_IDS: tuple[str, ...] = ("g1", "go2")
+
+DEFAULT_POLICY_BY_ROBOT: dict[str, str] = {
+    "g1": "g1_robojudo_asap",
+    "go2": "go2_unitree_rl_mjlab",
+}
+
+POLICY_PROFILES: dict[str, dict[str, Any]] = {
+    "g1_robojudo_asap": {
+        "robot_id": "g1",
+        "locomotion": {
+            "mode": "robojudo",
+            "policy_path": Path("policies/g1/policy.onnx"),
+            "observation_size": None,
+            "observation_profile": "generic",
+            "action_scale": 0.25,
+            "kp": 35.0,
+            "kd": 1.0,
+        },
+    },
+    "go2_unitree_rl_mjlab": {
+        "robot_id": "go2",
+        "locomotion": {
+            "mode": "policy",
+            "policy_path": Path("policies/go2/unitree_rl_mjlab/policy.onnx"),
+            "observation_size": 45,
+            "observation_profile": "dias_ai_master_go2_velocity_flat",
+            "action_scale": 0.5,
+            "kp": 50.0,
+            "kd": 3.5,
+        },
+    },
+}
+
+POLICY_IDS: tuple[str, ...] = tuple(POLICY_PROFILES)
 
 
 class EpisodeCatalogError(RuntimeError):
@@ -41,6 +77,8 @@ class LocalEpisodeSpec:
     checksum_sha256: str
     raw_config: Mapping[str, Any]
     config: NavigationConfig
+    robot_id: str
+    policy_id: str
     robot_selector: str
     canonical_backend_id: str
 
@@ -60,6 +98,11 @@ class LocalEpisodeSpec:
             "path": self.path.as_posix(),
             "checksum_sha256": self.checksum_sha256,
             "steps": self.steps,
+            "robot_id": self.robot_id,
+            "policy_id": self.policy_id,
+            "policy_path": self.config.locomotion.policy_path.as_posix()
+            if self.config.locomotion.policy_path is not None
+            else None,
             "robot_selector": self.robot_selector,
             "canonical_backend_id": self.canonical_backend_id,
             "locomotion_mode": self.locomotion_mode,
@@ -72,6 +115,20 @@ class LocalEpisodeSpec:
             "dynamic_obstacles": dict(self.raw_config.get("dynamic_obstacles", {})),
             "visualization": dict(self.raw_config.get("visualization", {})),
         }
+
+    def with_policy(self, policy_id: str, policy_path: Path | None = None) -> "LocalEpisodeSpec":
+        profile = _policy_profile_for(self.robot_id, policy_id)
+        profile_locomotion = dict(profile["locomotion"])
+        if policy_path is not None:
+            profile_locomotion["policy_path"] = Path(policy_path)
+        locomotion = LocomotionConfig(**profile_locomotion)
+        config = replace(self.config, locomotion=locomotion)
+        return replace(
+            self,
+            policy_id=policy_id,
+            config=config,
+            canonical_backend_id=_canonical_backend_id(self.id, {"locomotion": {"mode": locomotion.mode}}),
+        )
 
 
 class EpisodeCatalog:
@@ -103,10 +160,30 @@ class EpisodeCatalog:
         except KeyError as exc:
             raise EpisodeCatalogError(f"unknown local episode id: {episode_id}") from exc
 
-    def select(self, episode_ids: Sequence[str] | None = None) -> tuple[LocalEpisodeSpec, ...]:
+    def select(
+        self,
+        episode_ids: Sequence[str] | None = None,
+        *,
+        robot_id: str | None = None,
+        policy_id: str | None = None,
+        policy_path: Path | None = None,
+    ) -> tuple[LocalEpisodeSpec, ...]:
+        if robot_id is not None and robot_id not in ROBOT_IDS:
+            raise EpisodeCatalogError(f"unknown robot id: {robot_id}")
+        effective_policy_id = policy_id or (DEFAULT_POLICY_BY_ROBOT[robot_id] if robot_id else None)
         if episode_ids is None or len(episode_ids) == 0:
-            return tuple(self)
-        return tuple(self.get(episode_id) for episode_id in episode_ids)
+            specs = tuple(spec for spec in self if robot_id is None or spec.robot_id == robot_id)
+        else:
+            specs = tuple(self.get(episode_id) for episode_id in episode_ids)
+        if robot_id is not None:
+            wrong_robot = [spec.id for spec in specs if spec.robot_id != robot_id]
+            if wrong_robot:
+                raise EpisodeCatalogError(
+                    f"selected episodes do not belong to robot {robot_id}: {wrong_robot}"
+                )
+        if effective_policy_id is None:
+            return specs
+        return tuple(spec.with_policy(effective_policy_id, policy_path=policy_path) for spec in specs)
 
 
 def load_default_catalog(config_dir: Path | str | None = None) -> EpisodeCatalog:
@@ -123,6 +200,8 @@ def _load_episode_spec(path: Path) -> LocalEpisodeSpec:
     raw_config = json.loads(raw_bytes.decode("utf-8"))
     metadata = raw_config.get("episode", {})
     episode_id = str(metadata.get("id", path.stem))
+    robot_id = _episode_robot_id(episode_id)
+    policy_id = DEFAULT_POLICY_BY_ROBOT[robot_id]
     return LocalEpisodeSpec(
         id=episode_id,
         title=str(metadata.get("title", episode_id)),
@@ -131,17 +210,26 @@ def _load_episode_spec(path: Path) -> LocalEpisodeSpec:
         checksum_sha256=hashlib.sha256(raw_bytes).hexdigest(),
         raw_config=raw_config,
         config=load_navigation_config(path),
-        robot_selector=_robot_selector(episode_id, raw_config),
+        robot_id=robot_id,
+        policy_id=policy_id,
+        robot_selector=_robot_selector(robot_id),
         canonical_backend_id=_canonical_backend_id(episode_id, raw_config),
     )
 
 
-def _robot_selector(episode_id: str, raw_config: Mapping[str, Any]) -> str:
-    if episode_id.startswith("go2_"):
+def _episode_robot_id(episode_id: str) -> str:
+    for robot_id in ROBOT_IDS:
+        if episode_id.startswith(f"{robot_id}_"):
+            return robot_id
+    raise EpisodeCatalogError(f"episode id does not start with a known robot id: {episode_id}")
+
+
+def _robot_selector(robot_id: str) -> str:
+    if robot_id == "go2":
         return "official_go2"
-    if raw_config.get("locomotion", {}).get("mode") == "robojudo":
+    if robot_id == "g1":
         return "official_g1"
-    return "kinematic"
+    raise EpisodeCatalogError(f"unknown robot id: {robot_id}")
 
 
 def _canonical_backend_id(episode_id: str, raw_config: Mapping[str, Any]) -> str:
@@ -151,6 +239,16 @@ def _canonical_backend_id(episode_id: str, raw_config: Mapping[str, Any]) -> str
     if episode_id.startswith("go2_") and locomotion_mode == "policy":
         return "go2_mujoco_onnx"
     return "g1_slam_kinematic"
+
+
+def _policy_profile_for(robot_id: str, policy_id: str) -> dict[str, Any]:
+    try:
+        profile = POLICY_PROFILES[policy_id]
+    except KeyError as exc:
+        raise EpisodeCatalogError(f"unknown policy id: {policy_id}") from exc
+    if profile["robot_id"] != robot_id:
+        raise EpisodeCatalogError(f"policy {policy_id} is for {profile['robot_id']}, not {robot_id}")
+    return profile
 
 
 def _repo_root() -> Path:

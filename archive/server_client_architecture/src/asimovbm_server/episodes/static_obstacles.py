@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from .models import (
     EntityDefinition,
@@ -70,6 +72,10 @@ class StaticObstacleWorld:
     world: StaticWorld2D
     obstacle_rects: dict[str, RectObstacle] = field(default_factory=dict)
     latest_ranges: tuple[float, ...] = ()
+    mujoco: Any | None = None
+    model: Any | None = None
+    data: Any | None = None
+    robot_qpos_addr: int | None = None
 
 
 class StaticObstacleNavigationScenario:
@@ -83,6 +89,7 @@ class StaticObstacleNavigationScenario:
 
     def reset(self, world: StaticObstacleWorld, robot) -> EpisodeObservation:
         robot.reset(self.definition.robot_start)
+        _sync_mujoco_robot(world, robot.state().pose)
         return self.observe(0.0, world, robot)
 
     def before_step(self, time_s: float, world: StaticObstacleWorld) -> None:
@@ -103,6 +110,7 @@ class StaticObstacleNavigationScenario:
             step=_float_metadata(self.definition, "lidar_step_m", DEFAULT_LIDAR_STEP_M),
         )
         world.latest_ranges = scan.ranges
+        _sync_mujoco_robot(world, robot_state.pose)
         return EpisodeObservation(
             episode_id=self.definition.id,
             step_id=robot_state.step_id,
@@ -117,8 +125,19 @@ class StaticObstacleNavigationScenario:
                 "source": "g1_slam",
                 "lidar_angles": scan.angles,
                 "lidar_max_range": scan.max_range,
+                "world_bounds": (
+                    world.world.x_min,
+                    world.world.y_min,
+                    world.world.x_max,
+                    world.world.y_max,
+                ),
             },
         )
+
+    def viewer_target(self, world: StaticObstacleWorld) -> tuple[Any, Any] | None:
+        if world.model is None or world.data is None:
+            return None
+        return world.model, world.data
 
     def evaluate(self, time_s: float, world: StaticObstacleWorld, robot) -> EpisodeStatus:
         robot_state = robot.state()
@@ -175,15 +194,17 @@ def _world_from_definition(definition: EpisodeDefinition) -> StaticObstacleWorld
         for entity in definition.obstacles
     }
     x_min, y_min, x_max, y_max = _bounds_for_definition(definition, tuple(rects.values()))
-    return StaticObstacleWorld(
+    scenario_world = StaticObstacleWorld(
         world=StaticWorld2D(x_min, y_min, x_max, y_max, tuple(rects.values())),
         obstacle_rects=rects,
     )
+    _attach_mujoco_scene(definition, scenario_world)
+    return scenario_world
 
 
 def _rect_from_obstacle(entity: EntityDefinition) -> RectObstacle:
-    half_width = float(entity.metadata.get("half_width", entity.radius))
-    half_depth = float(entity.metadata.get("half_depth", entity.radius))
+    half_width = float(entity.half_width or entity.metadata.get("half_width", entity.radius))
+    half_depth = float(entity.half_depth or entity.metadata.get("half_depth", entity.radius))
     return RectObstacle(
         entity.x - half_width,
         entity.y - half_depth,
@@ -239,6 +260,11 @@ def _collision_summary(
 
 
 def _public_obstacle(entity: EntityDefinition) -> PublicEntityObservation:
+    metadata = dict(entity.metadata)
+    metadata.setdefault("shape", entity.shape)
+    if entity.shape == "rectangle":
+        metadata.setdefault("half_width", entity.half_width)
+        metadata.setdefault("half_depth", entity.half_depth)
     return PublicEntityObservation(
         id=entity.id,
         kind=entity.kind,
@@ -246,6 +272,7 @@ def _public_obstacle(entity: EntityDefinition) -> PublicEntityObservation:
         y=entity.y,
         radius=entity.radius,
         role=entity.role,
+        metadata=metadata,
     )
 
 
@@ -298,6 +325,99 @@ def _simulate_lidar(
 
 def _wrap_angle(value: float) -> float:
     return math.atan2(math.sin(value), math.cos(value))
+
+
+def _attach_mujoco_scene(definition: EpisodeDefinition, world: StaticObstacleWorld) -> None:
+    try:
+        import mujoco
+    except ModuleNotFoundError:
+        return
+
+    model = mujoco.MjModel.from_xml_string(_mujoco_scene_xml(definition, world))
+    data = mujoco.MjData(model)
+    joint_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, "robot_freejoint")
+    if joint_id >= 0:
+        world.robot_qpos_addr = int(model.jnt_qposadr[joint_id])
+    world.mujoco = mujoco
+    world.model = model
+    world.data = data
+    _sync_mujoco_robot(world, definition.robot_start)
+
+
+def _sync_mujoco_robot(world: StaticObstacleWorld, pose) -> None:
+    if world.mujoco is None or world.model is None or world.data is None:
+        return
+    if world.robot_qpos_addr is None:
+        return
+    qpos = world.data.qpos
+    addr = world.robot_qpos_addr
+    qpos[addr + 0] = pose.x
+    qpos[addr + 1] = pose.y
+    qpos[addr + 2] = 0.18
+    half_yaw = 0.5 * pose.yaw
+    qpos[addr + 3] = math.cos(half_yaw)
+    qpos[addr + 4] = 0.0
+    qpos[addr + 5] = 0.0
+    qpos[addr + 6] = math.sin(half_yaw)
+    world.mujoco.mj_forward(world.model, world.data)
+
+
+def _mujoco_scene_xml(definition: EpisodeDefinition, world: StaticObstacleWorld) -> str:
+    obstacle_geoms = []
+    for entity in definition.obstacles:
+        rect = world.obstacle_rects[entity.id]
+        center_x = 0.5 * (rect.x_min + rect.x_max)
+        center_y = 0.5 * (rect.y_min + rect.y_max)
+        size_x = 0.5 * (rect.x_max - rect.x_min)
+        size_y = 0.5 * (rect.y_max - rect.y_min)
+        obstacle_geoms.append(
+            f'    <geom name="{_xml_name(entity.id)}" type="box" '
+            f'pos="{center_x:.4f} {center_y:.4f} 0.30" '
+            f'size="{size_x:.4f} {size_y:.4f} 0.30" material="nav_obstacle_mat"/>'
+        )
+
+    floor_size_x = 0.5 * (world.world.x_max - world.world.x_min) + 0.5
+    floor_size_y = 0.5 * (world.world.y_max - world.world.y_min) + 0.5
+    floor_center_x = 0.5 * (world.world.x_min + world.world.x_max)
+    floor_center_y = 0.5 * (world.world.y_min + world.world.y_max)
+    goal_x = definition.goal.x if definition.goal and definition.goal.x is not None else 0.0
+    goal_y = definition.goal.y if definition.goal and definition.goal.y is not None else 0.0
+    obstacles = "\n".join(obstacle_geoms)
+    return f"""<mujoco model="asimovbm_static_obstacles">
+  <option timestep="{definition.control_dt:.4f}"/>
+  <statistic center="2 0 0.3" extent="5.0"/>
+  <visual>
+    <global azimuth="130" elevation="-35"/>
+    <headlight ambient="0.55 0.55 0.55" diffuse="0.35 0.35 0.35" specular="0.03 0.03 0.03"/>
+  </visual>
+  <asset>
+    <texture name="nav_grid" type="2d" builtin="checker" rgb1="0.18 0.19 0.20" rgb2="0.24 0.25 0.26" width="512" height="512"/>
+    <material name="nav_floor_mat" texture="nav_grid" texrepeat="4 4" reflectance="0.1"/>
+    <material name="nav_obstacle_mat" rgba="0.8 0.18 0.12 1"/>
+    <material name="nav_goal_mat" rgba="0.1 0.8 0.35 1"/>
+    <material name="nav_robot_mat" rgba="0.12 0.42 0.95 1"/>
+  </asset>
+  <worldbody>
+    <light name="top_light" directional="true" pos="0 0 8" dir="0 0 -1" ambient="0.35 0.35 0.35" diffuse="0.45 0.45 0.45"/>
+    <camera name="overview" pos="{floor_center_x:.4f} {floor_center_y - 7.0:.4f} 8.0" xyaxes="1 0 0 0 0.82 0.57"/>
+    <geom name="floor" type="plane" pos="{floor_center_x:.4f} {floor_center_y:.4f} 0" size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>
+    <geom name="goal_agent" type="cylinder" pos="{goal_x:.4f} {goal_y:.4f} 0.45" size="0.20 0.45" material="nav_goal_mat"/>
+{obstacles}
+    <body name="robot_marker" pos="0 0 0.18">
+      <freejoint name="robot_freejoint"/>
+      <geom name="robot_body" type="cylinder" size="0.25 0.18" material="nav_robot_mat"/>
+      <geom name="robot_heading" type="box" pos="0.22 0 0.11" size="0.16 0.035 0.035" rgba="0.95 0.95 0.2 1"/>
+    </body>
+  </worldbody>
+</mujoco>
+"""
+
+
+def _xml_name(value: str) -> str:
+    name = re.sub(r"[^A-Za-z0-9_]", "_", value)
+    if not name or name[0].isdigit():
+        return f"entity_{name}"
+    return name
 
 
 def _float_metadata(definition: EpisodeDefinition, key: str, default: float) -> float:

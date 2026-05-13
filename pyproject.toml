@@ -8,6 +8,7 @@ dependencies = []
 
 [project.optional-dependencies]
 g1-mujoco = [
+  "imageio>=2.0",
   "mujoco>=3.2.0,<3.4.0",
   "numpy>=1.26",
   "onnxruntime>=1.17",

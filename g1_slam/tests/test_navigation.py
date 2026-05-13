@@ -1,5 +1,7 @@
 import unittest
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
@@ -17,7 +19,13 @@ from g1_slam.locomotion import _is_git_lfs_pointer
 from g1_slam.mapping import GridSpec, OccupancyGrid
 from g1_slam.mujoco_runner import _official_g1_scene_xml, _official_go2_scene_xml, _robot_spec
 from g1_slam.planner import AStarPlanner
-from g1_slam.robojudo_backend import _robojudo_navigation_scene_tail, _world_with_dynamic_obstacles
+from g1_slam.robojudo_backend import (
+    DEFAULT_ROBOJUDO_CONFIG,
+    RoboJuDoBackend,
+    RoboJuDoBackendConfig,
+    _robojudo_navigation_scene_tail,
+    _world_with_dynamic_obstacles,
+)
 from g1_slam.simulation import run_navigation
 from g1_slam.world import RectObstacle, World2D, default_world
 
@@ -204,6 +212,54 @@ class NavigationTests(unittest.TestCase):
         self.assertIn('name="person_npc_2"', xml)
         self.assertIn('type="capsule"', xml)
         self.assertIn('nav_npc_clothes_mat', xml)
+
+    def test_robojudo_repo_path_adds_bundled_mujoco_viewer(self):
+        with TemporaryDirectory() as tmp:
+            repo_path = Path(tmp) / "RoboJuDo"
+            viewer_path = repo_path / "third_party" / "mujoco_viewer"
+            viewer_path.mkdir(parents=True)
+            repo_path = repo_path.resolve()
+            viewer_path = viewer_path.resolve()
+            original_sys_path = list(sys.path)
+            try:
+                sys.path[:] = [
+                    entry
+                    for entry in sys.path
+                    if entry not in {repo_path.as_posix(), viewer_path.as_posix()}
+                ]
+                resolved = RoboJuDoBackend._install_repo_path(repo_path)
+                self.assertEqual(resolved, repo_path)
+                self.assertIn(repo_path.as_posix(), sys.path)
+                self.assertIn(viewer_path.as_posix(), sys.path)
+            finally:
+                sys.path[:] = original_sys_path
+
+    def test_robojudo_backend_defaults_to_unitree_g1_policy_config(self):
+        self.assertEqual(DEFAULT_ROBOJUDO_CONFIG, "g1")
+        self.assertEqual(RoboJuDoBackendConfig().config_name, "g1")
+
+    def test_robojudo_viewer_compat_accepts_robojudo_typo_keyword(self):
+        class FakeViewer:
+            def __init__(self, model, data, *, width=None):
+                self.model = model
+                self.data = data
+                self.width = width
+
+        original_module = sys.modules.get("mujoco_viewer")
+        sys.modules["mujoco_viewer"] = SimpleNamespace(MujocoViewer=FakeViewer)
+        try:
+            RoboJuDoBackend._install_mujoco_viewer_compat()
+            viewer = FakeViewer("model", "data", width=1200, diable_key_callbacks=True)
+        finally:
+            if original_module is None:
+                sys.modules.pop("mujoco_viewer", None)
+            else:
+                sys.modules["mujoco_viewer"] = original_module
+
+        self.assertEqual(viewer.model, "model")
+        self.assertEqual(viewer.data, "data")
+        self.assertEqual(viewer.width, 1200)
+        self.assertTrue(getattr(FakeViewer, "_g1_slam_marker_compat", False))
 
     def test_dynamic_obstacles_extend_lidar_world_over_time(self):
         world = default_world()

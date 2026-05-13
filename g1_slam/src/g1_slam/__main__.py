@@ -18,6 +18,7 @@ from .simulation import run_navigation, save_trajectory
 from .world import default_world
 
 DEFAULT_GO2_POLICY_PATH = Path("policies/go2/unitree_rl_mjlab/policy.onnx")
+G1_SLAM_ROOT = Path(__file__).resolve().parents[2]
 
 
 def main() -> None:
@@ -32,8 +33,8 @@ def main() -> None:
     parser.add_argument("--locomotion", choices=("kinematic", "policy", "robojudo"), help="override config locomotion.mode")
     parser.add_argument("--policy-path", type=Path, help="override config locomotion.policy_path")
     parser.add_argument("--model-path", type=Path, help="optional path to a MuJoCo XML/MJCF file")
-    parser.add_argument("--robojudo-repo", type=Path, default=Path("third_party/RoboJuDo"))
-    parser.add_argument("--robojudo-config", default="g1_asap_loco")
+    parser.add_argument("--robojudo-repo", type=Path, default=G1_SLAM_ROOT / "third_party" / "RoboJuDo")
+    parser.add_argument("--robojudo-config", default=None)
     parser.add_argument(
         "--dynamic-blue-cylinders",
         action="store_true",
@@ -59,6 +60,12 @@ def main() -> None:
         "--npc-policy",
         default=None,
         help="NPC movement policy. Default: config value, usually social_patrol",
+    )
+    parser.add_argument(
+        "--realtime-factor",
+        type=float,
+        default=1.0,
+        help="MuJoCo render playback speed multiplier; use 1.0 for realtime.",
     )
     parser.add_argument("--render", action="store_true", help="open the MuJoCo viewer")
     args = parser.parse_args()
@@ -133,7 +140,11 @@ def main() -> None:
     )
 
     if locomotion_config.mode == "robojudo":
-        from .robojudo_backend import RoboJuDoBackendConfig, run_robojudo_navigation
+        from .robojudo_backend import (
+            DEFAULT_ROBOJUDO_CONFIG,
+            RoboJuDoBackendConfig,
+            run_robojudo_navigation,
+        )
 
         run_robojudo_navigation(
             world,
@@ -143,7 +154,7 @@ def main() -> None:
             controller_config=nav_config.controller,
             backend_config=RoboJuDoBackendConfig(
                 repo_path=args.robojudo_repo,
-                config_name=args.robojudo_config,
+                config_name=args.robojudo_config or DEFAULT_ROBOJUDO_CONFIG,
                 max_vx=nav_config.controller.max_linear_speed,
                 max_vy=nav_config.controller.max_linear_speed,
                 max_yaw_rate=nav_config.controller.max_yaw_rate,
@@ -169,6 +180,7 @@ def main() -> None:
             visualization_config=nav_config.visualization,
             render=args.render,
             dynamic_obstacles=dynamic_obstacles,
+            realtime_factor=args.realtime_factor,
         )
         return
 
@@ -189,6 +201,23 @@ def _fallback_missing_default_go2_policy(
     explicit_policy_path: bool,
 ) -> LocomotionConfig:
     policy_path = locomotion_config.policy_path
+    resolved_policy_path = _resolve_default_go2_policy_path(policy_path)
+    if (
+        robot == "official_go2"
+        and locomotion_config.mode == "policy"
+        and not explicit_policy_path
+        and policy_path == DEFAULT_GO2_POLICY_PATH
+        and resolved_policy_path != policy_path
+    ):
+        return LocomotionConfig(
+            mode=locomotion_config.mode,
+            policy_path=resolved_policy_path,
+            observation_size=locomotion_config.observation_size,
+            observation_profile=locomotion_config.observation_profile,
+            action_scale=locomotion_config.action_scale,
+            kp=locomotion_config.kp,
+            kd=locomotion_config.kd,
+        )
     if (
         robot != "official_go2"
         or locomotion_config.mode != "policy"
@@ -214,6 +243,15 @@ def _fallback_missing_default_go2_policy(
         kp=locomotion_config.kp,
         kd=locomotion_config.kd,
     )
+
+
+def _resolve_default_go2_policy_path(policy_path: Path | None) -> Path | None:
+    if policy_path != DEFAULT_GO2_POLICY_PATH:
+        return policy_path
+    g1_slam_policy_path = G1_SLAM_ROOT / DEFAULT_GO2_POLICY_PATH
+    if g1_slam_policy_path.exists():
+        return g1_slam_policy_path
+    return policy_path
 
 
 if __name__ == "__main__":

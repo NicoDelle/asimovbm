@@ -104,10 +104,10 @@ def test_report_builder_accepts_local_technical_context() -> None:
             run_id="run-1",
             maturity="local_g1_slam_validation",
             reliability={"attempts": 1},
-            smoke_results=({"maturity": "local_g1_slam_validation", "episode_id": "g1_approach_user"},),
+            validation_results=({"maturity": "local_g1_slam_validation", "episode_id": "g1_approach_user"},),
         )
     )
 
-    assert report["behavioral_metrics"]["status"] == "not_applicable_smoke_context"
+    assert report["behavioral_metrics"]["status"] == "not_applicable"
     assert report["technical_reliability"]["attempts"] == 1
-    assert report["smoke_results"][0]["maturity"] == "local_g1_slam_validation"
+    assert report["validation_results"][0]["maturity"] == "local_g1_slam_validation"

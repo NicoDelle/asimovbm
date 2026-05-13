@@ -12,10 +12,13 @@ from asimovbm_server.traces import EpisodeTrace
 @dataclass(frozen=True)
 class BenchmarkRunConfig:
     robot_profile_id: str = "minimal-mobile-base"
-    agent_id: str = "reference-social-nav"
+    robot_profile_ids: tuple[str, ...] = ()
+    agent_id: str = "obstacle-aware-nav"
     max_attempts_per_episode: int = 1
     realtime: float = 0.0
     visible: bool = False
+    tier_id: str | None = None
+    episode_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -24,6 +27,9 @@ class EpisodeRunRecord:
     episode_id: str
     attempt: int
     trace: EpisodeTrace
+    robot_profile_id: str
+    robot_embodiment_kind: str
+    robot_metadata: dict[str, object] = field(default_factory=dict)
     metrics: dict[str, MetricValue] = field(default_factory=dict)
 
 

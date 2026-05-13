@@ -1,0 +1,85 @@
+{
+  "backend_proof": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "proof_status": "not_verified_in_this_run",
+      "real_backend_verified": false,
+      "reason": "portable local trace backend; run release smoke with RoboJuDo/Go2 assets to mark the canonical backend verified",
+      "robot_selector": "official_g1"
+    }
+  ],
+  "canonical_episode_ids": [
+    "g1_approach_user",
+    "g1_lateral_open",
+    "g1_lateral_static_dynamic_obstacles",
+    "go2_approach_user",
+    "go2_lateral_open",
+    "go2_lateral_static_dynamic_obstacles"
+  ],
+  "created_at": "2026-05-13T10:18:52.576088+00:00",
+  "episodes": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "checksum_sha256": "e6553fe2c28577a977ed350384c053dfdd034922aa53fb480d71515a70456eda",
+      "description": "The humanoid starts several meters away and walks toward a laptop-like viewer position, stopping at a comfortable distance.",
+      "dynamic_obstacles": {
+        "blue_cylinder_seed": 7,
+        "blue_cylinders": false
+      },
+      "goal": {
+        "x": -0.9,
+        "y": 0.0
+      },
+      "id": "g1_approach_user",
+      "locomotion_mode": "robojudo",
+      "path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_approach_user.json",
+      "robot_selector": "official_g1",
+      "start": {
+        "x": -5.0,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      "steps": 1400,
+      "title": "G1 approaching the user viewpoint",
+      "visualization": {
+        "camera": {
+          "azimuth": 180,
+          "distance": 0.5,
+          "elevation": 0.0,
+          "fixed": true,
+          "lookat": {
+            "x": -1.4,
+            "y": 0.0,
+            "z": 0.9
+          }
+        },
+        "show_trajectory": false,
+        "trajectory_interval_steps": 20
+      }
+    }
+  ],
+  "iterations": 1,
+  "metadata": {},
+  "records": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "episode_id": "g1_approach_user",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "iteration": 0,
+      "metrics_path": "g1_approach_user/iteration-000/metrics.json",
+      "technical_valid": true,
+      "terminal_status": "success",
+      "trace_path": "g1_approach_user/iteration-000/trace.json",
+      "viewer_mode": "visible"
+    }
+  ],
+  "report_path": "report.json",
+  "run_id": "local-20260513T101848Z-86bfed59",
+  "schema_version": "asimovbm.local_validation.v1",
+  "selected_episode_ids": [
+    "g1_approach_user"
+  ],
+  "viewer_mode": "visible",
+  "viewer_speed": 4.0
+}

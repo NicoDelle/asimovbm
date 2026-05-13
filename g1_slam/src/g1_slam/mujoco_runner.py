@@ -20,6 +20,8 @@ from .scene_visuals import (
 from .simulation import make_grid_for_world
 from .world import World2D
 
+G1_SLAM_ROOT = Path(__file__).resolve().parents[2]
+
 
 @dataclass(frozen=True)
 class RobotSpec:
@@ -32,19 +34,29 @@ class RobotSpec:
 ROBOT_SPECS = {
     "kinematic": RobotSpec(
         name="kinematic",
-        default_model_path=Path("assets/g1_kinematic.xml"),
+        default_model_path=G1_SLAM_ROOT / "assets" / "g1_kinematic.xml",
         base_height=0.72,
         use_physics_step=True,
     ),
     "official_g1": RobotSpec(
         name="official_g1",
-        default_model_path=Path("third_party/unitree_mujoco/unitree_robots/g1/g1_nav_generated.xml"),
+        default_model_path=G1_SLAM_ROOT
+        / "third_party"
+        / "unitree_mujoco"
+        / "unitree_robots"
+        / "g1"
+        / "g1_nav_generated.xml",
         base_height=0.80,
         use_physics_step=False,
     ),
     "official_go2": RobotSpec(
         name="official_go2",
-        default_model_path=Path("third_party/unitree_mujoco/unitree_robots/go2/go2_nav_generated.xml"),
+        default_model_path=G1_SLAM_ROOT
+        / "third_party"
+        / "unitree_mujoco"
+        / "unitree_robots"
+        / "go2"
+        / "go2_nav_generated.xml",
         base_height=0.27,
         use_physics_step=False,
     ),
@@ -67,7 +79,10 @@ def run_mujoco_navigation(
     visualization_config: VisualizationConfig | None = None,
     dynamic_obstacles: tuple[DynamicObstacle, ...] = (),
     dynamic_cylinders: tuple[DynamicObstacle, ...] | None = None,
+    realtime_factor: float = 1.0,
 ) -> None:
+    if realtime_factor <= 0.0:
+        raise ValueError("realtime_factor must be > 0")
     try:
         import mujoco
     except ModuleNotFoundError as exc:
@@ -138,7 +153,7 @@ def run_mujoco_navigation(
                 mujoco.mj_forward(model, data)
             if render:
                 viewer.sync()
-                sleep(dt)
+                sleep(dt / realtime_factor)
     if render:
         # MuJoCo's passive viewer can segfault when the closed viewer object is
         # destroyed at function return on some Linux desktop stacks.
@@ -178,10 +193,10 @@ def _ensure_official_g1_nav_scene(
     if not robot_xml.exists() or not meshes_dir.exists():
         raise FileNotFoundError(
             "Could not find the official Unitree G1 model. Clone it with:\n"
-            "mkdir -p third_party\n"
+            "mkdir -p g1_slam/third_party\n"
             "git clone --depth 1 --filter=blob:none --sparse "
-            "https://github.com/unitreerobotics/unitree_mujoco.git third_party/unitree_mujoco\n"
-            "cd third_party/unitree_mujoco\n"
+            "https://github.com/unitreerobotics/unitree_mujoco.git g1_slam/third_party/unitree_mujoco\n"
+            "cd g1_slam/third_party/unitree_mujoco\n"
             "git sparse-checkout set unitree_robots/g1"
         )
     scene_path.write_text(_official_g1_scene_xml(world, dynamic_obstacles), encoding="utf-8")
@@ -212,10 +227,10 @@ def _ensure_official_go2_nav_scene(
     if not robot_xml.exists() or not assets_dir.exists():
         raise FileNotFoundError(
             "Could not find the official Unitree Go2 model. Clone it with:\n"
-            "mkdir -p third_party\n"
+            "mkdir -p g1_slam/third_party\n"
             "git clone --depth 1 --filter=blob:none --sparse "
-            "https://github.com/unitreerobotics/unitree_mujoco.git third_party/unitree_mujoco\n"
-            "cd third_party/unitree_mujoco\n"
+            "https://github.com/unitreerobotics/unitree_mujoco.git g1_slam/third_party/unitree_mujoco\n"
+            "cd g1_slam/third_party/unitree_mujoco\n"
             "git sparse-checkout set unitree_robots/go2"
         )
     scene_path.write_text(_official_go2_scene_xml(world, dynamic_obstacles), encoding="utf-8")

@@ -22,8 +22,20 @@ def prepare_run_dir(artifact_root: Path, run_id: str) -> ArtifactPaths:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(_json_ready(payload), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def relative_to_run(path: Path, run_dir: Path) -> str:
     return path.relative_to(run_dir).as_posix()
+
+
+def _json_ready(value: Any) -> Any:
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    if isinstance(value, Path):
+        return value.as_posix()
+    if isinstance(value, dict):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, tuple | list):
+        return [_json_ready(item) for item in value]
+    return value

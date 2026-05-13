@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "id": "robojudo_navigation_validation",
+  "metadata": {
+    "source": "g1_slam/config/episodes",
+    "normalization": "Robot-neutral episode geometry; robot policy details retained as metadata."
+  },
+  "tiers": [
+    {
+      "id": "approach_user",
+      "episodes": [
+        {
+          "id": "approach_user",
+          "scenario_type": "obstacle_navigation",
+          "robot_start": {"x": -5.0, "y": 0.0, "yaw": 0.0},
+          "goal": {"x": -0.9, "y": 0.0, "stop_distance_m": 0.35},
+          "bounds": [-6.5, -3.0, 2.0, 3.0],
+          "max_steps": 3200,
+          "control_dt": 0.05,
+          "metadata": {
+            "source_episode_ids": {"g1": "g1_approach_user", "go2": "go2_approach_user"},
+            "source_steps": {"g1": 1400, "go2": 3200},
+            "robot_controller_profiles": {
+              "g1": {
+                "controller": {"lookahead": 0.5, "waypoint_tolerance": 0.22, "goal_tolerance": 0.35, "max_linear_speed": 0.45, "max_yaw_rate": 1.1},
+                "locomotion": {"mode": "robojudo", "policy_path": "policies/g1/policy.onnx", "observation_size": null, "action_scale": 0.25, "kp": 35.0, "kd": 1.0}
+              },
+              "go2": {
+                "controller": {"lookahead": 0.55, "waypoint_tolerance": 0.22, "goal_tolerance": 0.35, "max_linear_speed": 0.8, "max_yaw_rate": 1.2},
+                "locomotion": {"mode": "policy", "policy_path": "policies/go2/unitree_rl_mjlab/policy.onnx", "observation_size": 45, "observation_profile": "dias_ai_master_go2_velocity_flat", "action_scale": 0.5, "kp": 50.0, "kd": 3.5}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "lateral_open",
+      "episodes": [
+        {
+          "id": "lateral_open",
+          "scenario_type": "obstacle_navigation",
+          "robot_start": {"x": -3.0, "y": -2.2, "yaw": 1.5708},
+          "goal": {"x": -3.0, "y": 2.2, "stop_distance_m": 0.28},
+          "bounds": [-7.0, -4.0, 3.0, 4.0],
+          "max_steps": 3200,
+          "control_dt": 0.05,
+          "metadata": {
+            "source_episode_ids": {"g1": "g1_lateral_open", "go2": "go2_lateral_open"},
+            "source_steps": {"g1": 1200, "go2": 3200},
+            "robot_controller_profiles": {
+              "g1": {
+                "controller": {"lookahead": 0.55, "waypoint_tolerance": 0.25, "goal_tolerance": 0.28, "max_linear_speed": 0.55, "max_yaw_rate": 1.2},
+                "locomotion": {"mode": "robojudo", "policy_path": "policies/g1/policy.onnx", "observation_size": null, "action_scale": 0.25, "kp": 35.0, "kd": 1.0}
+              },
+              "go2": {
+                "controller": {"lookahead": 0.65, "waypoint_tolerance": 0.25, "goal_tolerance": 0.28, "max_linear_speed": 1.0, "max_yaw_rate": 1.35},
+                "locomotion": {"mode": "policy", "policy_path": "policies/go2/unitree_rl_mjlab/policy.onnx", "observation_size": 45, "observation_profile": "dias_ai_master_go2_velocity_flat", "action_scale": 0.5, "kp": 50.0, "kd": 3.5}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "static_dynamic_obstacles",
+      "episodes": [
+        {
+          "id": "lateral_static_dynamic_obstacles",
+          "scenario_type": "human_obstacle_navigation",
+          "robot_start": {"x": -3.8, "y": 0.0, "yaw": 0.0},
+          "goal": {"x": 4.2, "y": 0.0, "stop_distance_m": 0.3},
+          "bounds": [-5.2, -3.0, 5.5, 3.0],
+          "max_steps": 3600,
+          "control_dt": 0.05,
+          "obstacles": [
+            {"id": "static_box_1", "shape": "rectangle", "x_min": -1.2, "y_min": -2.1, "x_max": -0.7, "y_max": 0.5},
+            {"id": "static_box_2", "shape": "rectangle", "x_min": 1.4, "y_min": -0.5, "x_max": 1.9, "y_max": 2.0}
+          ],
+          "metadata": {
+            "dynamic_seed": 11,
+            "dynamic_count": 3,
+            "source_episode_ids": {"g1": "g1_lateral_static_dynamic_obstacles", "go2": "go2_lateral_static_dynamic_obstacles"},
+            "source_steps": {"g1": 950, "go2": 3600},
+            "robot_controller_profiles": {
+              "g1": {
+                "controller": {"lookahead": 0.6, "waypoint_tolerance": 0.25, "goal_tolerance": 0.3, "max_linear_speed": 0.55, "max_yaw_rate": 1.25},
+                "locomotion": {"mode": "robojudo", "policy_path": "policies/g1/policy.onnx", "observation_size": null, "action_scale": 0.25, "kp": 35.0, "kd": 1.0}
+              },
+              "go2": {
+                "controller": {"lookahead": 0.65, "waypoint_tolerance": 0.25, "goal_tolerance": 0.3, "max_linear_speed": 0.9, "max_yaw_rate": 1.35},
+                "locomotion": {"mode": "policy", "policy_path": "policies/go2/unitree_rl_mjlab/policy.onnx", "observation_size": 45, "observation_profile": "dias_ai_master_go2_velocity_flat", "action_scale": 0.5, "kp": 50.0, "kd": 3.5}
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

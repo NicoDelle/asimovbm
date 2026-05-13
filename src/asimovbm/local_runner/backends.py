@@ -5,11 +5,13 @@ loop. It preserves the checked-in episode config, planner, lidar, dynamic
 obstacle scripts, controller limits, and terminal semantics while producing the
 per-step measurements that the metric bridge needs. Machines with full
 RoboJuDo/Go2 assets can still use the canonical selectors recorded in the
-manifest as release-smoke proof gates.
+manifest as visible-backend proof gates.
 """
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -36,6 +38,7 @@ class LocalTraceBackend(Protocol):
         *,
         iteration: int,
         viewer_enabled: bool,
+        viewer_speed: float,
     ) -> LocalEpisodeTrace:
         ...
 
@@ -75,10 +78,17 @@ class G1SlamReferenceBackend:
         *,
         iteration: int,
         viewer_enabled: bool,
+        viewer_speed: float = 4.0,
     ) -> LocalEpisodeTrace:
         world = _episode_world(spec)
         dynamic_obstacles = _dynamic_obstacles(spec)
-        viewer_proof = _maybe_run_real_viewer(spec, world, dynamic_obstacles, viewer_enabled)
+        viewer_proof = _maybe_run_real_viewer(
+            spec,
+            world,
+            dynamic_obstacles,
+            viewer_enabled,
+            viewer_speed,
+        )
         pose = spec.config.start
         goal = spec.config.goal
         grid = make_grid_for_world(world)
@@ -151,6 +161,7 @@ class G1SlamReferenceBackend:
             viewer_mode="visible" if viewer_enabled else "headless",
             metadata={
                 "reference_backend": True,
+                "viewer_speed": viewer_speed,
                 "viewer_proof": viewer_proof,
                 "canonical_backend_proof": backend_proof_for(spec).to_dict(),
             },
@@ -159,7 +170,7 @@ class G1SlamReferenceBackend:
 
 def backend_proof_for(spec: LocalEpisodeSpec) -> BackendProof:
     reason = (
-        "portable local trace backend; run release smoke with RoboJuDo/Go2 assets "
+        "portable local trace backend; run visible backend validation with RoboJuDo/Go2 assets "
         "to mark the canonical backend verified"
     )
     return BackendProof(
@@ -251,22 +262,78 @@ def _maybe_run_real_viewer(
     world: World2D,
     dynamic_obstacles,
     viewer_enabled: bool,
+    viewer_speed: float,
 ) -> dict[str, object]:
     if not viewer_enabled:
         return {"viewer_requested": False, "viewer_status": "not_requested"}
+    return _run_viewer_subprocess(spec, viewer_speed)
+
+
+def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float) -> dict[str, object]:
+    config_path = spec.path.resolve()
+    command = [
+        sys.executable,
+        "-m",
+        "g1_slam",
+        "--config",
+        config_path.as_posix(),
+        "--steps",
+        str(spec.config.steps),
+        "--realtime-factor",
+        str(viewer_speed),
+    ]
+    if spec.locomotion_mode == "robojudo":
+        command.extend(["--locomotion", "robojudo"])
+        path = "g1_robojudo"
+    else:
+        command.extend(["--mujoco", "--render", "--robot", spec.robot_selector])
+        path = "mujoco"
+    timeout_s = max(30.0, (spec.config.steps * 0.08 / max(viewer_speed, 0.1)) + 20.0)
     try:
-        if spec.locomotion_mode == "robojudo":
-            return _run_robojudo_viewer(spec, world)
-        return _run_mujoco_viewer(spec, world, dynamic_obstacles)
-    except Exception as exc:
+        completed = subprocess.run(
+            command,
+            check=False,
+            cwd=_viewer_working_directory(spec),
+            timeout=timeout_s,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except subprocess.TimeoutExpired as exc:
         return {
             "viewer_requested": True,
-            "viewer_status": "not_launched",
-            "reason": repr(exc),
+            "viewer_status": "timeout",
+            "path": path,
+            "viewer_speed": viewer_speed,
+            "timeout_s": timeout_s,
+            "stderr_tail": _text_tail(exc.stderr),
         }
+    status = "launched" if completed.returncode == 0 else "failed"
+    return {
+        "viewer_requested": True,
+        "viewer_status": status,
+        "path": path,
+        "viewer_speed": viewer_speed,
+        "returncode": completed.returncode,
+        "stderr_tail": _text_tail(completed.stderr),
+    }
 
 
-def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D) -> dict[str, object]:
+def _text_tail(value, limit: int = 1000) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        value = value.decode("utf-8", errors="replace")
+    return str(value)[-limit:]
+
+
+def _viewer_working_directory(spec: LocalEpisodeSpec):
+    if len(spec.path.parents) >= 3:
+        return spec.path.parents[2]
+    return None
+
+
+def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D, viewer_speed: float) -> dict[str, object]:
     from g1_slam.robojudo_backend import RoboJuDoBackendConfig, run_robojudo_navigation
 
     run_robojudo_navigation(
@@ -279,7 +346,7 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D) -> dict[str, ob
             max_vx=spec.config.controller.max_linear_speed,
             max_vy=spec.config.controller.max_linear_speed,
             max_yaw_rate=spec.config.controller.max_yaw_rate,
-            run_fullspeed=False,
+            run_fullspeed=viewer_speed > 1.0,
             enable_dynamic_cylinders=spec.config.dynamic_obstacles.blue_cylinders,
             dynamic_cylinder_seed=spec.config.dynamic_obstacles.blue_cylinder_seed,
             dynamic_cylinder_count=spec.config.dynamic_obstacles.blue_cylinder_count,
@@ -290,10 +357,20 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D) -> dict[str, ob
             visualization=spec.config.visualization,
         ),
     )
-    return {"viewer_requested": True, "viewer_status": "launched", "path": "g1_robojudo"}
+    return {
+        "viewer_requested": True,
+        "viewer_status": "launched",
+        "path": "g1_robojudo",
+        "viewer_speed": viewer_speed,
+    }
 
 
-def _run_mujoco_viewer(spec: LocalEpisodeSpec, world: World2D, dynamic_obstacles) -> dict[str, object]:
+def _run_mujoco_viewer(
+    spec: LocalEpisodeSpec,
+    world: World2D,
+    dynamic_obstacles,
+    viewer_speed: float,
+) -> dict[str, object]:
     from g1_slam.mujoco_runner import run_mujoco_navigation
 
     run_mujoco_navigation(
@@ -308,8 +385,14 @@ def _run_mujoco_viewer(spec: LocalEpisodeSpec, world: World2D, dynamic_obstacles
         render=True,
         visualization_config=spec.config.visualization,
         dynamic_obstacles=dynamic_obstacles,
+        realtime_factor=viewer_speed,
     )
-    return {"viewer_requested": True, "viewer_status": "launched", "path": "mujoco"}
+    return {
+        "viewer_requested": True,
+        "viewer_status": "launched",
+        "path": "mujoco",
+        "viewer_speed": viewer_speed,
+    }
 
 
 def _viewer_locomotion_config(spec: LocalEpisodeSpec) -> LocomotionConfig:

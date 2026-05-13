@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
 import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from functools import wraps
+from inspect import signature
 from math import atan2, cos, sin
 from pathlib import Path
 
@@ -25,10 +28,13 @@ from .simulation import make_grid_for_world
 from .world import World2D
 
 
+DEFAULT_ROBOJUDO_CONFIG = "g1"
+
+
 @dataclass(frozen=True)
 class RoboJuDoBackendConfig:
-    repo_path: Path = Path("third_party/RoboJuDo")
-    config_name: str = "g1_asap_loco"
+    repo_path: Path = Path("g1_slam/third_party/RoboJuDo")
+    config_name: str = DEFAULT_ROBOJUDO_CONFIG
     max_vx: float = 0.5
     max_vy: float = 0.5
     max_yaw_rate: float = 1.0
@@ -83,6 +89,7 @@ class RoboJuDoBackend:
     def __init__(self, config: RoboJuDoBackendConfig | None = None) -> None:
         self.config = config or RoboJuDoBackendConfig()
         self.config = replace(self.config, repo_path=self._install_repo_path(self.config.repo_path))
+        self._install_mujoco_viewer_compat()
         self._install_virtual_joystick_controller(self.config)
         self.pipeline = self._build_pipeline(self.config)
 
@@ -281,13 +288,105 @@ class RoboJuDoBackend:
         if not repo_path.exists():
             raise FileNotFoundError(
                 f"No se encontro RoboJuDo en {repo_path}. Clonalo con:\n"
-                "mkdir -p third_party\n"
-                "git clone -b release https://github.com/HansZ8/RoboJuDo.git third_party/RoboJuDo"
+                "mkdir -p g1_slam/third_party\n"
+                "git clone -b release https://github.com/HansZ8/RoboJuDo.git g1_slam/third_party/RoboJuDo"
             )
         repo_path_text = repo_path.as_posix()
         if repo_path_text not in sys.path:
             sys.path.insert(0, repo_path_text)
+        mujoco_viewer_path = repo_path / "third_party" / "mujoco_viewer"
+        if mujoco_viewer_path.exists():
+            mujoco_viewer_path_text = mujoco_viewer_path.as_posix()
+            if mujoco_viewer_path_text not in sys.path:
+                sys.path.insert(0, mujoco_viewer_path_text)
         return repo_path
+
+    @staticmethod
+    def _install_mujoco_viewer_compat() -> None:
+        try:
+            import mujoco_viewer
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "No pude importar mujoco_viewer. Instala las dependencias en tu entorno con "
+                "`.venv/bin/python -m pip install -e g1_slam/third_party/RoboJuDo "
+                "imageio`."
+            ) from exc
+
+        viewer_class = mujoco_viewer.MujocoViewer
+        if getattr(viewer_class, "_g1_slam_accepts_diable_key_callbacks", False):
+            RoboJuDoBackend._install_marker_compat(viewer_class)
+            return
+        if "diable_key_callbacks" in signature(viewer_class.__init__).parameters:
+            viewer_class._g1_slam_accepts_diable_key_callbacks = True
+            RoboJuDoBackend._install_marker_compat(viewer_class)
+            return
+
+        original_init = viewer_class.__init__
+
+        @wraps(original_init)
+        def init_with_robojudo_typo(self, *args, diable_key_callbacks=False, **kwargs):
+            return original_init(self, *args, **kwargs)
+
+        viewer_class.__init__ = init_with_robojudo_typo
+        viewer_class._g1_slam_accepts_diable_key_callbacks = True
+        RoboJuDoBackend._install_marker_compat(viewer_class)
+
+    @staticmethod
+    def _install_marker_compat(viewer_class) -> None:
+        if getattr(viewer_class, "_g1_slam_marker_compat", False):
+            return
+
+        def add_marker_to_scene_compat(self, marker):
+            import mujoco
+            import numpy as np
+
+            if self.scn.ngeom >= self.scn.maxgeom:
+                raise RuntimeError(f"Ran out of geoms. maxgeom: {self.scn.maxgeom}")
+
+            geom = self.scn.geoms[self.scn.ngeom]
+            geom.dataid = -1
+            geom.objtype = mujoco.mjtObj.mjOBJ_UNKNOWN
+            geom.objid = -1
+            geom.category = mujoco.mjtCatBit.mjCAT_DECOR
+            if hasattr(geom, "texid"):
+                geom.texid = -1
+            if hasattr(geom, "texuniform"):
+                geom.texuniform = 0
+            if hasattr(geom, "texrepeat"):
+                geom.texrepeat[0] = 1
+                geom.texrepeat[1] = 1
+            geom.emission = 0
+            geom.specular = 0.5
+            geom.shininess = 0.5
+            geom.reflectance = 0
+            geom.type = mujoco.mjtGeom.mjGEOM_BOX
+            geom.size[:] = np.ones(3) * 0.1
+            geom.mat[:] = np.eye(3)
+            geom.rgba[:] = np.ones(4)
+
+            for key, value in marker.items():
+                if key == "id":
+                    continue
+                if isinstance(value, (int, float, mujoco._enums.mjtGeom)):
+                    setattr(geom, key, value)
+                elif isinstance(value, (tuple, list, np.ndarray)):
+                    attr = getattr(geom, key)
+                    attr[:] = np.asarray(value).reshape(attr.shape)
+                elif isinstance(value, str):
+                    if key != "label":
+                        raise AssertionError("Only label is a string in mjtGeom.")
+                    geom.label = value
+                elif hasattr(geom, key):
+                    raise ValueError(
+                        f"mjtGeom has attr {key} but type {type(value)} is invalid"
+                    )
+                else:
+                    raise ValueError(f"mjtGeom doesn't have field {key}")
+
+            self.scn.ngeom += 1
+
+        viewer_class._add_marker_to_scene = add_marker_to_scene_compat
+        viewer_class._g1_slam_marker_compat = True
 
     @staticmethod
     def _install_virtual_joystick_controller(config: RoboJuDoBackendConfig) -> None:
@@ -297,7 +396,7 @@ class RoboJuDoBackend:
         except ModuleNotFoundError as exc:
             raise RuntimeError(
                 "No pude importar RoboJuDo. Instala sus dependencias en tu entorno con "
-                "`pip install -e third_party/RoboJuDo`."
+                "`.venv/bin/python -m pip install -e g1_slam/third_party/RoboJuDo`."
             ) from exc
 
         _JOYSTICK_STATE.max_vx = config.max_vx
@@ -373,10 +472,18 @@ def run_robojudo_navigation(
     steps: int,
     controller_config: PurePursuitConfig,
     backend_config: RoboJuDoBackendConfig | None = None,
-) -> None:
+    trace_path: Path | None = None,
+    episode_id: str = "robojudo_navigation",
+    robot_id: str = "g1",
+    policy_id: str = "robojudo",
+    render: bool = True,
+) -> dict[str, object]:
     backend = RoboJuDoBackend.__new__(RoboJuDoBackend)
     backend.config = backend_config or RoboJuDoBackendConfig()
+    if not render:
+        backend.config = replace(backend.config, run_fullspeed=True)
     backend.config = replace(backend.config, repo_path=backend._install_repo_path(backend.config.repo_path))
+    backend._install_mujoco_viewer_compat()
     backend._install_virtual_joystick_controller(backend.config)
     backend.pipeline = backend._build_pipeline(backend.config, world)
     backend.reset()
@@ -396,8 +503,11 @@ def run_robojudo_navigation(
     controller = PurePursuitController(controller_config)
     path: list[tuple[float, float]] = []
     dt = float(getattr(backend.pipeline, "dt", 0.02))
+    trace_steps: list[dict[str, object]] = []
 
     trajectory_marker_index = 0
+    status = "timeout"
+    reached_goal = False
     for step in range(steps):
         sim_time = step * dt
         backend.set_dynamic_obstacles(dynamic_obstacles, sim_time=sim_time)
@@ -410,16 +520,92 @@ def run_robojudo_navigation(
 
         command = controller.command(pose, path, goal)
         pose = backend.step(command)
-        interval = max(1, backend.config.visualization.trajectory_interval_steps)
-        if step % interval == 0:
+        distance_to_goal = distance_xy((pose.x, pose.y), goal)
+        trace_steps.append(
+            {
+                "step_id": step + 1,
+                "time_s": (step + 1) * dt,
+                "robot_pose": _pose_trace(pose),
+                "goal": [goal[0], goal[1]],
+                "command": {"linear": command.linear, "yaw_rate": command.yaw_rate},
+                "distance_to_goal": distance_to_goal,
+                "entities": _trace_entities(world, dynamic_obstacles, sim_time),
+                "path": [[x, y] for x, y in path],
+            }
+        )
+        visualization = backend.config.visualization
+        interval = max(1, visualization.trajectory_interval_steps) if visualization is not None else 1
+        if visualization is not None and step % interval == 0:
             backend.add_trajectory_marker(pose, trajectory_marker_index)
             trajectory_marker_index += 1
 
-        if distance_xy((pose.x, pose.y), goal) < controller.config.goal_tolerance:
+        if distance_to_goal < controller.config.goal_tolerance:
+            status = "success"
+            reached_goal = True
             print(f"Meta alcanzada con RoboJuDo en {step + 1} pasos. Pose final: {pose}")
-            return
+            break
 
-    print(f"Meta no alcanzada con RoboJuDo en {steps} pasos. Pose final: {pose}")
+    if not reached_goal:
+        print(f"Meta no alcanzada con RoboJuDo en {steps} pasos. Pose final: {pose}")
+
+    result: dict[str, object] = {
+        "schema": "asimovbm.sim_trace.v1",
+        "episode_id": episode_id,
+        "robot_id": robot_id,
+        "policy_id": policy_id,
+        "status": status,
+        "reached_goal": reached_goal,
+        "step_count": len(trace_steps),
+        "goal": [goal[0], goal[1]],
+        "final_pose": _pose_trace(pose),
+        "steps": trace_steps,
+    }
+    if trace_path is not None:
+        trace_path.parent.mkdir(parents=True, exist_ok=True)
+        trace_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    return result
+
+
+def _pose_trace(pose: Pose2D) -> dict[str, float]:
+    return {"x": pose.x, "y": pose.y, "yaw": pose.yaw}
+
+
+def _trace_entities(
+    world: World2D,
+    dynamic_obstacles: tuple[DynamicObstacle, ...],
+    sim_time: float,
+) -> list[dict[str, object]]:
+    entities: list[dict[str, object]] = []
+    for index, obstacle in enumerate(world.obstacles):
+        entities.append(
+            {
+                "id": f"static_obstacle_{index}",
+                "kind": "static_obstacle",
+                "shape": "rectangle",
+                "x_min": obstacle.x_min,
+                "y_min": obstacle.y_min,
+                "x_max": obstacle.x_max,
+                "y_max": obstacle.y_max,
+            }
+        )
+    for obstacle in dynamic_obstacles:
+        x, y = obstacle.xy_at(sim_time)
+        next_x, next_y = obstacle.xy_at(sim_time + 0.1)
+        vx = (next_x - x) / 0.1
+        vy = (next_y - y) / 0.1
+        entities.append(
+            {
+                "id": obstacle.name,
+                "kind": "dynamic_obstacle",
+                "shape": "capsule" if obstacle.mode == "npc" else "cylinder",
+                "x": x,
+                "y": y,
+                "radius": obstacle.radius,
+                "policy": obstacle.policy,
+                "velocity": [vx, vy],
+            }
+        )
+    return entities
 
 
 def _axis(value: float, max_abs: float) -> float:
@@ -432,9 +618,14 @@ def _resolve_robojudo_repo_path(repo_path: Path) -> Path:
     candidate = repo_path.resolve()
     if candidate.exists():
         return candidate
-    package_root_candidate = Path(__file__).resolve().parents[2] / "third_party" / "RoboJuDo"
-    if package_root_candidate.exists():
-        return package_root_candidate
+    g1_slam_root = Path(__file__).resolve().parents[2]
+    fallback_candidates = (
+        g1_slam_root / "third_party" / "RoboJuDo",
+        g1_slam_root.parent / "third_party" / "RoboJuDo",
+    )
+    for fallback_candidate in fallback_candidates:
+        if fallback_candidate.exists():
+            return fallback_candidate
     return candidate
 
 

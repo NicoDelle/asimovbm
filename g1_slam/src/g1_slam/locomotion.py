@@ -7,6 +7,8 @@ from pathlib import Path
 from .config import LocomotionConfig
 from .controller import VelocityCommand
 
+G1_SLAM_ROOT = Path(__file__).resolve().parents[2]
+
 G1_29DOF_JOINT_ORDER = (
     "left_hip_pitch",
     "left_hip_roll",
@@ -90,7 +92,7 @@ class OnnxPolicyLocomotion:
     def __init__(self, mujoco, model, config: LocomotionConfig) -> None:
         if config.policy_path is None:
             raise ValueError("locomotion.policy_path is required when locomotion.mode is 'policy'")
-        policy_path = Path(config.policy_path)
+        policy_path = _resolve_policy_path(Path(config.policy_path))
         if not policy_path.exists():
             raise FileNotFoundError(
                 f"ONNX policy not found: {policy_path}. "
@@ -195,6 +197,15 @@ class OnnxPolicyLocomotion:
             qvel = float(data.qvel[binding.qvel_address])
             torque = self.config.kp * (target - qpos) - self.config.kd * qvel
             data.ctrl[binding.actuator_id] = max(binding.ctrl_min, min(binding.ctrl_max, torque))
+
+
+def _resolve_policy_path(policy_path: Path) -> Path:
+    if policy_path.exists() or policy_path.is_absolute():
+        return policy_path
+    g1_slam_policy_path = G1_SLAM_ROOT / policy_path
+    if g1_slam_policy_path.exists():
+        return g1_slam_policy_path
+    return policy_path
 
 
 def _build_policy_bindings(mujoco, model, config: LocomotionConfig) -> list[JointBinding]:

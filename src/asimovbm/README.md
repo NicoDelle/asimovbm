@@ -1,9 +1,10 @@
 # AsimovBM Local Simulation Runner
 
 This package contains the active local runner for Paper HRI validation. It
-loads the six canonical `g1_slam/config/episodes/*.json` episode configs,
-runs them sequentially, records step traces, computes the available
-social-navigation metrics, and writes JSON artifacts for inspection.
+loads the canonical `g1_slam/config/episodes/*.json` episode configs for one
+selected robot and policy, runs them sequentially, records step traces, computes
+the available social-navigation metrics, and writes JSON artifacts for
+inspection.
 
 Run every command below from the repository root.
 
@@ -12,20 +13,20 @@ Run every command below from the repository root.
 For normal development, install the package in editable mode:
 
 ```bash
-pip install -e .[dev]
+.venv/bin/python -m pip install -e .[dev]
 ```
 
 The installed command is:
 
 ```bash
-asimovbm-local --help
+.venv/bin/asimovbm-local --help
 ```
 
 If you do not want to install the package yet, use the module entry point with
 the repository paths:
 
 ```bash
-PYTHONPATH=src:g1_slam/src python3 -m asimovbm.local_runner.cli --help
+PYTHONPATH=src:g1_slam/src .venv/bin/python -m asimovbm.local_runner.cli --help
 ```
 
 ## Run One Visible Simulation
@@ -33,13 +34,13 @@ PYTHONPATH=src:g1_slam/src python3 -m asimovbm.local_runner.cli --help
 One iteration defaults to visible validation mode:
 
 ```bash
-asimovbm-local --iterations 1
+.venv/bin/asimovbm-local --robot g1 --iterations 1
 ```
 
 To run only one canonical episode:
 
 ```bash
-asimovbm-local --episode g1_approach_user --iterations 1
+.venv/bin/asimovbm-local --robot g1 --episode g1_approach_user --iterations 1
 ```
 
 The visible path requests the canonical robot viewer for the selected episode.
@@ -52,19 +53,41 @@ records the portable local trace and marks the trace metadata with
 Repeated runs default to headless metric collection:
 
 ```bash
-asimovbm-local --iterations 3
+.venv/bin/asimovbm-local --robot g1 --iterations 3
 ```
 
 You can also force headless mode explicitly:
 
 ```bash
-asimovbm-local --iterations 3 --headless
+.venv/bin/asimovbm-local --robot g1 --iterations 3 --headless
 ```
 
 Headless mode is the preferred path for collecting metric traces because it
 does not require visual assets and writes the same metrics/report artifacts.
 
-## Select Episodes
+## Select Robot, Policy, And Episodes
+
+Every run is scoped to one robot and one policy. The default policy profiles
+are:
+
+```text
+g1  -> g1_robojudo_asap
+go2 -> go2_unitree_rl_mjlab
+```
+
+Run all canonical scenarios for one robot:
+
+```bash
+.venv/bin/asimovbm-local --robot g1 --iterations 1
+.venv/bin/asimovbm-local --robot go2 --iterations 1
+```
+
+Override the policy profile or only the local policy file path:
+
+```bash
+.venv/bin/asimovbm-local --robot go2 --policy go2_unitree_rl_mjlab --iterations 1
+.venv/bin/asimovbm-local --robot go2 --policy-path policies/go2/my-policy.onnx --iterations 1
+```
 
 The available episode ids are:
 
@@ -80,9 +103,10 @@ go2_lateral_static_dynamic_obstacles
 Pass `--episode` more than once to run a subset:
 
 ```bash
-asimovbm-local \
+.venv/bin/asimovbm-local \
+  --robot g1 \
   --episode g1_approach_user \
-  --episode go2_lateral_open \
+  --episode g1_lateral_open \
   --iterations 2 \
   --headless
 ```
@@ -98,7 +122,8 @@ artifacts/local-validation/<run-id>/
 Use `--artifact-root` and `--run-id` for stable output paths:
 
 ```bash
-asimovbm-local \
+.venv/bin/asimovbm-local \
+  --robot g1 \
   --iterations 2 \
   --headless \
   --artifact-root /tmp/asimovbm-local \
@@ -132,8 +157,9 @@ That command writes `artifacts/unity-validation/<run-id>/manifest.json`,
 
 ## What The Files Mean
 
-- `manifest.json` records selected episodes, config checksums, robot selectors,
-  execution mode, trace paths, metric paths, and backend proof metadata.
+- `manifest.json` records the selected robot and policy, selected episodes,
+  config checksums, robot selectors, execution mode, trace paths, metric paths,
+  and backend proof metadata.
 - `report.json` records run-level reliability plus the behavioral metric blocks
   computed from the traces.
 - `trace.json` records per-step measurements: time, pose, velocity, action,
@@ -145,20 +171,23 @@ That command writes `artifacts/unity-validation/<run-id>/manifest.json`,
 These commands were tested locally from the repository root:
 
 ```bash
-asimovbm-local \
+.venv/bin/asimovbm-local \
+  --robot g1 \
   --episode g1_approach_user \
   --iterations 1 \
   --headless \
   --artifact-root /tmp/asimovbm-readme-installed \
   --run-id installed-smoke
 
-PYTHONPATH=src:g1_slam/src python3 -m asimovbm.local_runner.cli \
+PYTHONPATH=src:g1_slam/src .venv/bin/python -m asimovbm.local_runner.cli \
+  --robot g1 \
   --episode g1_approach_user \
   --iterations 1 \
   --artifact-root /tmp/asimovbm-readme-visible \
   --run-id visible-smoke
 
-PYTHONPATH=src:g1_slam/src python3 -m asimovbm.local_runner.cli \
+PYTHONPATH=src:g1_slam/src .venv/bin/python -m asimovbm.local_runner.cli \
+  --robot g1 \
   --iterations 2 \
   --headless \
   --artifact-root /tmp/asimovbm-readme-headless \
@@ -166,5 +195,5 @@ PYTHONPATH=src:g1_slam/src python3 -m asimovbm.local_runner.cli \
 ```
 
 The one-episode commands produced one trace and one metrics file for
-`g1_approach_user`. The all-episode command produced traces and metrics for all
-six episodes across two iterations.
+`g1_approach_user`. The all-scenario command produced traces and metrics for
+the three selected G1 episodes across two iterations.

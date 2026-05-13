@@ -10,10 +10,10 @@
           "scenario_type": "obstacle_navigation",
           "robot_start": {"x": 0.0, "y": 0.0, "yaw": 0.0},
           "goal": {"x": 4.0, "y": 0.0},
-          "max_steps": 160,
+          "max_steps": 320,
           "obstacles": [
-            {"id": "box_left", "x": 1.4, "y": 0.45, "radius": 0.25},
-            {"id": "box_right", "x": 2.4, "y": -0.45, "radius": 0.25}
+            {"id": "box_left", "shape": "rectangle", "x": 1.4, "y": 0.45, "half_width": 0.25, "half_depth": 0.25},
+            {"id": "box_right", "shape": "rectangle", "x": 2.4, "y": -0.45, "half_width": 0.25, "half_depth": 0.25}
           ]
         }
       ]
@@ -22,15 +22,17 @@
       "id": "human_obstacles",
       "episodes": [
         {
-          "id": "static_bystanders_001",
+          "id": "dynamic_crossing_001",
           "scenario_type": "human_obstacle_navigation",
-          "robot_start": {"x": 0.0, "y": 0.0, "yaw": 0.0},
-          "goal": {"x": 4.0, "y": 0.0},
-          "max_steps": 160,
-          "humans": [
-            {"id": "human_a", "x": 1.7, "y": 0.35, "radius": 0.35, "posture": "standing"},
-            {"id": "human_b", "x": 2.7, "y": -0.35, "radius": 0.35, "posture": "standing"}
-          ]
+          "robot_start": {"x": -6.0, "y": 0.0, "yaw": 0.0},
+          "goal": {"x": 10.0, "y": 0.0, "stop_distance_m": 0.55},
+          "bounds": [-12.0, -7.0, 14.0, 7.0],
+          "max_steps": 420,
+          "obstacles": [
+            {"id": "static_box_left", "shape": "rectangle", "x": -1.2, "y": -1.0, "half_width": 0.25, "half_depth": 0.85},
+            {"id": "static_box_right", "shape": "rectangle", "x": 2.0, "y": 1.0, "half_width": 0.25, "half_depth": 0.85}
+          ],
+          "metadata": {"dynamic_seed": 7}
         }
       ]
     },

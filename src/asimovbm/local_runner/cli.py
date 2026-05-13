@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .catalog import DEFAULT_EPISODE_IDS
+from .catalog import DEFAULT_EPISODE_IDS, DEFAULT_POLICY_BY_ROBOT, POLICY_IDS, ROBOT_IDS, EpisodeCatalogError
 from .runner import LocalRunConfig, run_local_validation
 
 
@@ -13,6 +13,32 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="asimovbm-local")
     parser.add_argument("--artifact-root", type=Path, default=Path("artifacts/local-validation"))
     parser.add_argument("--iterations", type=int, default=1)
+    parser.add_argument(
+        "--robot",
+        choices=ROBOT_IDS,
+        required=True,
+        help="Robot under test. A run never mixes robots.",
+    )
+    parser.add_argument(
+        "--policy",
+        choices=POLICY_IDS,
+        help=(
+            "Policy profile to test. Defaults by robot: "
+            + ", ".join(f"{robot}={policy}" for robot, policy in DEFAULT_POLICY_BY_ROBOT.items())
+            + "."
+        ),
+    )
+    parser.add_argument(
+        "--policy-path",
+        type=Path,
+        help="Override the selected policy profile's policy_path, for local policy files.",
+    )
+    parser.add_argument(
+        "--viewer-speed",
+        type=float,
+        default=4.0,
+        help="Visible playback speed multiplier; use 1.0 for realtime.",
+    )
     parser.add_argument(
         "--episode",
         action="append",
@@ -30,15 +56,22 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     visible = True if args.visible else False if args.headless else None
-    result = run_local_validation(
-        LocalRunConfig(
-            artifact_root=args.artifact_root,
-            iterations=args.iterations,
-            episode_ids=tuple(args.episodes or ()),
-            visible=visible,
-            run_id=args.run_id,
+    try:
+        result = run_local_validation(
+            LocalRunConfig(
+                artifact_root=args.artifact_root,
+                iterations=args.iterations,
+                robot_id=args.robot,
+                policy_id=args.policy,
+                policy_path=args.policy_path,
+                episode_ids=tuple(args.episodes or ()),
+                visible=visible,
+                viewer_speed=args.viewer_speed,
+                run_id=args.run_id,
+            )
         )
-    )
+    except (EpisodeCatalogError, ValueError) as exc:
+        build_parser().error(str(exc))
     print(f"local validation run: {result.run_id}")
     print(f"manifest: {result.manifest_path}")
     print(f"report: {result.report_path}")

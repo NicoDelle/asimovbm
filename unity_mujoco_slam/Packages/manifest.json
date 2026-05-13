@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "org.mujoco": "https://github.com/google-deepmind/mujoco.git?path=/unity#3.7.0",
+    "com.unity.test-framework": "1.4.5",
+    "com.unity.ugui": "1.0.0",
+    "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.modules.physics": "1.0.0",
+    "com.unity.modules.terrain": "1.0.0"
+  }
+}
