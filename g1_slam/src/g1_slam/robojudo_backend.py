@@ -334,6 +334,38 @@ class RoboJuDoBackend:
         RoboJuDoBackend._install_marker_compat(viewer_class)
 
     @staticmethod
+    def _install_headless_mujoco_viewer() -> None:
+        import mujoco_viewer
+
+        class HeadlessCamera:
+            def __init__(self) -> None:
+                self.lookat = [0.0, 0.0, 0.0]
+                self.distance = 3.0
+                self.elevation = -10.0
+                self.azimuth = 180.0
+                self.type = None
+
+        class HeadlessMujocoViewer:
+            _g1_slam_headless = True
+
+            def __init__(self, model, data, **kwargs) -> None:
+                self.model = model
+                self.data = data
+                self.cam = HeadlessCamera()
+                self.is_alive = False
+
+            def render(self) -> None:
+                return None
+
+            def close(self) -> None:
+                return None
+
+            def add_marker(self, **kwargs) -> None:
+                return None
+
+        mujoco_viewer.MujocoViewer = HeadlessMujocoViewer
+
+    @staticmethod
     def _install_marker_compat(viewer_class) -> None:
         if getattr(viewer_class, "_g1_slam_marker_compat", False):
             return
@@ -488,6 +520,8 @@ def run_robojudo_navigation(
         backend.config = replace(backend.config, run_fullspeed=True)
     backend.config = replace(backend.config, repo_path=backend._install_repo_path(backend.config.repo_path))
     backend._install_mujoco_viewer_compat()
+    if not render:
+        backend._install_headless_mujoco_viewer()
     backend._install_virtual_joystick_controller(backend.config)
     backend.pipeline = backend._build_pipeline(backend.config, world)
     backend.reset()
@@ -597,13 +631,7 @@ def _trace_entities(
         )
     for obstacle in dynamic_obstacles:
         x, y = obstacle.xy_at(sim_time)
-<<<<<<< HEAD
-        next_x, next_y = obstacle.xy_at(sim_time + 0.1)
-        vx = (next_x - x) / 0.1
-        vy = (next_y - y) / 0.1
-=======
         vx, vy = obstacle.velocity_at(sim_time)
->>>>>>> 61a2468 (Added episodes)
         entities.append(
             {
                 "id": obstacle.name,
@@ -612,10 +640,7 @@ def _trace_entities(
                 "x": x,
                 "y": y,
                 "radius": obstacle.radius,
-<<<<<<< HEAD
                 "policy": obstacle.policy,
-=======
->>>>>>> 61a2468 (Added episodes)
                 "velocity": [vx, vy],
             }
         )

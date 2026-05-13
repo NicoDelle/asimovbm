@@ -21,20 +21,13 @@ from g1_slam.mapping import GridSpec, OccupancyGrid
 from g1_slam.mujoco_runner import _official_g1_scene_xml, _official_go2_scene_xml, _robot_spec
 from g1_slam.planner import AStarPlanner
 from g1_slam.robojudo_backend import (
-<<<<<<< HEAD
     DEFAULT_ROBOJUDO_CONFIG,
-    RoboJuDoBackend,
-    RoboJuDoBackendConfig,
-    _robojudo_navigation_scene_tail,
-    _world_with_dynamic_obstacles,
-=======
     RoboJuDoBackend,
     RoboJuDoBackendConfig,
     _robojudo_navigation_scene_tail,
     _trace_entities,
     _world_with_dynamic_obstacles,
     run_robojudo_navigation,
->>>>>>> 61a2468 (Added episodes)
 )
 from g1_slam.simulation import run_navigation
 from g1_slam.world import RectObstacle, World2D, default_world
