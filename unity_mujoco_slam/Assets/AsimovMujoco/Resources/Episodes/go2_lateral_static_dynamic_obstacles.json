@@ -68,6 +68,30 @@
       "azimuth": 90.0,
       "elevation": -22.0
     },
+    "camera_views": {
+      "arrival": {
+        "fixed": true,
+        "lookat": {
+          "x": 1.4,
+          "y": 0.0,
+          "z": 0.85
+        },
+        "distance": 3.2,
+        "azimuth": 90.0,
+        "elevation": -8.0
+      },
+      "bystander": {
+        "fixed": true,
+        "lookat": {
+          "x": 0.2,
+          "y": 0.0,
+          "z": 0.85
+        },
+        "distance": 6.8,
+        "azimuth": 180.0,
+        "elevation": -18.0
+      }
+    },
     "show_trajectory": false,
     "trajectory_interval_steps": 15
   }

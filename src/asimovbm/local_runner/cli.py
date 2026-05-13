@@ -52,6 +52,52 @@ def build_parser() -> argparse.ArgumentParser:
         dest="episodes",
         help="Run only the selected canonical episode id. May be passed more than once.",
     )
+    parser.add_argument(
+        "--survey-export",
+        action="store_true",
+        help="Render survey MP4 videos and JSON sidecars for each episode/view.",
+    )
+    parser.add_argument(
+        "--survey-root",
+        type=Path,
+        default=Path("artifacts/survey"),
+        help="Root for survey videos, JSON sidecars, and metric summaries.",
+    )
+    parser.add_argument(
+        "--survey-policy-id",
+        help="Policy folder name for survey export, e.g. policy_a or policy_b.",
+    )
+    parser.add_argument(
+        "--survey-view",
+        action="append",
+        choices=("arrival", "bystander"),
+        dest="survey_views",
+        help="Survey camera view to export. Defaults to arrival and bystander.",
+    )
+    parser.add_argument(
+        "--survey-video-fps",
+        type=int,
+        default=2,
+        help="Frame rate for generated survey videos.",
+    )
+    parser.add_argument(
+        "--survey-video-width",
+        type=int,
+        default=426,
+        help="Pixel width for generated survey videos.",
+    )
+    parser.add_argument(
+        "--survey-video-height",
+        type=int,
+        default=240,
+        help="Pixel height for generated survey videos.",
+    )
+    parser.add_argument(
+        "--survey-video-max-duration",
+        type=float,
+        default=15.0,
+        help="Maximum survey video duration in seconds; use 0 to preserve full episode duration.",
+    )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--visible", action="store_true", help="force visible validation mode")
     mode.add_argument("--headless", action="store_true", help="force headless metric collection mode")
@@ -73,6 +119,14 @@ def main(argv: list[str] | None = None) -> int:
                 episode_ids=tuple(args.episodes or ()),
                 visible=visible,
                 viewer_speed=args.viewer_speed,
+                survey_export=args.survey_export,
+                survey_root=args.survey_root,
+                survey_policy_id=args.survey_policy_id,
+                survey_views=tuple(args.survey_views or ("arrival", "bystander")),
+                survey_video_fps=args.survey_video_fps,
+                survey_video_width=args.survey_video_width,
+                survey_video_height=args.survey_video_height,
+                survey_video_max_duration_s=args.survey_video_max_duration or None,
                 run_id=args.run_id,
             )
         )
@@ -81,6 +135,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"local validation run: {result.run_id}")
     print(f"manifest: {result.manifest_path}")
     print(f"report: {result.report_path}")
+    if result.survey_export is not None:
+        print(f"survey videos: {result.survey_export.video_root}")
+        print(f"survey json: {result.survey_export.json_root}")
+        print(f"survey metrics: {result.survey_export.summary_json_path}")
     return 0
 
 

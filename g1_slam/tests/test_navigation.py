@@ -412,6 +412,7 @@ class NavigationTests(unittest.TestCase):
 
         with (
             patch.object(RoboJuDoBackend, "_install_repo_path", return_value=Path("RoboJuDo")),
+            patch.object(RoboJuDoBackend, "_install_mujoco_viewer_compat"),
             patch.object(RoboJuDoBackend, "_install_virtual_joystick_controller"),
             patch.object(RoboJuDoBackend, "_build_pipeline", return_value=FakePipeline()),
             patch.object(RoboJuDoBackend, "reset"),

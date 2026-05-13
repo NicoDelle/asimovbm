@@ -1,0 +1,1032 @@
+{
+  "camera_view": "arrival",
+  "episode_id": "g1_point_to_point_dynamic_npcs",
+  "metadata": {
+    "iteration": 0,
+    "metrics_path": "g1_lateral_static_dynamic_obstacles/iteration-000/metrics.json",
+    "technical_valid": true,
+    "terminal_status": "timeout",
+    "trace_path": "g1_lateral_static_dynamic_obstacles/iteration-000/trace.json"
+  },
+  "metric_report": {
+    "behavioral_metrics": {
+      "axes": {
+        "impression": {
+          "applied_caps": [],
+          "axis_id": "impression",
+          "confidence": "partial",
+          "contributing_features": [
+            "task_success_rate",
+            "hesitation",
+            "acknowledgement_clarity",
+            "sparc",
+            "heading_jerk",
+            "stability",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "behavioral_naturalness": "insufficient_evidence",
+            "bystander_ack": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "min_human_robot_distance": "insufficient_evidence",
+            "proxemic_intrusion_dose": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence"
+          },
+          "omitted_features": [
+            "min_human_robot_distance",
+            "proxemic_intrusion_dose",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack",
+            "behavioral_naturalness"
+          ],
+          "reason": null,
+          "score": 0.3431375130085357,
+          "status": "computed"
+        },
+        "perceived_dexterity": {
+          "applied_caps": [],
+          "axis_id": "perceived_dexterity",
+          "confidence": "partial",
+          "contributing_features": [
+            "task_success_rate",
+            "hesitation",
+            "acknowledgement_clarity",
+            "sparc",
+            "heading_jerk",
+            "stability",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "behavioral_naturalness": "insufficient_evidence",
+            "bystander_ack": "not_applicable",
+            "comfort_aware_path_efficiency": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence",
+            "task_completion_time": "not_applicable"
+          },
+          "omitted_features": [
+            "task_completion_time",
+            "comfort_aware_path_efficiency",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack",
+            "behavioral_naturalness"
+          ],
+          "reason": null,
+          "score": 0.22724084551135873,
+          "status": "computed"
+        },
+        "perceived_safety": {
+          "applied_caps": [
+            {
+              "cap": 0.2,
+              "event_count": 469,
+              "kind": "v1_physical_instability_cap",
+              "metric_id": "stability",
+              "source": "docs/metrics_research/hri_metric_weighting_artifact.md"
+            }
+          ],
+          "axis_id": "perceived_safety",
+          "confidence": "partial",
+          "contributing_features": [
+            "task_success_rate",
+            "hesitation",
+            "acknowledgement_clarity",
+            "sparc",
+            "heading_jerk",
+            "stability",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "bystander_ack": "not_applicable",
+            "comfort_aware_path_efficiency": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "min_human_robot_distance": "insufficient_evidence",
+            "proxemic_intrusion_dose": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence"
+          },
+          "omitted_features": [
+            "comfort_aware_path_efficiency",
+            "min_human_robot_distance",
+            "proxemic_intrusion_dose",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack"
+          ],
+          "reason": null,
+          "score": 0.2,
+          "status": "computed"
+        },
+        "perceived_social_awareness": {
+          "applied_caps": [],
+          "axis_id": "perceived_social_awareness",
+          "confidence": "partial",
+          "contributing_features": [
+            "hesitation",
+            "acknowledgement_clarity",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "bystander_ack": "not_applicable",
+            "comfort_aware_path_efficiency": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "min_human_robot_distance": "insufficient_evidence",
+            "proxemic_intrusion_dose": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence"
+          },
+          "omitted_features": [
+            "comfort_aware_path_efficiency",
+            "min_human_robot_distance",
+            "proxemic_intrusion_dose",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack"
+          ],
+          "reason": null,
+          "score": 0.5623247142741348,
+          "status": "computed"
+        }
+      },
+      "features": {
+        "acknowledgement_clarity": {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "acknowledgement_clarity",
+          "normalized_score": 1.0,
+          "raw_inputs_summary": {
+            "attempts": 1,
+            "successes": 1
+          },
+          "raw_value": 1.0,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        },
+        "behavioral_naturalness": {
+          "confidence": "low",
+          "metadata": {},
+          "metric_id": "behavioral_naturalness",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "legged naturalness requires periodic joint telemetry",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        "bystander_ack": {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "bystander_ack",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "no bystander entered the near-human zone",
+          "status": "not_applicable",
+          "units": null
+        },
+        "comfort_aware_path_efficiency": {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "comfort_aware_path_efficiency",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "path efficiency is only computed for successful episodes",
+          "status": "not_applicable",
+          "units": null
+        },
+        "gesture_response_success": {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "gesture_response_success",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "no come_here events were present",
+          "status": "not_applicable",
+          "units": null
+        },
+        "heading_jerk": {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "heading_jerk",
+          "normalized_score": 0.0,
+          "raw_inputs_summary": {
+            "sample_count": 950,
+            "sample_rate_hz": 12.5
+          },
+          "raw_value": -136.0093872144151,
+          "reason": null,
+          "status": "computed",
+          "units": "spectral_arc_length"
+        },
+        "hesitation": {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "hesitation",
+          "normalized_score": 0.7102212855637513,
+          "raw_inputs_summary": {
+            "hesitation_epochs": 8,
+            "max_heading_error": 3.125811383834169,
+            "reversal_epochs": 3
+          },
+          "raw_value": 0.14488935721812435,
+          "reason": null,
+          "status": "computed",
+          "units": "events/s"
+        },
+        "human_aware_approach": {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "human_aware_approach",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        "legibility": {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "legibility",
+          "normalized_score": 0.1,
+          "raw_inputs_summary": {
+            "fraction_inside_cone_post_commit": 0.16,
+            "t_commit": 0.0
+          },
+          "raw_value": 0.16,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        },
+        "min_human_robot_distance": {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "min_human_robot_distance",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        "proxemic_intrusion_dose": {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "proxemic_intrusion_dose",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        "sparc": {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "sparc",
+          "normalized_score": 0.10644757500880209,
+          "raw_inputs_summary": {
+            "sample_count": 950,
+            "sample_rate_hz": 12.5
+          },
+          "raw_value": -5.574209699964792,
+          "reason": null,
+          "status": "computed",
+          "units": "spectral_arc_length"
+        },
+        "speed_near_humans_p95": {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "speed_near_humans_p95",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        "stability": {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "stability",
+          "normalized_score": 0.0,
+          "raw_inputs_summary": {
+            "collisions": 469,
+            "instability_events": 0,
+            "invalid_actions": 0
+          },
+          "raw_value": 0.0,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        },
+        "task_completion_time": {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "task_completion_time",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "no successful valid episodes",
+          "status": "not_applicable",
+          "units": null
+        },
+        "task_success_rate": {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "task_success_rate",
+          "normalized_score": 0.0,
+          "raw_inputs_summary": {
+            "successes": 0,
+            "valid_episodes": 1
+          },
+          "raw_value": 0.0,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        }
+      },
+      "global_score": {
+        "confidence": "insufficient",
+        "contributing_axes": [
+          "perceived_dexterity",
+          "perceived_safety",
+          "perceived_social_awareness",
+          "impression"
+        ],
+        "evidence_gaps": [
+          {
+            "axis_id": "perceived_dexterity",
+            "missing_features": [
+              "speed_near_humans_p95",
+              "human_aware_approach",
+              "behavioral_naturalness"
+            ]
+          },
+          {
+            "axis_id": "perceived_safety",
+            "missing_features": [
+              "min_human_robot_distance",
+              "proxemic_intrusion_dose",
+              "speed_near_humans_p95",
+              "human_aware_approach"
+            ]
+          },
+          {
+            "axis_id": "perceived_social_awareness",
+            "missing_features": [
+              "min_human_robot_distance",
+              "proxemic_intrusion_dose",
+              "speed_near_humans_p95",
+              "human_aware_approach"
+            ]
+          },
+          {
+            "axis_id": "impression",
+            "missing_features": [
+              "min_human_robot_distance",
+              "proxemic_intrusion_dose",
+              "speed_near_humans_p95",
+              "human_aware_approach",
+              "behavioral_naturalness"
+            ]
+          }
+        ],
+        "model_metadata": {
+          "axis_model": "manual_v1_evidence_weights",
+          "kind": "equal_weight_axis_mean_with_v1_caps",
+          "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+          "version": "v1"
+        },
+        "reason": "one or more contributing axes omitted required evidence",
+        "score": null,
+        "status": "insufficient_evidence"
+      },
+      "macro_indicators": [
+        {
+          "applied_caps": [],
+          "axis_id": "perceived_dexterity",
+          "confidence": "partial",
+          "contributing_features": [
+            "task_success_rate",
+            "hesitation",
+            "acknowledgement_clarity",
+            "sparc",
+            "heading_jerk",
+            "stability",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "behavioral_naturalness": "insufficient_evidence",
+            "bystander_ack": "not_applicable",
+            "comfort_aware_path_efficiency": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence",
+            "task_completion_time": "not_applicable"
+          },
+          "omitted_features": [
+            "task_completion_time",
+            "comfort_aware_path_efficiency",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack",
+            "behavioral_naturalness"
+          ],
+          "reason": null,
+          "score": 0.22724084551135873,
+          "status": "computed"
+        },
+        {
+          "applied_caps": [
+            {
+              "cap": 0.2,
+              "event_count": 469,
+              "kind": "v1_physical_instability_cap",
+              "metric_id": "stability",
+              "source": "docs/metrics_research/hri_metric_weighting_artifact.md"
+            }
+          ],
+          "axis_id": "perceived_safety",
+          "confidence": "partial",
+          "contributing_features": [
+            "task_success_rate",
+            "hesitation",
+            "acknowledgement_clarity",
+            "sparc",
+            "heading_jerk",
+            "stability",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "bystander_ack": "not_applicable",
+            "comfort_aware_path_efficiency": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "min_human_robot_distance": "insufficient_evidence",
+            "proxemic_intrusion_dose": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence"
+          },
+          "omitted_features": [
+            "comfort_aware_path_efficiency",
+            "min_human_robot_distance",
+            "proxemic_intrusion_dose",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack"
+          ],
+          "reason": null,
+          "score": 0.2,
+          "status": "computed"
+        },
+        {
+          "applied_caps": [],
+          "axis_id": "perceived_social_awareness",
+          "confidence": "partial",
+          "contributing_features": [
+            "hesitation",
+            "acknowledgement_clarity",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "bystander_ack": "not_applicable",
+            "comfort_aware_path_efficiency": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "min_human_robot_distance": "insufficient_evidence",
+            "proxemic_intrusion_dose": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence"
+          },
+          "omitted_features": [
+            "comfort_aware_path_efficiency",
+            "min_human_robot_distance",
+            "proxemic_intrusion_dose",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack"
+          ],
+          "reason": null,
+          "score": 0.5623247142741348,
+          "status": "computed"
+        },
+        {
+          "applied_caps": [],
+          "axis_id": "impression",
+          "confidence": "partial",
+          "contributing_features": [
+            "task_success_rate",
+            "hesitation",
+            "acknowledgement_clarity",
+            "sparc",
+            "heading_jerk",
+            "stability",
+            "legibility"
+          ],
+          "model_metadata": {
+            "kind": "manual_v1_evidence_weights",
+            "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+            "version": "v1"
+          },
+          "omitted_feature_statuses": {
+            "behavioral_naturalness": "insufficient_evidence",
+            "bystander_ack": "not_applicable",
+            "gesture_response_success": "not_applicable",
+            "human_aware_approach": "insufficient_evidence",
+            "min_human_robot_distance": "insufficient_evidence",
+            "proxemic_intrusion_dose": "insufficient_evidence",
+            "speed_near_humans_p95": "insufficient_evidence"
+          },
+          "omitted_features": [
+            "min_human_robot_distance",
+            "proxemic_intrusion_dose",
+            "speed_near_humans_p95",
+            "gesture_response_success",
+            "human_aware_approach",
+            "bystander_ack",
+            "behavioral_naturalness"
+          ],
+          "reason": null,
+          "score": 0.3431375130085357,
+          "status": "computed"
+        }
+      ],
+      "scoring_model": {
+        "kind": "manual_v1_evidence_weights",
+        "source": "docs/metrics_research/hri_metric_weighting_artifact.md",
+        "version": "v1"
+      },
+      "status": "scored",
+      "sub_indicators": [
+        {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "task_success_rate",
+          "normalized_score": 0.0,
+          "raw_inputs_summary": {
+            "successes": 0,
+            "valid_episodes": 1
+          },
+          "raw_value": 0.0,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        },
+        {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "task_completion_time",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "no successful valid episodes",
+          "status": "not_applicable",
+          "units": null
+        },
+        {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "comfort_aware_path_efficiency",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "path efficiency is only computed for successful episodes",
+          "status": "not_applicable",
+          "units": null
+        },
+        {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "hesitation",
+          "normalized_score": 0.7102212855637513,
+          "raw_inputs_summary": {
+            "hesitation_epochs": 8,
+            "max_heading_error": 3.125811383834169,
+            "reversal_epochs": 3
+          },
+          "raw_value": 0.14488935721812435,
+          "reason": null,
+          "status": "computed",
+          "units": "events/s"
+        },
+        {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "min_human_robot_distance",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "proxemic_intrusion_dose",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "speed_near_humans_p95",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "gesture_response_success",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "no come_here events were present",
+          "status": "not_applicable",
+          "units": null
+        },
+        {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "acknowledgement_clarity",
+          "normalized_score": 1.0,
+          "raw_inputs_summary": {
+            "attempts": 1,
+            "successes": 1
+          },
+          "raw_value": 1.0,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        },
+        {
+          "confidence": "insufficient",
+          "metadata": {},
+          "metric_id": "human_aware_approach",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "trace does not include human poses",
+          "status": "insufficient_evidence",
+          "units": null
+        },
+        {
+          "confidence": "not_applicable",
+          "metadata": {},
+          "metric_id": "bystander_ack",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "no bystander entered the near-human zone",
+          "status": "not_applicable",
+          "units": null
+        },
+        {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "sparc",
+          "normalized_score": 0.10644757500880209,
+          "raw_inputs_summary": {
+            "sample_count": 950,
+            "sample_rate_hz": 12.5
+          },
+          "raw_value": -5.574209699964792,
+          "reason": null,
+          "status": "computed",
+          "units": "spectral_arc_length"
+        },
+        {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "heading_jerk",
+          "normalized_score": 0.0,
+          "raw_inputs_summary": {
+            "sample_count": 950,
+            "sample_rate_hz": 12.5
+          },
+          "raw_value": -136.0093872144151,
+          "reason": null,
+          "status": "computed",
+          "units": "spectral_arc_length"
+        },
+        {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "stability",
+          "normalized_score": 0.0,
+          "raw_inputs_summary": {
+            "collisions": 469,
+            "instability_events": 0,
+            "invalid_actions": 0
+          },
+          "raw_value": 0.0,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        },
+        {
+          "confidence": "sufficient",
+          "metadata": {},
+          "metric_id": "legibility",
+          "normalized_score": 0.1,
+          "raw_inputs_summary": {
+            "fraction_inside_cone_post_commit": 0.16,
+            "t_commit": 0.0
+          },
+          "raw_value": 0.16,
+          "reason": null,
+          "status": "computed",
+          "units": "ratio"
+        },
+        {
+          "confidence": "low",
+          "metadata": {},
+          "metric_id": "behavioral_naturalness",
+          "normalized_score": null,
+          "raw_inputs_summary": {},
+          "raw_value": null,
+          "reason": "legged naturalness requires periodic joint telemetry",
+          "status": "insufficient_evidence",
+          "units": null
+        }
+      ]
+    },
+    "episode_id": "g1_lateral_static_dynamic_obstacles",
+    "iteration": 0,
+    "metrics": {
+      "acknowledgement_clarity": {
+        "confidence": "sufficient",
+        "metadata": {},
+        "metric_id": "acknowledgement_clarity",
+        "normalized_score": 1.0,
+        "raw_inputs_summary": {
+          "attempts": 1,
+          "successes": 1
+        },
+        "raw_value": 1.0,
+        "reason": null,
+        "status": "computed",
+        "units": "ratio"
+      },
+      "behavioral_naturalness": {
+        "confidence": "low",
+        "metadata": {},
+        "metric_id": "behavioral_naturalness",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "legged naturalness requires periodic joint telemetry",
+        "status": "insufficient_evidence",
+        "units": null
+      },
+      "bystander_ack": {
+        "confidence": "not_applicable",
+        "metadata": {},
+        "metric_id": "bystander_ack",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "no bystander entered the near-human zone",
+        "status": "not_applicable",
+        "units": null
+      },
+      "comfort_aware_path_efficiency": {
+        "confidence": "not_applicable",
+        "metadata": {},
+        "metric_id": "comfort_aware_path_efficiency",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "path efficiency is only computed for successful episodes",
+        "status": "not_applicable",
+        "units": null
+      },
+      "gesture_response_success": {
+        "confidence": "not_applicable",
+        "metadata": {},
+        "metric_id": "gesture_response_success",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "no come_here events were present",
+        "status": "not_applicable",
+        "units": null
+      },
+      "heading_jerk": {
+        "confidence": "sufficient",
+        "metadata": {},
+        "metric_id": "heading_jerk",
+        "normalized_score": 0.0,
+        "raw_inputs_summary": {
+          "sample_count": 950,
+          "sample_rate_hz": 12.5
+        },
+        "raw_value": -136.0093872144151,
+        "reason": null,
+        "status": "computed",
+        "units": "spectral_arc_length"
+      },
+      "hesitation": {
+        "confidence": "sufficient",
+        "metadata": {},
+        "metric_id": "hesitation",
+        "normalized_score": 0.7102212855637513,
+        "raw_inputs_summary": {
+          "hesitation_epochs": 8,
+          "max_heading_error": 3.125811383834169,
+          "reversal_epochs": 3
+        },
+        "raw_value": 0.14488935721812435,
+        "reason": null,
+        "status": "computed",
+        "units": "events/s"
+      },
+      "human_aware_approach": {
+        "confidence": "insufficient",
+        "metadata": {},
+        "metric_id": "human_aware_approach",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "trace does not include human poses",
+        "status": "insufficient_evidence",
+        "units": null
+      },
+      "legibility": {
+        "confidence": "sufficient",
+        "metadata": {},
+        "metric_id": "legibility",
+        "normalized_score": 0.1,
+        "raw_inputs_summary": {
+          "fraction_inside_cone_post_commit": 0.16,
+          "t_commit": 0.0
+        },
+        "raw_value": 0.16,
+        "reason": null,
+        "status": "computed",
+        "units": "ratio"
+      },
+      "min_human_robot_distance": {
+        "confidence": "insufficient",
+        "metadata": {},
+        "metric_id": "min_human_robot_distance",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "trace does not include human poses",
+        "status": "insufficient_evidence",
+        "units": null
+      },
+      "proxemic_intrusion_dose": {
+        "confidence": "insufficient",
+        "metadata": {},
+        "metric_id": "proxemic_intrusion_dose",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "trace does not include human poses",
+        "status": "insufficient_evidence",
+        "units": null
+      },
+      "sparc": {
+        "confidence": "sufficient",
+        "metadata": {},
+        "metric_id": "sparc",
+        "normalized_score": 0.10644757500880209,
+        "raw_inputs_summary": {
+          "sample_count": 950,
+          "sample_rate_hz": 12.5
+        },
+        "raw_value": -5.574209699964792,
+        "reason": null,
+        "status": "computed",
+        "units": "spectral_arc_length"
+      },
+      "speed_near_humans_p95": {
+        "confidence": "insufficient",
+        "metadata": {},
+        "metric_id": "speed_near_humans_p95",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "trace does not include human poses",
+        "status": "insufficient_evidence",
+        "units": null
+      },
+      "stability": {
+        "confidence": "sufficient",
+        "metadata": {},
+        "metric_id": "stability",
+        "normalized_score": 0.0,
+        "raw_inputs_summary": {
+          "collisions": 469,
+          "instability_events": 0,
+          "invalid_actions": 0
+        },
+        "raw_value": 0.0,
+        "reason": null,
+        "status": "computed",
+        "units": "ratio"
+      },
+      "task_completion_time": {
+        "confidence": "not_applicable",
+        "metadata": {},
+        "metric_id": "task_completion_time",
+        "normalized_score": null,
+        "raw_inputs_summary": {},
+        "raw_value": null,
+        "reason": "no successful valid episodes",
+        "status": "not_applicable",
+        "units": null
+      },
+      "task_success_rate": {
+        "confidence": "insufficient",
+        "metadata": {},
+        "metric_id": "task_success_rate",
+        "normalized_score": 0.0,
+        "raw_inputs_summary": {
+          "successes": 0,
+          "valid_episodes": 1
+        },
+        "raw_value": 0.0,
+        "reason": null,
+        "status": "computed",
+        "units": "ratio"
+      }
+    },
+    "technical_valid": true,
+    "terminal_status": "timeout"
+  },
+  "policy_id": "policy_a",
+  "render_backend": {
+    "control_dt_s": 0.08,
+    "fps": 2,
+    "height": 240,
+    "kind": "mujoco_offscreen",
+    "locomotion_mode": "kinematic",
+    "max_duration_s": 15.0,
+    "robot_selector": "official_g1",
+    "width": 426
+  },
+  "robot_id": "g1",
+  "run_id": "local-20260513T233036Z-7844ecb7",
+  "schema_version": "asimovbm.simulation_episode.v1",
+  "source_episode_id": "g1_lateral_static_dynamic_obstacles",
+  "video_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_dynamic_npcs.mp4"
+}

@@ -25,7 +25,7 @@ def navigation_lights_and_camera() -> str:
 
 def navigation_visual_settings() -> str:
     return """  <visual>
-    <global azimuth="125" elevation="-32"/>
+    <global azimuth="125" elevation="-32" offwidth="1920" offheight="1080"/>
     <headlight ambient="0.22 0.22 0.22" diffuse="0.18 0.18 0.18" specular="0.01 0.01 0.01"/>
     <rgba haze="0.58 0.63 0.66 1"/>
   </visual>"""
@@ -50,7 +50,7 @@ def environment_scene_geoms(world: World2D) -> str:
     floor_size_x = 0.5 * width + 1.0
     floor_size_y = 0.5 * height + 1.0
     return (
-        f'    <geom name="floor" type="plane" pos="{center_x:.4f} {center_y:.4f} 0" '
+        f'    <geom name="nav_floor" type="plane" pos="{center_x:.4f} {center_y:.4f} 0" '
         f'size="{floor_size_x:.4f} {floor_size_y:.4f} 0.05" material="nav_floor_mat"/>'
     )
 

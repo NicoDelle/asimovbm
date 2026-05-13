@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from asimovbm.local_runner import survey_export
 from asimovbm.local_runner.runner import LocalRunConfig, run_local_validation
 from asimovbm.local_runner.traces import LocalEpisodeTrace, LocalStepTrace
 
@@ -132,3 +133,77 @@ def test_default_single_iteration_requests_visible_viewer_for_selected_robot_epi
         "g1_lateral_open",
         "g1_lateral_static_dynamic_obstacles",
     ]
+
+
+def test_local_run_can_export_survey_videos_and_sidecars(tmp_path: Path, monkeypatch) -> None:
+    backend = FakeTraceBackend()
+    rendered = []
+
+    def fake_render(record, spec, *, view: str, output_path: Path, config) -> None:
+        rendered.append((record.trace.episode_id, spec.robot_selector, view, config.fps))
+        output_path.write_bytes(b"fake-mujoco-video")
+
+    monkeypatch.setattr(survey_export, "_render_mujoco_video", fake_render)
+    result = run_local_validation(
+        LocalRunConfig(
+            artifact_root=tmp_path / "local",
+            run_id="survey-run",
+            iterations=1,
+            robot_id="g1",
+            episode_ids=("g1_approach_user",),
+            backend=backend,
+            survey_export=True,
+            survey_root=tmp_path / "survey",
+            survey_policy_id="policy_a",
+            survey_video_fps=4,
+        )
+    )
+
+    assert result.survey_export is not None
+    assert backend.calls[0]["viewer_enabled"] is False
+    assert rendered == [
+        ("g1_approach_user", "official_g1", "arrival", 4),
+        ("g1_approach_user", "official_g1", "bystander", 4),
+    ]
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["survey_export"]["summary_json_path"].endswith("metrics-summary-survey-run.json")
+    assert len(result.survey_export.videos) == 2
+
+    for view in ("arrival", "bystander"):
+        video_path = (
+            tmp_path
+            / "survey"
+            / "videos"
+            / "policy_a"
+            / view
+            / "g1_point_to_point_open.mp4"
+        )
+        json_path = (
+            tmp_path
+            / "survey"
+            / "json"
+            / "policy_a"
+            / view
+            / "g1_point_to_point_open.json"
+        )
+        assert video_path.exists()
+        assert video_path.stat().st_size > 0
+        sidecar = json.loads(json_path.read_text(encoding="utf-8"))
+        assert sidecar["episode_id"] == "g1_point_to_point_open"
+        assert sidecar["source_episode_id"] == "g1_approach_user"
+        assert sidecar["policy_id"] == "policy_a"
+        assert sidecar["camera_view"] == view
+        assert sidecar["render_backend"]["kind"] == "mujoco_offscreen"
+        assert sidecar["render_backend"]["robot_selector"] == "official_g1"
+        assert sidecar["render_backend"]["width"] == 426
+        assert sidecar["render_backend"]["height"] == 240
+        assert sidecar["render_backend"]["max_duration_s"] == 15.0
+        assert set(sidecar["metric_report"]["behavioral_metrics"]["axes"]) >= {
+            "perceived_dexterity",
+            "perceived_safety",
+            "perceived_social_awareness",
+            "impression",
+        }
+
+    summary = json.loads((tmp_path / "survey" / "metrics-summary-survey-run.json").read_text(encoding="utf-8"))
+    assert summary["video_count"] == 2
