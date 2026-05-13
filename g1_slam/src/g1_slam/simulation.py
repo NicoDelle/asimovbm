@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .controller import PurePursuitConfig, PurePursuitController
+from .controller import PurePursuitConfig, PurePursuitController, VelocityCommand
 from .geometry import Pose2D, distance_xy
 from .lidar import simulate_lidar
 from .mapping import GridSpec, OccupancyGrid
@@ -54,7 +54,11 @@ def run_navigation(
             path = planner.plan(pose, goal)
             controller.reset()
 
-        command = controller.command(pose, path, goal)
+        sim_time = step * dt
+        if sim_time < controller.config.start_delay_s:
+            command = VelocityCommand(0.0, 0.0)
+        else:
+            command = controller.command(pose, path, goal)
         candidate = pose.moved(command.linear, command.yaw_rate, dt)
         if world.collides(candidate, robot_radius):
             candidate = pose.moved(0.0, 0.9, dt)

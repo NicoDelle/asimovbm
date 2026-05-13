@@ -6,7 +6,7 @@ from pathlib import Path
 from time import sleep
 
 from .config import LocomotionConfig, VisualizationConfig
-from .controller import PurePursuitConfig
+from .controller import PurePursuitConfig, VelocityCommand
 from .dynamic_obstacles import DynamicObstacle
 from .geometry import Pose2D
 from .scene_visuals import (
@@ -133,7 +133,10 @@ def run_mujoco_navigation(
                 path = planner.plan(pose, goal)
                 controller.reset()
 
-            command = controller.command(pose, path, goal)
+            if sim_time < controller.config.start_delay_s:
+                command = VelocityCommand(0.0, 0.0)
+            else:
+                command = controller.command(pose, path, goal)
             candidate = pose.moved(command.linear, command.yaw_rate, dt)
             if active_world.collides(candidate, 0.20):
                 candidate = pose.moved(0.0, 0.9, dt)

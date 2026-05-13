@@ -201,6 +201,7 @@ def _dynamic_obstacles(spec: LocalEpisodeSpec):
         count=config.blue_cylinder_count,
         world=spec.config.world,
         npc_policy=config.npc_policy,
+        obstacles=config.obstacles,
     )
 
 
@@ -353,6 +354,7 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D, viewer_speed: f
             dynamic_obstacle_mode=spec.config.dynamic_obstacles.mode,
             dynamic_obstacle_seed=spec.config.dynamic_obstacles.blue_cylinder_seed,
             dynamic_obstacle_count=spec.config.dynamic_obstacles.blue_cylinder_count,
+            dynamic_obstacle_specs=spec.config.dynamic_obstacles.obstacles,
             npc_policy=spec.config.dynamic_obstacles.npc_policy,
             visualization=spec.config.visualization,
         ),
@@ -400,6 +402,7 @@ def _viewer_locomotion_config(spec: LocalEpisodeSpec) -> LocomotionConfig:
         return LocomotionConfig(
             mode="kinematic",
             policy_path=spec.config.locomotion.policy_path,
+            robojudo_config=spec.config.locomotion.robojudo_config,
             observation_size=spec.config.locomotion.observation_size,
             observation_profile=spec.config.locomotion.observation_profile,
             action_scale=spec.config.locomotion.action_scale,

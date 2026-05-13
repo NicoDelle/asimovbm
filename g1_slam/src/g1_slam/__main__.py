@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .config import LocomotionConfig, load_navigation_config
+from .config import LocomotionConfig, load_navigation_config, visualization_for_camera_view
 from .dynamic_obstacles import (
     DYNAMIC_SCENARIO_GOAL,
     DYNAMIC_SCENARIO_START,
@@ -34,7 +34,11 @@ def main() -> None:
     parser.add_argument("--policy-path", type=Path, help="override config locomotion.policy_path")
     parser.add_argument("--model-path", type=Path, help="optional path to a MuJoCo XML/MJCF file")
     parser.add_argument("--robojudo-repo", type=Path, default=G1_SLAM_ROOT / "third_party" / "RoboJuDo")
-    parser.add_argument("--robojudo-config", default=None)
+    parser.add_argument(
+        "--robojudo-config",
+        default=None,
+        help="override locomotion.robojudo_config from the episode JSON",
+    )
     parser.add_argument(
         "--dynamic-blue-cylinders",
         action="store_true",
@@ -66,6 +70,15 @@ def main() -> None:
         type=float,
         default=1.0,
         help="MuJoCo render playback speed multiplier; use 1.0 for realtime.",
+    )
+    parser.add_argument(
+        "--camera-view",
+        choices=("config", "arrival", "bystander"),
+        default="config",
+        help=(
+            "viewer framing: config uses visualization.camera, otherwise "
+            "selects a named camera from visualization.camera_views"
+        ),
     )
     parser.add_argument("--render", action="store_true", help="open the MuJoCo viewer")
     args = parser.parse_args()
@@ -108,6 +121,7 @@ def main() -> None:
         count=dynamic_obstacle_count,
         world=world,
         npc_policy=npc_policy,
+        obstacles=nav_config.dynamic_obstacles.obstacles,
     )
     start = Pose2D(*args.start) if args.start is not None else default_start
     goal = (args.goal[0], args.goal[1]) if args.goal is not None else default_goal
@@ -117,6 +131,7 @@ def main() -> None:
         locomotion_config = locomotion_config.__class__(
             mode=args.locomotion,
             policy_path=locomotion_config.policy_path,
+            robojudo_config=locomotion_config.robojudo_config,
             observation_size=locomotion_config.observation_size,
             observation_profile=locomotion_config.observation_profile,
             action_scale=locomotion_config.action_scale,
@@ -127,6 +142,7 @@ def main() -> None:
         locomotion_config = locomotion_config.__class__(
             mode=locomotion_config.mode,
             policy_path=args.policy_path,
+            robojudo_config=locomotion_config.robojudo_config,
             observation_size=locomotion_config.observation_size,
             observation_profile=locomotion_config.observation_profile,
             action_scale=locomotion_config.action_scale,
@@ -138,6 +154,10 @@ def main() -> None:
         robot=args.robot,
         explicit_policy_path=args.policy_path is not None,
     )
+    visualization_config = visualization_for_camera_view(
+        nav_config.visualization,
+        camera_view=args.camera_view,
+    )
 
     if locomotion_config.mode == "robojudo":
         from .robojudo_backend import (
@@ -146,6 +166,7 @@ def main() -> None:
             run_robojudo_navigation,
         )
 
+        robojudo_config_name = args.robojudo_config or locomotion_config.robojudo_config
         run_robojudo_navigation(
             world,
             start=start,
@@ -154,15 +175,20 @@ def main() -> None:
             controller_config=nav_config.controller,
             backend_config=RoboJuDoBackendConfig(
                 repo_path=args.robojudo_repo,
+<<<<<<< HEAD
                 config_name=args.robojudo_config or DEFAULT_ROBOJUDO_CONFIG,
+=======
+                config_name=robojudo_config_name,
+>>>>>>> 61a2468 (Added episodes)
                 max_vx=nav_config.controller.max_linear_speed,
                 max_vy=nav_config.controller.max_linear_speed,
                 max_yaw_rate=nav_config.controller.max_yaw_rate,
                 dynamic_obstacle_mode=dynamic_obstacle_mode,
                 dynamic_obstacle_seed=dynamic_obstacle_seed,
                 dynamic_obstacle_count=dynamic_obstacle_count,
+                dynamic_obstacle_specs=nav_config.dynamic_obstacles.obstacles,
                 npc_policy=npc_policy,
-                visualization=nav_config.visualization,
+                visualization=visualization_config,
             ),
         )
         return
@@ -177,7 +203,7 @@ def main() -> None:
             steps=steps,
             controller_config=nav_config.controller,
             locomotion_config=locomotion_config,
-            visualization_config=nav_config.visualization,
+            visualization_config=visualization_config,
             render=args.render,
             dynamic_obstacles=dynamic_obstacles,
             realtime_factor=args.realtime_factor,
@@ -212,6 +238,7 @@ def _fallback_missing_default_go2_policy(
         return LocomotionConfig(
             mode=locomotion_config.mode,
             policy_path=resolved_policy_path,
+            robojudo_config=locomotion_config.robojudo_config,
             observation_size=locomotion_config.observation_size,
             observation_profile=locomotion_config.observation_profile,
             action_scale=locomotion_config.action_scale,
@@ -237,6 +264,7 @@ def _fallback_missing_default_go2_policy(
     return LocomotionConfig(
         mode="kinematic",
         policy_path=policy_path,
+        robojudo_config=locomotion_config.robojudo_config,
         observation_size=locomotion_config.observation_size,
         observation_profile=locomotion_config.observation_profile,
         action_scale=locomotion_config.action_scale,

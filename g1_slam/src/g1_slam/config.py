@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -9,11 +9,14 @@ from .controller import PurePursuitConfig
 from .geometry import Pose2D
 from .world import RectObstacle, World2D, default_world
 
+G1_SLAM_ROOT = Path(__file__).resolve().parents[2]
+
 
 @dataclass(frozen=True)
 class LocomotionConfig:
     mode: str
     policy_path: Path | None
+    robojudo_config: str
     observation_size: int | None
     observation_profile: str
     action_scale: float
@@ -28,6 +31,29 @@ class DynamicObstaclesConfig:
     blue_cylinder_seed: int
     blue_cylinder_count: int | None
     npc_policy: str
+    obstacles: tuple[DynamicObstacleConfig, ...]
+
+
+@dataclass(frozen=True)
+class DynamicObstacleConfig:
+    name: str | None
+    center: tuple[float, float]
+    axis: tuple[float, float]
+    radius: float | None
+    half_height: float | None
+    amplitude_m: float
+    period_s: float
+    phase_rad: float
+    policy: str | None
+
+
+@dataclass(frozen=True)
+class CameraConfig:
+    lookat: tuple[float, float, float] | None
+    distance: float | None
+    azimuth: float | None
+    elevation: float | None
+    fixed: bool
 
 
 @dataclass(frozen=True)
@@ -37,8 +63,12 @@ class VisualizationConfig:
     camera_azimuth: float | None
     camera_elevation: float | None
     fixed_camera: bool
+    camera_views: dict[str, CameraConfig]
     show_trajectory: bool
     trajectory_interval_steps: int
+
+
+CameraViewName = str
 
 
 @dataclass(frozen=True)
@@ -61,6 +91,7 @@ DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
     locomotion=LocomotionConfig(
         mode="kinematic",
         policy_path=Path("policies/g1/policy.onnx"),
+        robojudo_config="g1_asap_loco",
         observation_size=None,
         observation_profile="generic",
         action_scale=0.25,
@@ -74,6 +105,7 @@ DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
         blue_cylinder_seed=7,
         blue_cylinder_count=None,
         npc_policy="social_patrol",
+        obstacles=(),
     ),
     visualization=VisualizationConfig(
         camera_lookat=None,
@@ -81,6 +113,7 @@ DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
         camera_azimuth=None,
         camera_elevation=None,
         fixed_camera=False,
+        camera_views={},
         show_trajectory=False,
         trajectory_interval_steps=25,
     ),
@@ -88,7 +121,7 @@ DEFAULT_NAVIGATION_CONFIG = NavigationConfig(
 
 
 def load_navigation_config(path: str | Path) -> NavigationConfig:
-    config_path = Path(path)
+    config_path = _resolve_config_path(path)
     if not config_path.exists():
         return DEFAULT_NAVIGATION_CONFIG
 
@@ -104,6 +137,39 @@ def load_navigation_config(path: str | Path) -> NavigationConfig:
         world=_read_world(payload.get("world")),
         dynamic_obstacles=_read_dynamic_obstacles(payload.get("dynamic_obstacles", {})),
         visualization=_read_visualization(payload.get("visualization", {})),
+    )
+
+
+def _resolve_config_path(path: str | Path) -> Path:
+    config_path = Path(path)
+    if config_path.exists() or config_path.is_absolute():
+        return config_path
+    g1_slam_path = G1_SLAM_ROOT / config_path
+    if g1_slam_path.exists():
+        return g1_slam_path
+    return config_path
+
+
+def visualization_for_camera_view(
+    visualization: VisualizationConfig,
+    *,
+    camera_view: CameraViewName,
+) -> VisualizationConfig:
+    if camera_view == "config":
+        return visualization
+    try:
+        camera = visualization.camera_views[camera_view]
+    except KeyError as exc:
+        available = ", ".join(("config", *sorted(visualization.camera_views)))
+        raise ValueError(f"camera_view must be one of: {available}") from exc
+
+    return replace(
+        visualization,
+        camera_lookat=camera.lookat,
+        camera_distance=camera.distance,
+        camera_azimuth=camera.azimuth,
+        camera_elevation=camera.elevation,
+        fixed_camera=camera.fixed,
     )
 
 
@@ -128,6 +194,12 @@ def _read_locomotion(payload: dict[str, Any]) -> LocomotionConfig:
     return LocomotionConfig(
         mode=str(payload.get("mode", DEFAULT_NAVIGATION_CONFIG.locomotion.mode)),
         policy_path=Path(raw_policy_path) if raw_policy_path else None,
+        robojudo_config=str(
+            payload.get(
+                "robojudo_config",
+                DEFAULT_NAVIGATION_CONFIG.locomotion.robojudo_config,
+            )
+        ),
         observation_size=int(raw_observation_size) if raw_observation_size is not None else None,
         observation_profile=str(
             payload.get(
@@ -149,6 +221,7 @@ def _read_controller(payload: dict[str, Any]) -> PurePursuitConfig:
         goal_tolerance=float(payload.get("goal_tolerance", defaults.goal_tolerance)),
         max_linear_speed=float(payload.get("max_linear_speed", defaults.max_linear_speed)),
         max_yaw_rate=float(payload.get("max_yaw_rate", defaults.max_yaw_rate)),
+        start_delay_s=float(payload.get("start_delay_s", defaults.start_delay_s)),
     )
 
 
@@ -194,22 +267,54 @@ def _read_dynamic_obstacles(payload: dict[str, Any]) -> DynamicObstaclesConfig:
         ),
         blue_cylinder_count=count,
         npc_policy=str(payload.get("npc_policy", defaults.npc_policy)),
+        obstacles=tuple(_read_dynamic_obstacle(obstacle) for obstacle in payload.get("obstacles", ())),
+    )
+
+
+def _read_dynamic_obstacle(payload: dict[str, Any]) -> DynamicObstacleConfig:
+    center = payload.get("center", {})
+    axis = payload.get("axis", {"x": 0.0, "y": 1.0})
+    return DynamicObstacleConfig(
+        name=str(payload["name"]) if payload.get("name") else None,
+        center=(float(center["x"]), float(center["y"])),
+        axis=(float(axis.get("x", 0.0)), float(axis.get("y", 1.0))),
+        radius=_read_optional_float(payload, "radius", None),
+        half_height=_read_optional_float(payload, "half_height", None),
+        amplitude_m=float(payload.get("amplitude_m", 0.9)),
+        period_s=float(payload.get("period_s", 16.0)),
+        phase_rad=float(payload.get("phase_rad", 0.0)),
+        policy=str(payload["policy"]) if payload.get("policy") else None,
     )
 
 
 def _read_visualization(payload: dict[str, Any]) -> VisualizationConfig:
     defaults = DEFAULT_NAVIGATION_CONFIG.visualization
     camera = payload.get("camera", {})
+    camera_views = payload.get("camera_views", {})
     return VisualizationConfig(
         camera_lookat=_read_camera_lookat(camera.get("lookat")),
         camera_distance=_read_optional_float(camera, "distance", defaults.camera_distance),
         camera_azimuth=_read_optional_float(camera, "azimuth", defaults.camera_azimuth),
         camera_elevation=_read_optional_float(camera, "elevation", defaults.camera_elevation),
         fixed_camera=bool(camera.get("fixed", defaults.fixed_camera)),
+        camera_views={
+            str(name): _read_camera_config(view, defaults)
+            for name, view in camera_views.items()
+        },
         show_trajectory=bool(payload.get("show_trajectory", defaults.show_trajectory)),
         trajectory_interval_steps=int(
             payload.get("trajectory_interval_steps", defaults.trajectory_interval_steps)
         ),
+    )
+
+
+def _read_camera_config(payload: dict[str, Any], defaults: VisualizationConfig) -> CameraConfig:
+    return CameraConfig(
+        lookat=_read_camera_lookat(payload.get("lookat")),
+        distance=_read_optional_float(payload, "distance", defaults.camera_distance),
+        azimuth=_read_optional_float(payload, "azimuth", defaults.camera_azimuth),
+        elevation=_read_optional_float(payload, "elevation", defaults.camera_elevation),
+        fixed=bool(payload.get("fixed", defaults.fixed_camera)),
     )
 
 

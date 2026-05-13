@@ -1,9 +1,9 @@
 # G1 And Go2 SLAM Episode Configurations
 
-These files define six MuJoCo episodes with the same SLAM navigation loop:
+These files define twelve MuJoCo episodes with the same SLAM navigation loop:
 
-- Three G1 humanoid episodes using RoboJuDo locomotion.
-- Three Unitree Go2 quadruped episodes using the official `unitree_mujoco`
+- Six G1 humanoid episodes using RoboJuDo locomotion.
+- Six Unitree Go2 quadruped episodes using the official `unitree_mujoco`
   Go2 model and an external ONNX velocity policy.
 
 Each configuration sets the robot start pose, goal, world bounds, obstacle
@@ -27,7 +27,7 @@ conda activate asimovbm
 ```
 
 For the G1 episodes, RoboJuDo and its `mujoco_viewer` dependency must already
-be installed as described in `docs/run-g1-slam-episode.md`.
+be installed as described in `run-g1-slam-episode.md`.
 
 For the Go2 episodes, RoboJuDo is not used. The policy profile is tuned for the
 Hugging Face model `diasAiMaster/unitree-go2-velocity-flat`, trained with
@@ -61,9 +61,81 @@ the Go2 episode configs use `observation_profile:
 "dias_ai_master_go2_velocity_flat"`, `observation_size: 45`, and
 `action_scale: 0.5`.
 
+## Camera Views
+
+Each episode can be rendered with a named camera view from the episode JSON:
+
+- `--camera-view arrival` frames the viewer from the goal side, looking back at
+  the route so the robot appears to approach.
+- `--camera-view bystander` frames the route from the side so the viewer sees
+  the robot move from point A to point B.
+
+If no view is passed, `--camera-view config` uses `visualization.camera`.
+The `arrival` and `bystander` values are stored under
+`visualization.camera_views`, so each episode can tune its own camera positions
+without changing Python code.
+
 ## G1 Episodes
 
-### 1. Open Lateral Motion
+The three point-to-point G1 episodes set `controller.start_delay_s: 2.0`, so
+the viewer opens with a two-second hold before navigation commands move the
+robot forward.
+
+### 1. Point-To-Point Motion Without Obstacles
+
+Config file:
+
+```text
+config/episodes/g1_point_to_point_open.json
+```
+
+Run:
+
+```bash
+python3 -m g1_slam --config config/episodes/g1_point_to_point_open.json --render
+```
+
+This episode moves the G1 from point A to point B in an empty world. It has no
+static obstacles and no dynamic obstacles. The navigation floor spans a larger
+`16m x 10m` world.
+
+### 2. Point-To-Point Motion With Static Obstacles
+
+Config file:
+
+```text
+config/episodes/g1_point_to_point_static_obstacles.json
+```
+
+Run:
+
+```bash
+python3 -m g1_slam --config config/episodes/g1_point_to_point_static_obstacles.json --render
+```
+
+This episode keeps the same point A to point B route, but places two static red
+block obstacles in the larger world so SLAM has to route around them.
+
+### 3. Point-To-Point Motion With Dynamic NPCs
+
+Config file:
+
+```text
+config/episodes/g1_point_to_point_dynamic_npcs.json
+```
+
+Run:
+
+```bash
+python3 -m g1_slam --config config/episodes/g1_point_to_point_dynamic_npcs.json --render
+```
+
+This episode keeps the static world empty and enables two moving pedestrian
+NPCs through `dynamic_obstacles.mode: "npcs"` and the `social_patrol` policy.
+The NPC centers are declared in the JSON at one-third and two-thirds of the
+current start-to-goal distance.
+
+### 4. Open Lateral Motion
 
 Config file:
 
@@ -81,7 +153,7 @@ This episode keeps the world empty: no static red blocks and no dynamic blue
 cylinders. The robot walks from one side of the scene to the other while the
 viewer stays fixed and the final green goal marker remains visible.
 
-### 2. Lateral Motion With Static Obstacles And NPCs
+### 5. Lateral Motion With Static Obstacles And NPCs
 
 Config file:
 
@@ -109,7 +181,7 @@ The SLAM scan world is updated with the moving NPCs over time, and the
 RoboJuDo MuJoCo scene renders the same red obstacles and NPC actors. The
 fixed camera keeps the short route visible without drawing a trajectory trace.
 
-### 3. Robot Approaching The User
+### 6. Robot Approaching The User
 
 Config file:
 
@@ -130,7 +202,70 @@ robot approach and final marker stay easy to see.
 
 ## Go2 Episodes
 
-### 4. Go2 Open Lateral Motion
+### 7. Go2 Point-To-Point Motion Without Obstacles
+
+Config file:
+
+```text
+config/episodes/go2_point_to_point_open.json
+```
+
+Run:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/go2_point_to_point_open.json \
+  --mujoco \
+  --robot official_go2 \
+  --render
+```
+
+This mirrors the G1 point-to-point open episode with the Go2 policy locomotion
+profile and the same larger `16m x 10m` floor.
+
+### 8. Go2 Point-To-Point Motion With Static Obstacles
+
+Config file:
+
+```text
+config/episodes/go2_point_to_point_static_obstacles.json
+```
+
+Run:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/go2_point_to_point_static_obstacles.json \
+  --mujoco \
+  --robot official_go2 \
+  --render
+```
+
+This mirrors the G1 static-obstacle point-to-point episode with two static red
+blocks and no dynamic obstacles.
+
+### 9. Go2 Point-To-Point Motion With Dynamic NPCs
+
+Config file:
+
+```text
+config/episodes/go2_point_to_point_dynamic_npcs.json
+```
+
+Run:
+
+```bash
+python3 -m g1_slam \
+  --config config/episodes/go2_point_to_point_dynamic_npcs.json \
+  --mujoco \
+  --robot official_go2 \
+  --render
+```
+
+This mirrors the G1 dynamic point-to-point episode using three moving
+pedestrian NPCs and no static obstacles.
+
+### 10. Go2 Open Lateral Motion
 
 Config file:
 
@@ -152,7 +287,7 @@ This mirrors the open G1 lateral episode, but uses the Unitree Go2 quadruped
 MJCF and `locomotion.mode="policy"` with the `dias_ai_master_go2_velocity_flat`
 observation profile.
 
-### 5. Go2 Lateral Motion With Static Obstacles And NPCs
+### 11. Go2 Lateral Motion With Static Obstacles And NPCs
 
 Config file:
 
@@ -174,7 +309,7 @@ This mirrors the mixed-obstacle G1 episode. Static red boxes are baked into the
 generated Go2 navigation scene, while the NPCs are generated as mocap bodies
 and moved over time in both MuJoCo and the SLAM lidar world.
 
-### 6. Go2 Approaching The User
+### 12. Go2 Approaching The User
 
 Config file:
 

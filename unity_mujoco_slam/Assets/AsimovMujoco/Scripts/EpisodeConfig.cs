@@ -106,6 +106,7 @@ namespace Asimov.UnityMujoco
         public float goal_tolerance = 0.28f;
         public float max_linear_speed = 0.65f;
         public float max_yaw_rate = 1.4f;
+        public float start_delay_s;
     }
 
     [Serializable]
@@ -113,6 +114,7 @@ namespace Asimov.UnityMujoco
     {
         public string mode = "";
         public string policy_path = "";
+        public string robojudo_config = "g1_asap_loco";
         public int observation_size;
         public string observation_profile = "generic";
         public float action_scale = 0.25f;

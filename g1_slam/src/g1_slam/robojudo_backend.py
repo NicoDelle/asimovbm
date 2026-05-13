@@ -41,12 +41,14 @@ class RoboJuDoBackendConfig:
     auto_start_walking: bool = True
     run_fullspeed: bool | None = None
     use_navigation_scene: bool = True
+    visualize_policy_debug: bool = False
     enable_dynamic_cylinders: bool = False
     dynamic_cylinder_seed: int = 7
     dynamic_cylinder_count: int | None = None
     dynamic_obstacle_mode: str | None = None
     dynamic_obstacle_seed: int | None = None
     dynamic_obstacle_count: int | None = None
+    dynamic_obstacle_specs: tuple[object, ...] = ()
     npc_policy: str = "social_patrol"
     visualization: VisualizationConfig | None = None
 
@@ -448,6 +450,8 @@ class RoboJuDoBackend:
 
         cfg = ConfigManager(config_name=config.config_name).get_cfg()
         cfg.ctrl = [RoboJuDoBackend.VirtualJoystickCtrlCfg()]
+        if hasattr(cfg.env, "visualize_extras"):
+            cfg.env.visualize_extras = config.visualize_policy_debug
         if config.use_navigation_scene and world is not None:
             dynamic_obstacles = _dynamic_obstacles_from_config(config, world)
             cfg.env.xml = _ensure_robojudo_navigation_scene(
@@ -518,7 +522,10 @@ def run_robojudo_navigation(
             path = planner.plan(pose, goal)
             controller.reset()
 
-        command = controller.command(pose, path, goal)
+        if sim_time < controller.config.start_delay_s:
+            command = VelocityCommand(0.0, 0.0)
+        else:
+            command = controller.command(pose, path, goal)
         pose = backend.step(command)
         distance_to_goal = distance_xy((pose.x, pose.y), goal)
         trace_steps.append(
@@ -590,9 +597,13 @@ def _trace_entities(
         )
     for obstacle in dynamic_obstacles:
         x, y = obstacle.xy_at(sim_time)
+<<<<<<< HEAD
         next_x, next_y = obstacle.xy_at(sim_time + 0.1)
         vx = (next_x - x) / 0.1
         vy = (next_y - y) / 0.1
+=======
+        vx, vy = obstacle.velocity_at(sim_time)
+>>>>>>> 61a2468 (Added episodes)
         entities.append(
             {
                 "id": obstacle.name,
@@ -601,7 +612,10 @@ def _trace_entities(
                 "x": x,
                 "y": y,
                 "radius": obstacle.radius,
+<<<<<<< HEAD
                 "policy": obstacle.policy,
+=======
+>>>>>>> 61a2468 (Added episodes)
                 "velocity": [vx, vy],
             }
         )
@@ -706,6 +720,7 @@ def _dynamic_obstacles_from_config(
         count=count,
         world=world,
         npc_policy=config.npc_policy,
+        obstacles=config.dynamic_obstacle_specs,
     )
 
 

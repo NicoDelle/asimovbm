@@ -33,6 +33,7 @@ def test_reference_backend_records_step_measurements() -> None:
             locomotion=LocomotionConfig(
                 mode="kinematic",
                 policy_path=None,
+                robojudo_config="g1_asap_loco",
                 observation_size=None,
                 observation_profile="generic",
                 action_scale=0.25,
@@ -46,8 +47,9 @@ def test_reference_backend_records_step_measurements() -> None:
                 blue_cylinder_seed=7,
                 blue_cylinder_count=None,
                 npc_policy="social_patrol",
+                obstacles=(),
             ),
-            visualization=VisualizationConfig(None, None, None, None, False, False, 20),
+            visualization=VisualizationConfig(None, None, None, None, False, {}, False, 20),
         ),
         robot_id="g1",
         policy_id="g1_robojudo_asap",

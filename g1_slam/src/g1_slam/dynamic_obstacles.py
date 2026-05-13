@@ -36,6 +36,13 @@ class DynamicObstacle:
             self.center[1] + self.axis[1] * offset,
         )
 
+    def velocity_at(self, sim_time: float) -> tuple[float, float]:
+        angular_speed = 2.0 * math.pi / self.period_s
+        speed = self.amplitude_m * angular_speed * math.cos(
+            (angular_speed * sim_time) + self.phase_rad
+        )
+        return (self.axis[0] * speed, self.axis[1] * speed)
+
     def yaw_at(self, sim_time: float) -> float:
         phase = (2.0 * math.pi * sim_time / self.period_s) + self.phase_rad
         direction = 1.0 if math.cos(phase) >= 0.0 else -1.0
@@ -61,10 +68,13 @@ def make_default_dynamic_obstacles(
     count: int | None = None,
     world: World2D | None = None,
     npc_policy: str = "social_patrol",
+    obstacles: tuple[object, ...] = (),
 ) -> tuple[DynamicObstacle, ...]:
     normalized_mode = _normalize_mode(mode)
     if normalized_mode == "none":
         return ()
+    if obstacles:
+        return _configured_obstacles(normalized_mode, obstacles, npc_policy)
     target_count = 3 if count is None else max(0, count)
     if target_count == 0:
         return ()
@@ -89,6 +99,32 @@ def make_default_dynamic_obstacles(
     return tuple(
         _with_name(spec, _name_for_mode(normalized_mode, index))
         for index, spec in enumerate(selected[:target_count])
+    )
+
+
+def _configured_obstacles(
+    mode: str,
+    obstacles: tuple[object, ...],
+    npc_policy: str,
+) -> tuple[DynamicObstacle, ...]:
+    radius = 0.28 if mode == "npcs" else 0.22
+    half_height = 0.85 if mode == "npcs" else 0.35
+    visual_mode = "npc" if mode == "npcs" else "blue_cylinder"
+    policy = npc_policy if mode == "npcs" else "sinusoidal_patrol"
+    return tuple(
+        DynamicObstacle(
+            name=getattr(obstacle, "name", None) or _name_for_mode(mode, index),
+            center=getattr(obstacle, "center"),
+            axis=_unit_vector(getattr(obstacle, "axis")),
+            radius=getattr(obstacle, "radius", None) or radius,
+            half_height=getattr(obstacle, "half_height", None) or half_height,
+            amplitude_m=getattr(obstacle, "amplitude_m"),
+            period_s=getattr(obstacle, "period_s"),
+            phase_rad=getattr(obstacle, "phase_rad"),
+            mode=visual_mode,
+            policy=getattr(obstacle, "policy", None) or policy,
+        )
+        for index, obstacle in enumerate(obstacles)
     )
 
 

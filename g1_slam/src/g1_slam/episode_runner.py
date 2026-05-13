@@ -58,7 +58,7 @@ def run_episode_suite(
     trace_root: Path,
     render: bool,
     robojudo_repo: Path,
-    robojudo_config: str,
+    robojudo_config: str | None,
     continue_on_error: bool = True,
 ) -> EpisodeSuiteResult:
     trace_root.mkdir(parents=True, exist_ok=True)
@@ -80,7 +80,7 @@ def run_episode_suite(
             record = EpisodeTraceRecord(
                 episode_id=config_path.stem,
                 robot_id=robot_id,
-                policy_id=_policy_id(config),
+                policy_id=_policy_id(config, robojudo_config),
                 status="episode_failure",
                 reached_goal=False,
                 steps=0,
@@ -104,7 +104,7 @@ def run_episode_config(
     trace_root: Path,
     render: bool,
     robojudo_repo: Path,
-    robojudo_config: str,
+    robojudo_config: str | None,
 ) -> EpisodeTraceRecord:
     config = load_navigation_config(config_path)
     if config.world is None:
@@ -119,6 +119,7 @@ def run_episode_config(
             render=render,
         )
     dynamic_count = config.dynamic_obstacles.blue_cylinder_count
+    selected_robojudo_config = robojudo_config or config.locomotion.robojudo_config
     result = run_robojudo_navigation(
         config.world,
         start=config.start,
@@ -127,25 +128,30 @@ def run_episode_config(
         controller_config=config.controller,
         backend_config=RoboJuDoBackendConfig(
             repo_path=robojudo_repo,
-            config_name=robojudo_config,
+            config_name=selected_robojudo_config,
             max_vx=config.controller.max_linear_speed,
             max_vy=config.controller.max_linear_speed,
             max_yaw_rate=config.controller.max_yaw_rate,
             enable_dynamic_cylinders=config.dynamic_obstacles.blue_cylinders,
             dynamic_cylinder_seed=config.dynamic_obstacles.blue_cylinder_seed,
             dynamic_cylinder_count=dynamic_count,
+            dynamic_obstacle_mode=config.dynamic_obstacles.mode,
+            dynamic_obstacle_seed=config.dynamic_obstacles.blue_cylinder_seed,
+            dynamic_obstacle_count=dynamic_count,
+            dynamic_obstacle_specs=config.dynamic_obstacles.obstacles,
+            npc_policy=config.dynamic_obstacles.npc_policy,
             visualization=config.visualization,
         ),
         trace_path=trace_path,
         episode_id=config_path.stem,
         robot_id=robot_id,
-        policy_id=_policy_id(config),
+        policy_id=_policy_id(config, selected_robojudo_config),
         render=render,
     )
     return EpisodeTraceRecord(
         episode_id=config_path.stem,
         robot_id=robot_id,
-        policy_id=_policy_id(config),
+        policy_id=_policy_id(config, selected_robojudo_config),
         status=result["status"],
         reached_goal=bool(result["reached_goal"]),
         steps=int(result["step_count"]),
@@ -218,7 +224,9 @@ def write_dry_run_trace(path: Path, *, episode_id: str = "dry_run") -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def _policy_id(config: NavigationConfig) -> str:
+def _policy_id(config: NavigationConfig, robojudo_config: str | None = None) -> str:
+    if config.locomotion.mode == "robojudo":
+        return f"robojudo:{robojudo_config or config.locomotion.robojudo_config}"
     policy_path = config.locomotion.policy_path
     if policy_path is None:
         return config.locomotion.mode
