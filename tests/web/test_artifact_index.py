@@ -19,8 +19,9 @@ def test_list_runs_returns_manifest_and_report_summary(tmp_path: Path) -> None:
             "run_id": "local-test",
             "created_at": "2026-05-13T10:00:00+00:00",
             "viewer_mode": "headless",
+            "trace_backend": "real",
             "selected_episode_ids": ["g1_point_to_point_open"],
-            "records": [],
+            "records": [{"real_backend_verified": True}],
         },
     )
     _write_json(
@@ -41,6 +42,8 @@ def test_list_runs_returns_manifest_and_report_summary(tmp_path: Path) -> None:
             "status": "ready",
             "created_at": "2026-05-13T10:00:00+00:00",
             "viewer_mode": "headless",
+            "trace_backend": "real",
+            "real_backend_verified": True,
             "selected_episode_ids": ["g1_point_to_point_open"],
             "reliability": {
                 "total_episode_runs": 1,

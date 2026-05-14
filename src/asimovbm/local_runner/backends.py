@@ -44,6 +44,10 @@ class LocalTraceBackend(Protocol):
         ...
 
 
+class LocalTraceBackendError(RuntimeError):
+    """Raised when a requested local trace backend cannot produce a trace."""
+
+
 @dataclass(frozen=True)
 class BackendProof:
     canonical_backend_id: str
@@ -164,6 +168,9 @@ class G1SlamReferenceBackend:
             viewer_mode="visible" if viewer_enabled else "headless",
             metadata={
                 "reference_backend": True,
+                "trace_source": "reference",
+                "real_backend_verified": False,
+                "backend_proof_status": "not_verified_in_this_run",
                 "viewer_speed": viewer_speed,
                 "camera_view": camera_view,
                 "viewer_proof": viewer_proof,
@@ -245,7 +252,9 @@ def _dynamic_entities(obstacles, sim_time: float) -> tuple[dict[str, object], ..
     return tuple(
         {
             "id": obstacle.name,
-            "type": "obstacle",
+            "type": "bystander" if obstacle.mode == "npc" else "obstacle",
+            "role": "bystander" if obstacle.mode == "npc" else "obstacle",
+            "collision_role": "dynamic_obstacle",
             "shape": "cylinder",
             "mode": obstacle.mode,
             "policy": obstacle.policy,

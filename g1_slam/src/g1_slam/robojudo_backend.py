@@ -560,17 +560,34 @@ def run_robojudo_navigation(
             command = VelocityCommand(0.0, 0.0)
         else:
             command = controller.command(pose, path, goal)
+        previous_pose = pose
         pose = backend.step(command)
+        robot_velocity = _velocity_trace(previous_pose, pose, dt)
         distance_to_goal = distance_xy((pose.x, pose.y), goal)
+        step_status = "success" if distance_to_goal < controller.config.goal_tolerance else "running"
+        contacts = _contact_trace(backend, step + 1)
         trace_steps.append(
             {
                 "step_id": step + 1,
                 "time_s": (step + 1) * dt,
+                "dt_s": dt,
                 "robot_pose": _pose_trace(pose),
+                "robot_velocity": robot_velocity,
                 "goal": [goal[0], goal[1]],
+                "action": {"linear": command.linear, "yaw_rate": command.yaw_rate},
                 "command": {"linear": command.linear, "yaw_rate": command.yaw_rate},
                 "distance_to_goal": distance_to_goal,
                 "entities": _trace_entities(world, dynamic_obstacles, sim_time),
+                "collisions": _collision_events_from_contacts(contacts, step + 1),
+                "contacts": contacts,
+                "qpos": _qpos_trace(backend),
+                "qvel": _qvel_trace(backend),
+                "public_observation": {
+                    "robot_pose": _pose_trace(pose),
+                    "goal": [goal[0], goal[1]],
+                    "distance_to_goal": distance_to_goal,
+                },
+                "status": step_status,
                 "path": [[x, y] for x, y in path],
             }
         )
@@ -580,7 +597,7 @@ def run_robojudo_navigation(
             backend.add_trajectory_marker(pose, trajectory_marker_index)
             trajectory_marker_index += 1
 
-        if distance_to_goal < controller.config.goal_tolerance:
+        if step_status == "success":
             status = "success"
             reached_goal = True
             print(f"Meta alcanzada con RoboJuDo en {step + 1} pasos. Pose final: {pose}")
@@ -599,6 +616,15 @@ def run_robojudo_navigation(
         "step_count": len(trace_steps),
         "goal": [goal[0], goal[1]],
         "final_pose": _pose_trace(pose),
+        "metadata": {
+            "backend_kind": "g1_robojudo_mujoco",
+            "config_name": backend.config.config_name,
+            "repo_path": backend.config.repo_path.as_posix(),
+            "trace_source": "viewer_loop" if render else "robojudo_loop",
+            "viewer_mode": "visible" if render else "headless",
+            "render": render,
+            "real_backend_verified": True,
+        },
         "steps": trace_steps,
     }
     if trace_path is not None:
@@ -609,6 +635,115 @@ def run_robojudo_navigation(
 
 def _pose_trace(pose: Pose2D) -> dict[str, float]:
     return {"x": pose.x, "y": pose.y, "yaw": pose.yaw}
+
+
+def _velocity_trace(previous: Pose2D, current: Pose2D, dt_s: float) -> dict[str, float]:
+    if dt_s <= 0.0:
+        return {"vx": 0.0, "vy": 0.0, "yaw_rate": 0.0}
+    return {
+        "vx": (current.x - previous.x) / dt_s,
+        "vy": (current.y - previous.y) / dt_s,
+        "yaw_rate": (current.yaw - previous.yaw) / dt_s,
+    }
+
+
+def _qpos_trace(backend: RoboJuDoBackend) -> list[float]:
+    return _data_vector_trace(backend, "qpos")
+
+
+def _qvel_trace(backend: RoboJuDoBackend) -> list[float]:
+    return _data_vector_trace(backend, "qvel")
+
+
+def _data_vector_trace(backend: RoboJuDoBackend, field: str) -> list[float]:
+    data = _backend_data(backend)
+    values = getattr(data, field, None)
+    if values is None:
+        return []
+    try:
+        return [float(value) for value in values]
+    except TypeError:
+        return []
+
+
+def _contact_trace(backend: RoboJuDoBackend, step_id: int) -> list[dict[str, object]]:
+    data = _backend_data(backend)
+    model = _backend_model(backend)
+    if data is None or model is None:
+        return []
+    ncon = int(getattr(data, "ncon", 0) or 0)
+    contacts = getattr(data, "contact", ())
+    traced: list[dict[str, object]] = []
+    for index in range(ncon):
+        try:
+            contact = contacts[index]
+        except (IndexError, TypeError):
+            continue
+        geom1 = int(getattr(contact, "geom1", -1))
+        geom2 = int(getattr(contact, "geom2", -1))
+        geom1_name = _geom_name(model, geom1)
+        geom2_name = _geom_name(model, geom2)
+        category = _contact_category(geom1_name, geom2_name)
+        if category is None:
+            continue
+        traced.append(
+            {
+                "step_id": step_id,
+                "contact_index": index,
+                "geom1": geom1_name,
+                "geom2": geom2_name,
+                "category": category,
+            }
+        )
+    return traced
+
+
+def _collision_events_from_contacts(
+    contacts: list[dict[str, object]],
+    step_id: int,
+) -> list[dict[str, object]]:
+    return [
+        {
+            "step_id": step_id,
+            "type": "contact",
+            "category": contact["category"],
+            "geom1": contact["geom1"],
+            "geom2": contact["geom2"],
+        }
+        for contact in contacts
+    ]
+
+
+def _backend_data(backend: RoboJuDoBackend):
+    env = getattr(getattr(backend, "pipeline", None), "env", None)
+    return getattr(env, "data", None)
+
+
+def _backend_model(backend: RoboJuDoBackend):
+    env = getattr(getattr(backend, "pipeline", None), "env", None)
+    return getattr(env, "model", None)
+
+
+def _geom_name(model, geom_id: int) -> str:
+    if geom_id < 0:
+        return f"geom_{geom_id}"
+    try:
+        import mujoco
+    except ModuleNotFoundError:
+        return f"geom_{geom_id}"
+    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
+    return str(name) if name is not None else f"geom_{geom_id}"
+
+
+def _contact_category(geom1_name: str, geom2_name: str) -> str | None:
+    names = f"{geom1_name} {geom2_name}".lower()
+    if "nav_floor" in names or "floor" in names or "ground" in names:
+        return None
+    if "person_npc" in names or "human" in names or "npc" in names:
+        return "human"
+    if "obs_" in names or "obstacle" in names or "wall" in names:
+        return "obstacle"
+    return None
 
 
 def _trace_entities(
@@ -622,6 +757,7 @@ def _trace_entities(
             {
                 "id": f"static_obstacle_{index}",
                 "kind": "static_obstacle",
+                "type": "obstacle",
                 "shape": "rectangle",
                 "x_min": obstacle.x_min,
                 "y_min": obstacle.y_min,
@@ -632,13 +768,18 @@ def _trace_entities(
     for obstacle in dynamic_obstacles:
         x, y = obstacle.xy_at(sim_time)
         vx, vy = obstacle.velocity_at(sim_time)
+        social_type = "bystander" if obstacle.mode == "npc" else "obstacle"
         entities.append(
             {
                 "id": obstacle.name,
                 "kind": "dynamic_obstacle",
+                "type": social_type,
+                "role": social_type,
+                "collision_role": "dynamic_obstacle",
                 "shape": "capsule" if obstacle.mode == "npc" else "cylinder",
                 "x": x,
                 "y": y,
+                "pose": [x, y, obstacle.yaw_at(sim_time)],
                 "radius": obstacle.radius,
                 "policy": obstacle.policy,
                 "velocity": [vx, vy],

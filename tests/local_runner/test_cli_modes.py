@@ -25,6 +25,17 @@ def test_camera_view_defaults_to_config_but_can_match_survey_pov() -> None:
     assert build_parser().parse_args(["--robot", "g1", "--camera-view", "arrival"]).camera_view == "arrival"
 
 
+def test_trace_backend_defaults_reference_but_real_can_be_requested() -> None:
+    assert LocalRunConfig().trace_backend == "reference"
+    assert build_parser().parse_args(["--robot", "g1"]).trace_backend == "reference"
+    assert build_parser().parse_args(["--robot", "g1", "--trace-backend", "real"]).trace_backend == "real"
+
+
+def test_real_trace_backend_is_currently_g1_only() -> None:
+    with pytest.raises(ValueError, match="supports only --robot g1"):
+        LocalRunConfig(robot_id="go2", trace_backend="real").validate()
+
+
 def test_start_delay_can_be_overridden_for_hand_matching() -> None:
     assert LocalRunConfig().start_delay_s is None
     assert build_parser().parse_args(["--robot", "g1", "--start-delay", "0"]).start_delay_s == 0.0

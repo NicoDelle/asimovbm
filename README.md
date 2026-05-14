@@ -191,13 +191,16 @@ tests/metrics/                # Pure metric library tests.
 
 Use this path when you want to watch the proper MuJoCo/RoboJuDo viewer yourself,
 then inspect the freshly computed metrics in the local web dashboard. Do not add
-`--survey-export` for this workflow.
+`--survey-export` for this workflow. The important flag is
+`--trace-backend real`: without it, `asimovbm-local` uses the portable reference
+trace backend for CI-style smoke runs.
 
 ```bash
 .venv/bin/asimovbm-local \
   --robot g1 \
   --iterations 1 \
   --visible \
+  --trace-backend real \
   --policy g1_robojudo_unitree \
   --viewer-speed 1.0 \
   --camera-view arrival \
@@ -206,28 +209,41 @@ then inspect the freshly computed metrics in the local web dashboard. Do not add
   --run-id hand-validated-g1-policy-a
 ```
 
-Swap `--policy g1_robojudo_asap` and use a different `--run-id` to validate
-the second G1 policy:
+Policy mapping for the survey videos:
+
+- policy A: `g1_robojudo_unitree` / RoboJuDo config `g1`
+- policy B: `g1_robojudo_asap` / RoboJuDo config `g1_asap_loco`
+
+Policy B dynamic-NPC hand-match command:
 
 ```bash
 .venv/bin/asimovbm-local \
   --robot g1 \
   --iterations 1 \
   --visible \
+  --trace-backend real \
   --policy g1_robojudo_asap \
+  --episode g1_point_to_point_dynamic_npcs \
   --viewer-speed 1.0 \
-  --camera-view arrival \
+  --camera-view bystander \
   --episode-steps 900 \
   --start-delay 0 \
   --start-x-offset 0.35 \
-  --run-id hand-validated-g1-policy-b
+  --run-id hand-validated-g1-policy-b-ep3
 ```
 
-`--episode-steps` is the run timer override. The local trace backend uses about
-`0.08` simulated seconds per step, so `900` steps is about `72` simulated
-seconds before success/timeout. Omit the flag to use each episode JSON's
-checked-in `steps` value. Use `--viewer-speed 1.0` for realtime visual review,
-or a larger value when you want the viewer to advance faster. Use
+Omit `--episode` to run all filmed G1 episodes:
+
+- `g1_point_to_point_open`
+- `g1_point_to_point_static_obstacles`
+- `g1_point_to_point_dynamic_npcs`
+
+`--episode-steps` is the run timer override. The reference backend uses about
+`0.08` simulated seconds per step; the real RoboJuDo path uses the MuJoCo
+pipeline `dt`, usually about `0.02`, so `900` steps is about `18` simulated
+seconds in real mode. Omit the flag to use each episode JSON's checked-in
+`steps` value. Use `--viewer-speed 1.0` for realtime visual review, or a larger
+value when you want the viewer to advance faster. Use
 `--camera-view config`, `--camera-view arrival`, or `--camera-view bystander`
 to choose the viewer POV from the episode JSON. `--start-delay` overrides the
 controller hold time before navigation commands are sent; policy B's dynamic
@@ -267,35 +283,3 @@ Launch the metric dashboard after the validation run:
 
 Open `http://127.0.0.1:8765`, select `hand-validated-g1` in the `Runs` view,
 and compare those metrics against whatever videos you validate manually.
-
-```bash
-.venv/bin/asimovbm-local \
-  --robot g1 \
-  --iterations 1 \
-  --visible \
-  --policy g1_robojudo_unitree \
-  --viewer-speed 1.0 \
-  --camera-view arrival \
-  --episode-steps 900 \
-  --start-delay 1.0 \
-  --run-id hand-validated-g1-policy-a
-
-  .venv/bin/asimovbm-local \
-  --robot g1 \
-  --iterations 1 \
-  --visible \
-  --policy g1_robojudo_asap \
-  --viewer-speed 1.0 \
-  --camera-view arrival \
-  --episode-steps 900 \
-  --start-delay 0 \
-  --start-x-offset 0.35 \
-  --run-id hand-validated-g1-policy-b
-  ```
-
-  episode list (select with --episode):
-  g1_point_to_point_open
-  g1_point_to_point_static_obstacles
-  g1_point_to_point_dynamic_npcs
-
-  asap_loco is policy B

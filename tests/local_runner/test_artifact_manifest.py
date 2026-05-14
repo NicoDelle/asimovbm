@@ -11,8 +11,9 @@ from asimovbm.local_runner.traces import LocalEpisodeTrace, LocalStepTrace
 class FakeTraceBackend:
     backend_id = "fake_trace_backend"
 
-    def __init__(self) -> None:
+    def __init__(self, *, trace_metadata: dict | None = None) -> None:
         self.calls = []
+        self.trace_metadata = trace_metadata or {}
 
     def run_episode(
         self,
@@ -62,6 +63,7 @@ class FakeTraceBackend:
             canonical_backend_id=spec.canonical_backend_id,
             execution_backend_id=self.backend_id,
             viewer_mode="visible" if viewer_enabled else "headless",
+            metadata=dict(self.trace_metadata),
         )
 
 
@@ -84,8 +86,11 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
     assert manifest["robot_id"] == "g1"
     assert manifest["policy_id"] == "g1_robojudo_asap"
     assert manifest["viewer_mode"] == "visible"
+    assert manifest["trace_backend"] == "reference"
     assert manifest["selected_episode_ids"] == ["g1_point_to_point_open"]
     assert manifest["records"][0]["trace_path"] == "g1_point_to_point_open/iteration-000/trace.json"
+    assert manifest["records"][0]["execution_backend_id"] == "fake_trace_backend"
+    assert manifest["records"][0]["real_backend_verified"] is False
     assert manifest["metrics_csv_path"] == "episode-metrics-000.csv"
     assert result.metrics_csv_path.name == "episode-metrics-000.csv"
     assert (result.run_dir / manifest["records"][0]["trace_path"]).exists()
@@ -125,6 +130,47 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
             "controller_start_delay_s": 1.0,
             "start": (-2.5, 1.6, 0.35),
             "goal": (2.5, 1.6),
+        }
+    ]
+
+
+def test_manifest_backend_proof_is_derived_from_actual_trace_metadata(tmp_path: Path) -> None:
+    backend = FakeTraceBackend(
+        trace_metadata={
+            "trace_source": "viewer_loop",
+            "real_backend_verified": True,
+            "backend_proof_status": "verified_in_this_run",
+        }
+    )
+
+    result = run_local_validation(
+        LocalRunConfig(
+            artifact_root=tmp_path,
+            run_id="real-proof",
+            iterations=1,
+            robot_id="g1",
+            episode_ids=("g1_point_to_point_open",),
+            trace_backend="real",
+            backend=backend,
+        )
+    )
+
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+
+    assert manifest["trace_backend"] == "real"
+    assert manifest["records"][0]["trace_source"] == "viewer_loop"
+    assert manifest["records"][0]["real_backend_verified"] is True
+    assert manifest["backend_proof"] == [
+        {
+            "episode_id": "g1_point_to_point_open",
+            "iteration": 0,
+            "canonical_backend_id": "g1_robojudo",
+            "robot_selector": "official_g1",
+            "execution_backend_id": "fake_trace_backend",
+            "trace_source": "viewer_loop",
+            "real_backend_verified": True,
+            "proof_status": "verified_in_this_run",
+            "reason": None,
         }
     ]
 

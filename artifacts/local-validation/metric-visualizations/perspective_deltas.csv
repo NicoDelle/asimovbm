@@ -1,0 +1,25 @@
+episode,episode_id,policy,policy_code,axis,arrival,bystander,delta_bystander_minus_arrival
+Ep1 open,g1_point_to_point_open,Policy A,A,perceived_dexterity,0.999877822744608,0.999877822744608,0.0
+Ep1 open,g1_point_to_point_open,Policy A,A,perceived_safety,0.9998445016749556,0.9998445016749556,0.0
+Ep1 open,g1_point_to_point_open,Policy A,A,perceived_social_awareness,1.0,1.0,0.0
+Ep1 open,g1_point_to_point_open,Policy A,A,impression,0.9996981503102081,0.9996981503102081,0.0
+Ep1 open,g1_point_to_point_open,Policy B,B,perceived_dexterity,0.999877822744608,0.999877822744608,0.0
+Ep1 open,g1_point_to_point_open,Policy B,B,perceived_safety,0.9998445016749556,0.9998445016749556,0.0
+Ep1 open,g1_point_to_point_open,Policy B,B,perceived_social_awareness,1.0,1.0,0.0
+Ep1 open,g1_point_to_point_open,Policy B,B,impression,0.9996981503102081,0.9996981503102081,0.0
+Ep2 static,g1_point_to_point_static_obstacles,Policy A,A,perceived_dexterity,0.19901742677048573,0.20205936301484076,0.0030419362443550313
+Ep2 static,g1_point_to_point_static_obstacles,Policy A,A,perceived_safety,0.2,0.2,0.0
+Ep2 static,g1_point_to_point_static_obstacles,Policy A,A,perceived_social_awareness,0.5149311200479165,0.5163350906222343,0.0014039705743177366
+Ep2 static,g1_point_to_point_static_obstacles,Policy A,A,impression,0.3169534777203429,0.31910072683400525,0.002147249113662375
+Ep2 static,g1_point_to_point_static_obstacles,Policy B,B,perceived_dexterity,0.19901742677048573,0.20205936301484076,0.0030419362443550313
+Ep2 static,g1_point_to_point_static_obstacles,Policy B,B,perceived_safety,0.2,0.2,0.0
+Ep2 static,g1_point_to_point_static_obstacles,Policy B,B,perceived_social_awareness,0.5149311200479165,0.5163350906222343,0.0014039705743177366
+Ep2 static,g1_point_to_point_static_obstacles,Policy B,B,impression,0.3169534777203429,0.31910072683400525,0.002147249113662375
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy A,A,perceived_dexterity,0.7609985170538803,0.7609985170538803,0.0
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy A,A,perceived_safety,0.2,0.2,0.0
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy A,A,perceived_social_awareness,0.9876421156697973,0.9876421156697973,0.0
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy A,A,impression,0.6855281905149603,0.6855281905149603,0.0
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy B,B,perceived_dexterity,0.7609985170538803,0.8809523809523809,0.1199538638985006
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy B,B,perceived_safety,0.2,0.2,0.0
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy B,B,perceived_social_awareness,0.9876421156697973,1.0,0.012357884330202684
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,Policy B,B,impression,0.6855281905149603,0.7843137254901961,0.09878553497523579

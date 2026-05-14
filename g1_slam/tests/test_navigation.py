@@ -391,6 +391,9 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(len(entities), 1)
         self.assertEqual(entities[0]["id"], "person_npc_0")
         self.assertEqual(entities[0]["kind"], "dynamic_obstacle")
+        self.assertEqual(entities[0]["type"], "bystander")
+        self.assertEqual(entities[0]["role"], "bystander")
+        self.assertIn("pose", entities[0])
         self.assertIn("velocity", entities[0])
 
     def test_robojudo_navigation_records_trace_with_configured_dynamic_obstacles(self):
@@ -427,7 +430,17 @@ class NavigationTests(unittest.TestCase):
             )
 
         self.assertEqual(result["step_count"], 1)
+        self.assertEqual(result["metadata"]["trace_source"], "robojudo_loop")
+        self.assertTrue(result["metadata"]["real_backend_verified"])
         self.assertEqual(result["steps"][0]["command"], {"linear": 0.0, "yaw_rate": 0.0})
+        self.assertEqual(result["steps"][0]["dt_s"], 0.02)
+        self.assertEqual(result["steps"][0]["robot_velocity"], {"vx": 2.5, "vy": 0.0, "yaw_rate": 0.0})
+        self.assertEqual(result["steps"][0]["action"], {"linear": 0.0, "yaw_rate": 0.0})
+        self.assertEqual(result["steps"][0]["collisions"], [])
+        self.assertEqual(result["steps"][0]["contacts"], [])
+        self.assertEqual(result["steps"][0]["qpos"], [])
+        self.assertEqual(result["steps"][0]["qvel"], [])
+        self.assertEqual(result["steps"][0]["status"], "running")
         self.assertEqual(result["steps"][0]["entities"], [])
 
     def test_dynamic_obstacle_patrols_do_not_cross_static_obstacles(self):

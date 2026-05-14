@@ -12,6 +12,7 @@ from .catalog import (
     ROBOT_IDS,
     EpisodeCatalogError,
 )
+from .backends import LocalTraceBackendError
 from .runner import LocalRunConfig, run_local_validation
 
 
@@ -59,7 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         help=(
             "Override each selected episode's configured step count. "
-            "The local trace backend uses 0.08 seconds per step; lower values shorten manual viewer runs."
+            "The reference backend uses 0.08 seconds per step; real RoboJuDo runs use the MuJoCo pipeline dt."
         ),
     )
     parser.add_argument(
@@ -87,6 +88,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Shift only the selected episode start pose on the world x-axis in meters. "
             "Positive values move the robot forward toward the point-to-point goal."
+        ),
+    )
+    parser.add_argument(
+        "--trace-backend",
+        choices=("reference", "real"),
+        default="reference",
+        help=(
+            "Metric trace source. reference is the portable 2D backend; real runs the "
+            "viewer-capable G1 RoboJuDo/MuJoCo loop and uses its exported trace."
         ),
     )
     parser.add_argument(
@@ -168,6 +178,7 @@ def main(argv: list[str] | None = None) -> int:
                 start_delay_s=args.start_delay_s,
                 start_x_offset_m=args.start_x_offset_m,
                 route_y_offset_m=args.route_y_offset_m,
+                trace_backend=args.trace_backend,
                 survey_export=args.survey_export,
                 survey_root=args.survey_root,
                 survey_policy_id=args.survey_policy_id,
@@ -179,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=args.run_id,
             )
         )
-    except (EpisodeCatalogError, ValueError) as exc:
+    except (EpisodeCatalogError, LocalTraceBackendError, ValueError) as exc:
         build_parser().error(str(exc))
     print(f"local validation run: {result.run_id}")
     print(f"manifest: {result.manifest_path}")

@@ -23,6 +23,8 @@ class RunSummary:
     status: str
     created_at: str | None
     viewer_mode: str | None
+    trace_backend: str | None
+    real_backend_verified: bool
     selected_episode_ids: tuple[str, ...]
     reliability: dict[str, Any]
     errors: tuple[ArtifactLoadError, ...] = ()
@@ -33,6 +35,8 @@ class RunSummary:
             "status": self.status,
             "created_at": self.created_at,
             "viewer_mode": self.viewer_mode,
+            "trace_backend": self.trace_backend,
+            "real_backend_verified": self.real_backend_verified,
             "selected_episode_ids": list(self.selected_episode_ids),
             "reliability": self.reliability,
             "errors": [error.to_dict() for error in self.errors],
@@ -81,6 +85,8 @@ def _summarize_run(run_dir: Path) -> RunSummary:
             status="incomplete",
             created_at=None,
             viewer_mode=None,
+            trace_backend=None,
+            real_backend_verified=False,
             selected_episode_ids=(),
             reliability={},
             errors=errors,
@@ -93,6 +99,8 @@ def _summarize_run(run_dir: Path) -> RunSummary:
         status="ready" if not errors else "incomplete",
         created_at=manifest.get("created_at"),
         viewer_mode=manifest.get("viewer_mode"),
+        trace_backend=manifest.get("trace_backend"),
+        real_backend_verified=_manifest_real_backend_verified(manifest),
         selected_episode_ids=tuple(str(value) for value in manifest.get("selected_episode_ids", ())),
         reliability=reliability,
         errors=errors,
@@ -117,6 +125,13 @@ def _load_record(
     if isinstance(trace_path, str):
         payload["trace_exists"] = _safe_child(run_dir, trace_path).exists()
     return payload
+
+
+def _manifest_real_backend_verified(manifest: dict[str, Any]) -> bool:
+    records = manifest.get("records")
+    if not isinstance(records, list) or not records:
+        return False
+    return all(bool(record.get("real_backend_verified", False)) for record in records if isinstance(record, dict))
 
 
 def _read_json(path: Path) -> tuple[Any | None, ArtifactLoadError | None]:

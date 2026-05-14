@@ -142,6 +142,11 @@ def build_trace_metric_report(trace: LocalEpisodeTrace) -> dict[str, Any]:
         "iteration": trace.iteration,
         "technical_valid": trace.technical_valid,
         "terminal_status": trace.terminal_status,
+        "canonical_backend_id": trace.canonical_backend_id,
+        "execution_backend_id": trace.execution_backend_id,
+        "trace_source": trace.metadata.get("trace_source"),
+        "real_backend_verified": trace.metadata.get("real_backend_verified", False),
+        "collision_count": trace.collision_count,
         "metrics": {metric_id: _metric_to_dict(value) for metric_id, value in values.items()},
         "behavioral_metrics": build_behavioral_metric_block(axes, values),
     }
@@ -210,7 +215,13 @@ def _human_positions_by_step(trace: LocalEpisodeTrace) -> list[list[tuple[float,
 def _human_positions(entities) -> list[tuple[float, float]]:
     positions: list[tuple[float, float]] = []
     for entity in entities:
-        if entity.get("type") not in {"human", "target", "bystander"}:
+        entity_type = entity.get("type")
+        entity_role = entity.get("role")
+        if entity_type not in {"human", "target", "bystander"} and entity_role not in {
+            "human",
+            "target",
+            "bystander",
+        }:
             continue
         pose = entity.get("pose")
         if isinstance(pose, (tuple, list)) and len(pose) >= 2:

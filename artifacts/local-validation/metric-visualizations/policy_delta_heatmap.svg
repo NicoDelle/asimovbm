@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="726" height="344" viewBox="0 0 726 344">
+<style>text{font-family:Inter,Arial,sans-serif;}.title{font-size:20px;font-weight:700;fill:#0f172a;}.note{font-size:12px;fill:#475569;}.label{font-size:12px;fill:#0f172a;}.col{font-size:11px;font-weight:700;fill:#334155;}.value{font-size:12px;font-weight:700;}</style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text class="title" x="16" y="28">Policy Delta: Policy B Minus Policy A</text>
+<text class="note" x="16" y="50">Positive means Policy B is higher for the same episode and perspective.</text>
+<text class="col" x="288.0" y="70" text-anchor="middle">dexterity</text>
+<text class="col" x="404.0" y="70" text-anchor="middle">safety</text>
+<text class="col" x="520.0" y="70" text-anchor="middle">social</text>
+<text class="col" x="636.0" y="70" text-anchor="middle">impression</text>
+<text class="label" x="16" y="106">Ep1 open | arrival</text>
+<rect x="230" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="288.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="346" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="404.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="462" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="520.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="578" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="636.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
+<text class="label" x="16" y="144">Ep1 open | bystander</text>
+<rect x="230" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="288.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="346" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="404.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="462" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="520.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="578" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="636.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
+<text class="label" x="16" y="182">Ep2 static | arrival</text>
+<rect x="230" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="288.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="346" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="404.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="462" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="520.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="578" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="636.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
+<text class="label" x="16" y="220">Ep2 static | bystander</text>
+<rect x="230" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="288.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="346" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="404.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="462" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="520.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="578" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="636.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
+<text class="label" x="16" y="258">Ep3 dynamic NPCs | arrival</text>
+<rect x="230" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="288.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="346" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="404.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="462" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="520.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="578" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="636.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
+<text class="label" x="16" y="296">Ep3 dynamic NPCs | bystander</text>
+<rect x="230" y="272" width="114" height="36" rx="4" fill="#2563eb" stroke="#ffffff"/>
+<text class="value" x="288.0" y="296" text-anchor="middle" fill="#ffffff">+0.120</text>
+<rect x="346" y="272" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="404.0" y="296" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="462" y="272" width="114" height="36" rx="4" fill="#e2eafa" stroke="#ffffff"/>
+<text class="value" x="520.0" y="296" text-anchor="middle" fill="#0f172a">+0.012</text>
+<rect x="578" y="272" width="114" height="36" rx="4" fill="#4a7eee" stroke="#ffffff"/>
+<text class="value" x="636.0" y="296" text-anchor="middle" fill="#ffffff">+0.099</text>
+<text class="note" x="16" y="332">Grey cells mean missing or insufficient evidence in the selected artifact.</text>
+</svg>

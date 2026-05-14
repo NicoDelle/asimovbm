@@ -29,7 +29,7 @@ from .artifacts import (
     relative_to_run,
     write_json,
 )
-from .backends import G1SlamReferenceBackend, LocalTraceBackend, backend_proof_for
+from .backends import G1SlamReferenceBackend, LocalTraceBackend
 from .catalog import (
     DEFAULT_POLICY_BY_ROBOT,
     ROBOT_IDS,
@@ -37,6 +37,7 @@ from .catalog import (
     load_default_catalog,
 )
 from .metrics_bridge import build_trace_metric_report
+from .real_backends import G1RoboJuDoRealTraceBackend
 from .survey_export import (
     DEFAULT_SURVEY_VIEWS,
     SurveyExportResult,
@@ -75,6 +76,7 @@ class LocalRunConfig:
     start_delay_s: float | None = None
     start_x_offset_m: float | None = None
     route_y_offset_m: float | None = None
+    trace_backend: str = "reference"
     survey_export: bool = False
     survey_root: Path = Path("artifacts/survey")
     survey_policy_id: str | None = None
@@ -106,8 +108,12 @@ class LocalRunConfig:
             raise ValueError("episode_steps must be >= 1")
         if self.start_delay_s is not None and self.start_delay_s < 0.0:
             raise ValueError("start_delay must be >= 0")
+        if self.trace_backend not in {"reference", "real"}:
+            raise ValueError("trace_backend must be one of reference, real")
         if self.robot_id not in ROBOT_IDS:
             raise ValueError(f"robot_id must be one of {', '.join(ROBOT_IDS)}")
+        if self.trace_backend == "real" and self.robot_id != "g1" and self.backend is None:
+            raise ValueError("real trace backend currently supports only --robot g1")
         if self.survey_export:
             expected_survey_policy_id = G1_SURVEY_POLICY_ID_BY_PROFILE.get(self.effective_policy_id())
             if (
@@ -151,7 +157,7 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
     config = config or LocalRunConfig()
     config.validate()
     catalog = config.catalog or load_default_catalog()
-    backend = config.backend or G1SlamReferenceBackend()
+    backend = config.backend or _backend_for_config(config)
     visible = config.resolved_visible()
     run_id = config.run_id or _new_run_id()
     paths = prepare_run_dir(config.artifact_root, run_id)
@@ -181,6 +187,10 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
                     metric_report,
                     episode_title=spec.title,
                     tier_id=trace.tier_id,
+                    canonical_backend_id=trace.canonical_backend_id,
+                    execution_backend_id=trace.execution_backend_id,
+                    trace_source=str(trace.metadata.get("trace_source", "")),
+                    real_backend_verified=bool(trace.metadata.get("real_backend_verified", False)),
                 ),
             )
             records.append(
@@ -442,13 +452,14 @@ def _build_manifest(
         "viewer_mode": "visible" if config.resolved_visible() else "headless",
         "viewer_speed": config.viewer_speed,
         "camera_view": config.camera_view,
+        "trace_backend": config.trace_backend,
         "start_delay_s": config.start_delay_s,
         "start_x_offset_m": config.start_x_offset_m,
         "route_y_offset_m": config.route_y_offset_m,
         "canonical_episode_ids": tuple(spec.id for spec in selected_specs),
         "selected_episode_ids": tuple(spec.id for spec in selected_specs),
         "episodes": [spec.to_manifest() for spec in selected_specs],
-        "backend_proof": [backend_proof_for(spec).to_dict() for spec in selected_specs],
+        "backend_proof": [_backend_proof_from_record(record) for record in records],
         "report_path": report_path,
         "metrics_csv_path": metrics_csv_path,
         "records": [record.to_manifest_entry() for record in records],
@@ -457,6 +468,34 @@ def _build_manifest(
     if survey_export is not None:
         manifest["survey_export"] = survey_export.to_manifest_entry()
     return manifest
+
+
+def _backend_for_config(config: LocalRunConfig) -> LocalTraceBackend:
+    if config.trace_backend == "real":
+        return G1RoboJuDoRealTraceBackend()
+    return G1SlamReferenceBackend()
+
+
+def _backend_proof_from_record(record: LocalRunRecord) -> dict[str, Any]:
+    trace = record.trace
+    real_backend_verified = bool(trace.metadata.get("real_backend_verified", False))
+    return {
+        "episode_id": trace.episode_id,
+        "iteration": trace.iteration,
+        "canonical_backend_id": trace.canonical_backend_id,
+        "robot_selector": trace.robot_selector,
+        "execution_backend_id": trace.execution_backend_id,
+        "trace_source": trace.metadata.get("trace_source"),
+        "real_backend_verified": real_backend_verified,
+        "proof_status": trace.metadata.get(
+            "backend_proof_status",
+            "verified_in_this_run" if real_backend_verified else "not_verified_in_this_run",
+        ),
+        "reason": trace.metadata.get(
+            "backend_proof_reason",
+            None if real_backend_verified else "metrics came from reference trace backend",
+        ),
+    }
 
 
 def _new_run_id() -> str:

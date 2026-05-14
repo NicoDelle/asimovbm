@@ -39,11 +39,19 @@ def test_build_episode_metrics_csv_row_serializes_axes_and_metrics() -> None:
         _metric_report(),
         episode_title="Approach user",
         tier_id="local",
+        canonical_backend_id="g1_robojudo",
+        execution_backend_id="g1_robojudo_mujoco_trace_v1",
+        trace_source="viewer_loop",
+        real_backend_verified=True,
     )
 
     assert row["run_id"] == "run-1"
     assert row["episode_id"] == "g1_point_to_point_open"
     assert row["technical_valid"] == "true"
+    assert row["canonical_backend_id"] == "g1_robojudo"
+    assert row["execution_backend_id"] == "g1_robojudo_mujoco_trace_v1"
+    assert row["trace_source"] == "viewer_loop"
+    assert row["real_backend_verified"] == "true"
     assert row["perceived_dexterity"] == "0.8"
     assert row["task_success_rate"] == "1.0"
     assert row["proxemic_intrusion_dose"] == ""

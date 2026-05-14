@@ -1,0 +1,6 @@
+q1/policyA-ep1-arrival contains 3 matching CSV rows; using episode-metrics-002.csv for condition-level metric plots.
+q2/policyB-ep1-arrival contains 2 matching CSV rows; using episode-metrics-007.csv for condition-level metric plots.
+q2/policyB-ep3-arrival contains 4 matching CSV rows; using episode-metrics-011.csv for condition-level metric plots.
+q3/policyA-ep2-bystander contains 1 CSV row(s) that do not match manifest episode g1_point_to_point_static_obstacles: episode-metrics-014.csv:g1_point_to_point_dynamic_npcs
+q3/policyA-ep2-bystander contains 2 matching CSV rows; using episode-metrics-015.csv for condition-level metric plots.
+q4/policyB-ep1-bystander contains 2 matching CSV rows; using episode-metrics-018.csv for condition-level metric plots.

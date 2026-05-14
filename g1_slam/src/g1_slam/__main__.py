@@ -34,6 +34,11 @@ def main() -> None:
     parser.add_argument("--start", nargs=3, type=float, metavar=("X", "Y", "YAW"))
     parser.add_argument("--goal", nargs=2, type=float, metavar=("X", "Y"))
     parser.add_argument("--out", type=Path, default=Path("runs"))
+    parser.add_argument(
+        "--trace-path",
+        type=Path,
+        help="write structured asimovbm.sim_trace.v1 telemetry for the executed run",
+    )
     parser.add_argument("--mujoco", action="store_true", help="use MuJoCo for visualization")
     parser.add_argument("--robot", choices=("kinematic", "official_g1", "official_go2"), default="kinematic")
     parser.add_argument("--locomotion", choices=("kinematic", "policy", "robojudo"), help="override config locomotion.mode")
@@ -189,6 +194,7 @@ def main() -> None:
                 max_vx=controller_config.max_linear_speed,
                 max_vy=controller_config.max_linear_speed,
                 max_yaw_rate=controller_config.max_yaw_rate,
+                run_fullspeed=args.realtime_factor > 1.0,
                 dynamic_obstacle_mode=dynamic_obstacle_mode,
                 dynamic_obstacle_seed=dynamic_obstacle_seed,
                 dynamic_obstacle_count=dynamic_obstacle_count,
@@ -196,11 +202,17 @@ def main() -> None:
                 npc_policy=npc_policy,
                 visualization=visualization_config,
             ),
+            trace_path=args.trace_path,
+            episode_id=args.config.stem,
+            robot_id="g1",
+            policy_id=f"robojudo:{robojudo_config_name}",
             render=args.render,
         )
         return
 
     if args.mujoco:
+        if args.trace_path is not None:
+            parser.error("--trace-path is currently supported for RoboJuDo runs only")
         run_mujoco_navigation(
             world,
             robot=args.robot,
@@ -216,6 +228,9 @@ def main() -> None:
             realtime_factor=args.realtime_factor,
         )
         return
+
+    if args.trace_path is not None:
+        parser.error("--trace-path is currently supported for RoboJuDo runs only")
 
     result = run_navigation(world, start=start, goal=goal, steps=steps, controller_config=controller_config)
     args.out.mkdir(parents=True, exist_ok=True)

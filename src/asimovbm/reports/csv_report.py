@@ -18,6 +18,10 @@ EPISODE_METRICS_METADATA_COLUMNS: tuple[str, ...] = (
     "tier_id",
     "technical_valid",
     "terminal_status",
+    "canonical_backend_id",
+    "execution_backend_id",
+    "trace_source",
+    "real_backend_verified",
 )
 
 
@@ -39,6 +43,10 @@ def build_episode_metrics_csv_row(
     *,
     episode_title: str | None = None,
     tier_id: str | None = None,
+    canonical_backend_id: str | None = None,
+    execution_backend_id: str | None = None,
+    trace_source: str | None = None,
+    real_backend_verified: bool | None = None,
 ) -> dict[str, str]:
     behavioral = _required_mapping(
         metric_report.get("behavioral_metrics"),
@@ -52,6 +60,14 @@ def build_episode_metrics_csv_row(
         "tier_id": _string(tier_id),
         "technical_valid": _bool_string(metric_report.get("technical_valid")),
         "terminal_status": _string(metric_report.get("terminal_status")),
+        "canonical_backend_id": _string(canonical_backend_id or metric_report.get("canonical_backend_id")),
+        "execution_backend_id": _string(execution_backend_id or metric_report.get("execution_backend_id")),
+        "trace_source": _string(trace_source or metric_report.get("trace_source")),
+        "real_backend_verified": _bool_string(
+            real_backend_verified
+            if real_backend_verified is not None
+            else metric_report.get("real_backend_verified")
+        ),
     }
     axes = _required_mapping(behavioral.get("axes"), "behavioral_metrics.axes")
     for axis_id in SOCIAL_NAVIGATION_AXIS_IDS:

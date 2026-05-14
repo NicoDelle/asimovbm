@@ -88,4 +88,7 @@ class LocalRunRecord:
             "viewer_mode": self.trace.viewer_mode,
             "canonical_backend_id": self.trace.canonical_backend_id,
             "execution_backend_id": self.trace.execution_backend_id,
+            "trace_source": self.trace.metadata.get("trace_source"),
+            "real_backend_verified": self.trace.metadata.get("real_backend_verified", False),
+            "collision_count": self.trace.collision_count,
         }
