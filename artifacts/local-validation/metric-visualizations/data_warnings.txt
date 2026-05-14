@@ -1,4 +1,0 @@
-q1/policyA-ep1-arrival contains 3 matching CSV rows; using episode-metrics-002.csv for condition-level metric plots.
-q2/policyB-ep1-arrival contains 2 matching CSV rows; using episode-metrics-007.csv for condition-level metric plots.
-q2/policyB-ep3-arrival contains 4 matching CSV rows; using episode-metrics-011.csv for condition-level metric plots.
-q4/policyB-ep1-bystander contains 2 matching CSV rows; using episode-metrics-018.csv for condition-level metric plots.

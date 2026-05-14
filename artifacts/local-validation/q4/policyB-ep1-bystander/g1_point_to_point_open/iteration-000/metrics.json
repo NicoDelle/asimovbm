@@ -38,7 +38,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.9996981503102081,
+        "score": 0.5882352941176471,
         "status": "computed"
       },
       "perceived_dexterity": {
@@ -76,7 +76,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.999877822744608,
+        "score": 0.849992678966302,
         "status": "computed"
       },
       "perceived_safety": {
@@ -115,7 +115,7 @@
           "bystander_ack"
         ],
         "reason": null,
-        "score": 0.9998445016749556,
+        "score": 0.7181725005025663,
         "status": "computed"
       },
       "perceived_social_awareness": {
@@ -150,7 +150,7 @@
           "bystander_ack"
         ],
         "reason": null,
-        "score": 1.0,
+        "score": 0.5642783932520163,
         "status": "computed"
       }
     },
@@ -159,12 +159,12 @@
         "confidence": "sufficient",
         "metadata": {},
         "metric_id": "acknowledgement_clarity",
-        "normalized_score": 1.0,
+        "normalized_score": 0.0,
         "raw_inputs_summary": {
           "attempts": 1,
-          "successes": 1
+          "successes": 0
         },
-        "raw_value": 1.0,
+        "raw_value": 0.0,
         "reason": null,
         "status": "computed",
         "units": "ratio"
@@ -195,12 +195,12 @@
         "confidence": "insufficient",
         "metadata": {},
         "metric_id": "comfort_aware_path_efficiency",
-        "normalized_score": 1.0,
+        "normalized_score": 0.8998975055282296,
         "raw_inputs_summary": {
           "successful_episodes": 1,
           "unconstrained_fallbacks": 1
         },
-        "raw_value": 1.0,
+        "raw_value": 0.9349333785933492,
         "reason": null,
         "status": "computed",
         "units": "ratio"
@@ -220,12 +220,12 @@
         "confidence": "sufficient",
         "metadata": {},
         "metric_id": "heading_jerk",
-        "normalized_score": 0.9982895184245127,
+        "normalized_score": 0.0,
         "raw_inputs_summary": {
-          "sample_count": 110,
-          "sample_rate_hz": 12.499999999999998
+          "sample_count": 705,
+          "sample_rate_hz": 50.0
         },
-        "raw_value": -2.006841926301949,
+        "raw_value": -8.282429521728798,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -237,7 +237,7 @@
         "normalized_score": 1.0,
         "raw_inputs_summary": {
           "hesitation_epochs": 0,
-          "max_heading_error": 0.2835604517954249,
+          "max_heading_error": 0.6372282681458343,
           "reversal_epochs": 0
         },
         "raw_value": 0.0,
@@ -262,10 +262,10 @@
         "metric_id": "legibility",
         "normalized_score": 1.0,
         "raw_inputs_summary": {
-          "fraction_inside_cone_post_commit": 1.0,
+          "fraction_inside_cone_post_commit": 0.9943262411347518,
           "t_commit": 0.0
         },
-        "raw_value": 1.0,
+        "raw_value": 0.9943262411347518,
         "reason": null,
         "status": "computed",
         "units": "ratio"
@@ -298,10 +298,10 @@
         "metric_id": "sparc",
         "normalized_score": 1.0,
         "raw_inputs_summary": {
-          "sample_count": 110,
-          "sample_rate_hz": 12.499999999999998
+          "sample_count": 705,
+          "sample_rate_hz": 50.0
         },
-        "raw_value": -1.4012376148497068,
+        "raw_value": -1.8328296693043333,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -340,7 +340,7 @@
         "raw_inputs_summary": {
           "successful_episodes": 1
         },
-        "raw_value": 8.8,
+        "raw_value": 14.1,
         "reason": null,
         "status": "computed",
         "units": "s"
@@ -452,7 +452,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.999877822744608,
+        "score": 0.849992678966302,
         "status": "computed"
       },
       {
@@ -491,7 +491,7 @@
           "bystander_ack"
         ],
         "reason": null,
-        "score": 0.9998445016749556,
+        "score": 0.7181725005025663,
         "status": "computed"
       },
       {
@@ -526,7 +526,7 @@
           "bystander_ack"
         ],
         "reason": null,
-        "score": 1.0,
+        "score": 0.5642783932520163,
         "status": "computed"
       },
       {
@@ -566,7 +566,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.9996981503102081,
+        "score": 0.5882352941176471,
         "status": "computed"
       }
     ],
@@ -599,7 +599,7 @@
         "raw_inputs_summary": {
           "successful_episodes": 1
         },
-        "raw_value": 8.8,
+        "raw_value": 14.1,
         "reason": null,
         "status": "computed",
         "units": "s"
@@ -608,12 +608,12 @@
         "confidence": "insufficient",
         "metadata": {},
         "metric_id": "comfort_aware_path_efficiency",
-        "normalized_score": 1.0,
+        "normalized_score": 0.8998975055282296,
         "raw_inputs_summary": {
           "successful_episodes": 1,
           "unconstrained_fallbacks": 1
         },
-        "raw_value": 1.0,
+        "raw_value": 0.9349333785933492,
         "reason": null,
         "status": "computed",
         "units": "ratio"
@@ -625,7 +625,7 @@
         "normalized_score": 1.0,
         "raw_inputs_summary": {
           "hesitation_epochs": 0,
-          "max_heading_error": 0.2835604517954249,
+          "max_heading_error": 0.6372282681458343,
           "reversal_epochs": 0
         },
         "raw_value": 0.0,
@@ -681,12 +681,12 @@
         "confidence": "sufficient",
         "metadata": {},
         "metric_id": "acknowledgement_clarity",
-        "normalized_score": 1.0,
+        "normalized_score": 0.0,
         "raw_inputs_summary": {
           "attempts": 1,
-          "successes": 1
+          "successes": 0
         },
-        "raw_value": 1.0,
+        "raw_value": 0.0,
         "reason": null,
         "status": "computed",
         "units": "ratio"
@@ -719,10 +719,10 @@
         "metric_id": "sparc",
         "normalized_score": 1.0,
         "raw_inputs_summary": {
-          "sample_count": 110,
-          "sample_rate_hz": 12.499999999999998
+          "sample_count": 705,
+          "sample_rate_hz": 50.0
         },
-        "raw_value": -1.4012376148497068,
+        "raw_value": -1.8328296693043333,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -731,12 +731,12 @@
         "confidence": "sufficient",
         "metadata": {},
         "metric_id": "heading_jerk",
-        "normalized_score": 0.9982895184245127,
+        "normalized_score": 0.0,
         "raw_inputs_summary": {
-          "sample_count": 110,
-          "sample_rate_hz": 12.499999999999998
+          "sample_count": 705,
+          "sample_rate_hz": 50.0
         },
-        "raw_value": -2.006841926301949,
+        "raw_value": -8.282429521728798,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -762,10 +762,10 @@
         "metric_id": "legibility",
         "normalized_score": 1.0,
         "raw_inputs_summary": {
-          "fraction_inside_cone_post_commit": 1.0,
+          "fraction_inside_cone_post_commit": 0.9943262411347518,
           "t_commit": 0.0
         },
-        "raw_value": 1.0,
+        "raw_value": 0.9943262411347518,
         "reason": null,
         "status": "computed",
         "units": "ratio"
@@ -783,19 +783,22 @@
       }
     ]
   },
+  "canonical_backend_id": "g1_robojudo",
+  "collision_count": 0,
   "episode_id": "g1_point_to_point_open",
+  "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
   "iteration": 0,
   "metrics": {
     "acknowledgement_clarity": {
       "confidence": "sufficient",
       "metadata": {},
       "metric_id": "acknowledgement_clarity",
-      "normalized_score": 1.0,
+      "normalized_score": 0.0,
       "raw_inputs_summary": {
         "attempts": 1,
-        "successes": 1
+        "successes": 0
       },
-      "raw_value": 1.0,
+      "raw_value": 0.0,
       "reason": null,
       "status": "computed",
       "units": "ratio"
@@ -826,12 +829,12 @@
       "confidence": "insufficient",
       "metadata": {},
       "metric_id": "comfort_aware_path_efficiency",
-      "normalized_score": 1.0,
+      "normalized_score": 0.8998975055282296,
       "raw_inputs_summary": {
         "successful_episodes": 1,
         "unconstrained_fallbacks": 1
       },
-      "raw_value": 1.0,
+      "raw_value": 0.9349333785933492,
       "reason": null,
       "status": "computed",
       "units": "ratio"
@@ -851,12 +854,12 @@
       "confidence": "sufficient",
       "metadata": {},
       "metric_id": "heading_jerk",
-      "normalized_score": 0.9982895184245127,
+      "normalized_score": 0.0,
       "raw_inputs_summary": {
-        "sample_count": 110,
-        "sample_rate_hz": 12.499999999999998
+        "sample_count": 705,
+        "sample_rate_hz": 50.0
       },
-      "raw_value": -2.006841926301949,
+      "raw_value": -8.282429521728798,
       "reason": null,
       "status": "computed",
       "units": "spectral_arc_length"
@@ -868,7 +871,7 @@
       "normalized_score": 1.0,
       "raw_inputs_summary": {
         "hesitation_epochs": 0,
-        "max_heading_error": 0.2835604517954249,
+        "max_heading_error": 0.6372282681458343,
         "reversal_epochs": 0
       },
       "raw_value": 0.0,
@@ -893,10 +896,10 @@
       "metric_id": "legibility",
       "normalized_score": 1.0,
       "raw_inputs_summary": {
-        "fraction_inside_cone_post_commit": 1.0,
+        "fraction_inside_cone_post_commit": 0.9943262411347518,
         "t_commit": 0.0
       },
-      "raw_value": 1.0,
+      "raw_value": 0.9943262411347518,
       "reason": null,
       "status": "computed",
       "units": "ratio"
@@ -929,10 +932,10 @@
       "metric_id": "sparc",
       "normalized_score": 1.0,
       "raw_inputs_summary": {
-        "sample_count": 110,
-        "sample_rate_hz": 12.499999999999998
+        "sample_count": 705,
+        "sample_rate_hz": 50.0
       },
-      "raw_value": -1.4012376148497068,
+      "raw_value": -1.8328296693043333,
       "reason": null,
       "status": "computed",
       "units": "spectral_arc_length"
@@ -971,7 +974,7 @@
       "raw_inputs_summary": {
         "successful_episodes": 1
       },
-      "raw_value": 8.8,
+      "raw_value": 14.1,
       "reason": null,
       "status": "computed",
       "units": "s"
@@ -991,6 +994,8 @@
       "units": "ratio"
     }
   },
+  "real_backend_verified": true,
   "technical_valid": true,
-  "terminal_status": "success"
+  "terminal_status": "success",
+  "trace_source": "robojudo_loop"
 }

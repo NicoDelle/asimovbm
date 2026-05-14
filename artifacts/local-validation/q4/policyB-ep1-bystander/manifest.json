@@ -2,24 +2,27 @@
   "backend_proof": [
     {
       "canonical_backend_id": "g1_robojudo",
-      "execution_backend_id": "g1_slam_reference_trace_v1",
-      "proof_status": "not_verified_in_this_run",
-      "real_backend_verified": false,
-      "reason": "portable local trace backend; run visible backend validation with RoboJuDo/Go2 assets to mark the canonical backend verified",
-      "robot_selector": "official_g1"
+      "episode_id": "g1_point_to_point_open",
+      "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
+      "iteration": 0,
+      "proof_status": "verified_in_this_run",
+      "real_backend_verified": true,
+      "reason": null,
+      "robot_selector": "official_g1",
+      "trace_source": "robojudo_loop"
     }
   ],
   "camera_view": "bystander",
   "canonical_episode_ids": [
     "g1_point_to_point_open"
   ],
-  "created_at": "2026-05-14T16:58:22.730141+00:00",
+  "created_at": "2026-05-14T19:27:10.745195+00:00",
   "episodes": [
     {
       "canonical_backend_id": "g1_robojudo",
       "checksum_sha256": "788b2d810a585a4cc84b30edbf574cf00d19f038e54055edbf9a3452be41264b",
       "controller": {
-        "start_delay_s": 0.0
+        "start_delay_s": 1.0
       },
       "description": "The humanoid walks from point A to point B in an empty MuJoCo navigation scene.",
       "dynamic_obstacles": {
@@ -43,7 +46,7 @@
         "y": 1.6,
         "yaw": 0.35
       },
-      "steps": 2000,
+      "steps": 1200,
       "title": "G1 point-to-point motion without obstacles",
       "visualization": {
         "camera": {
@@ -88,30 +91,36 @@
   ],
   "iterations": 1,
   "metadata": {},
-  "metrics_csv_path": "episode-metrics-018.csv",
+  "metrics_csv_path": "episode-metrics-000.csv",
   "policy_id": "g1_robojudo_asap",
   "policy_path": null,
   "records": [
     {
       "canonical_backend_id": "g1_robojudo",
+      "collision_count": 0,
       "episode_id": "g1_point_to_point_open",
-      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
       "iteration": 0,
       "metrics_path": "g1_point_to_point_open/iteration-000/metrics.json",
+      "real_backend_verified": true,
       "technical_valid": true,
       "terminal_status": "success",
       "trace_path": "g1_point_to_point_open/iteration-000/trace.json",
-      "viewer_mode": "visible"
+      "trace_source": "robojudo_loop",
+      "viewer_mode": "headless"
     }
   ],
   "report_path": "report.json",
   "robot_id": "g1",
+  "route_y_offset_m": null,
   "run_id": "policyB-ep1-bystander",
   "schema_version": "asimovbm.local_validation.v1",
   "selected_episode_ids": [
     "g1_point_to_point_open"
   ],
-  "start_delay_s": 0.0,
-  "viewer_mode": "visible",
-  "viewer_speed": 1.0
+  "start_delay_s": null,
+  "start_x_offset_m": null,
+  "trace_backend": "real",
+  "viewer_mode": "headless",
+  "viewer_speed": 4.0
 }

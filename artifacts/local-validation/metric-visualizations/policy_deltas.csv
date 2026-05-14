@@ -1,25 +1,25 @@
 episode,episode_id,perspective,axis,policy_a,policy_b,delta_policy_b_minus_a
-Ep1 open,g1_point_to_point_open,arrival,perceived_dexterity,0.999877822744608,0.999877822744608,0.0
-Ep1 open,g1_point_to_point_open,arrival,perceived_safety,0.9998445016749556,0.9998445016749556,0.0
-Ep1 open,g1_point_to_point_open,arrival,perceived_social_awareness,1.0,1.0,0.0
-Ep1 open,g1_point_to_point_open,arrival,impression,0.9996981503102081,0.9996981503102081,0.0
-Ep1 open,g1_point_to_point_open,bystander,perceived_dexterity,0.999877822744608,0.999877822744608,0.0
-Ep1 open,g1_point_to_point_open,bystander,perceived_safety,0.9998445016749556,0.9998445016749556,0.0
-Ep1 open,g1_point_to_point_open,bystander,perceived_social_awareness,1.0,1.0,0.0
-Ep1 open,g1_point_to_point_open,bystander,impression,0.9996981503102081,0.9996981503102081,0.0
-Ep2 static,g1_point_to_point_static_obstacles,arrival,perceived_dexterity,0.19901742677048573,0.19901742677048573,0.0
-Ep2 static,g1_point_to_point_static_obstacles,arrival,perceived_safety,0.2,0.2,0.0
-Ep2 static,g1_point_to_point_static_obstacles,arrival,perceived_social_awareness,0.5149311200479165,0.5149311200479165,0.0
-Ep2 static,g1_point_to_point_static_obstacles,arrival,impression,0.3169534777203429,0.3169534777203429,0.0
-Ep2 static,g1_point_to_point_static_obstacles,bystander,perceived_dexterity,0.20205936301484076,0.20205936301484076,0.0
-Ep2 static,g1_point_to_point_static_obstacles,bystander,perceived_safety,0.2,0.2,0.0
-Ep2 static,g1_point_to_point_static_obstacles,bystander,perceived_social_awareness,0.5163350906222343,0.5163350906222343,0.0
-Ep2 static,g1_point_to_point_static_obstacles,bystander,impression,0.31910072683400525,0.31910072683400525,0.0
-Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,arrival,perceived_dexterity,0.7609985170538803,0.7609985170538803,0.0
+Ep1 open,g1_point_to_point_open,arrival,perceived_dexterity,0.9285714285714285,0.8500042855913845,-0.07856714298004397
+Ep1 open,g1_point_to_point_open,arrival,perceived_safety,0.9090909090909091,0.7181872725708531,-0.19090363652005593
+Ep1 open,g1_point_to_point_open,arrival,perceived_social_awareness,1.0,0.5642899998770989,-0.43571000012290106
+Ep1 open,g1_point_to_point_open,arrival,impression,0.8235294117647058,0.5882352941176471,-0.23529411764705876
+Ep1 open,g1_point_to_point_open,bystander,perceived_dexterity,0.9285714285714285,0.849992678966302,-0.07857874960512645
+Ep1 open,g1_point_to_point_open,bystander,perceived_safety,0.9090909090909091,0.7181725005025663,-0.19091840858834275
+Ep1 open,g1_point_to_point_open,bystander,perceived_social_awareness,1.0,0.5642783932520163,-0.43572160674798366
+Ep1 open,g1_point_to_point_open,bystander,impression,0.8235294117647058,0.5882352941176471,-0.23529411764705876
+Ep2 static,g1_point_to_point_static_obstacles,arrival,perceived_dexterity,0.9168426455191155,0.6933458537802468,-0.22349679173886872
+Ep2 static,g1_point_to_point_static_obstacles,arrival,perceived_safety,0.894163367024329,0.2,-0.694163367024329
+Ep2 static,g1_point_to_point_static_obstacles,arrival,perceived_social_awareness,0.988271216947687,0.5543168703515196,-0.4339543465961675
+Ep2 static,g1_point_to_point_static_obstacles,arrival,impression,0.8235294117647058,0.46428303152966843,-0.3592463802350374
+Ep2 static,g1_point_to_point_static_obstacles,bystander,perceived_dexterity,0.9168426455191155,0.6918925625045473,-0.2249500830145682
+Ep2 static,g1_point_to_point_static_obstacles,bystander,perceived_safety,0.894163367024329,0.2,-0.694163367024329
+Ep2 static,g1_point_to_point_static_obstacles,bystander,perceived_social_awareness,0.988271216947687,0.5536921003773438,-0.4345791165703432
+Ep2 static,g1_point_to_point_static_obstacles,bystander,impression,0.8235294117647058,0.4629184082095117,-0.36061100355519415
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,arrival,perceived_dexterity,0.6823303939406671,0.35,-0.3323303939406671
 Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,arrival,perceived_safety,0.2,0.2,0.0
-Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,arrival,perceived_social_awareness,0.9876421156697973,0.9876421156697973,0.0
-Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,arrival,impression,0.6855281905149603,0.6855281905149603,0.0
-Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,bystander,perceived_dexterity,0.7609985170538803,0.8809523809523809,0.1199538638985006
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,arrival,perceived_social_awareness,0.5190591300688585,0.47413041770999853,-0.04492871235885998
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,arrival,impression,0.5109285397321679,0.39213971499661066,-0.11878882473555724
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,bystander,perceived_dexterity,0.6823303939406671,0.35,-0.3323303939406671
 Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,bystander,perceived_safety,0.2,0.2,0.0
-Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,bystander,perceived_social_awareness,0.9876421156697973,1.0,0.012357884330202684
-Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,bystander,impression,0.6855281905149603,0.7843137254901961,0.09878553497523579
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,bystander,perceived_social_awareness,0.5190591300688585,0.30492668873104356,-0.21413244133781495
+Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,bystander,impression,0.5109285397321679,0.2603569964096092,-0.2505715433225587

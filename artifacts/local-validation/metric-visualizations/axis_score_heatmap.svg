@@ -8,112 +8,112 @@
 <text class="col" x="520.0" y="70" text-anchor="middle">social</text>
 <text class="col" x="636.0" y="70" text-anchor="middle">impression</text>
 <text class="label" x="16" y="106">Ep1 open | Policy A | arrival</text>
-<rect x="230" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="288.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="346" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="404.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="230" y="82" width="114" height="36" rx="4" fill="#207f78" stroke="#ffffff"/>
+<text class="value" x="288.0" y="106" text-anchor="middle" fill="#ffffff">0.929</text>
+<rect x="346" y="82" width="114" height="36" rx="4" fill="#24827b" stroke="#ffffff"/>
+<text class="value" x="404.0" y="106" text-anchor="middle" fill="#ffffff">0.909</text>
 <rect x="462" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
 <text class="value" x="520.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="578" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="636.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="578" y="82" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="636.0" y="106" text-anchor="middle" fill="#ffffff">0.824</text>
 <text class="label" x="16" y="144">Ep1 open | Policy B | arrival</text>
-<rect x="230" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="288.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="346" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="404.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="462" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="520.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="578" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="636.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="230" y="120" width="114" height="36" rx="4" fill="#328a83" stroke="#ffffff"/>
+<text class="value" x="288.0" y="144" text-anchor="middle" fill="#ffffff">0.850</text>
+<rect x="346" y="120" width="114" height="36" rx="4" fill="#519b96" stroke="#ffffff"/>
+<text class="value" x="404.0" y="144" text-anchor="middle" fill="#ffffff">0.718</text>
+<rect x="462" y="120" width="114" height="36" rx="4" fill="#75b0ac" stroke="#ffffff"/>
+<text class="value" x="520.0" y="144" text-anchor="middle" fill="#ffffff">0.564</text>
+<rect x="578" y="120" width="114" height="36" rx="4" fill="#6faca8" stroke="#ffffff"/>
+<text class="value" x="636.0" y="144" text-anchor="middle" fill="#ffffff">0.588</text>
 <text class="label" x="16" y="182">Ep2 static | Policy A | arrival</text>
-<rect x="230" y="158" width="114" height="36" rx="4" fill="#cae0e0" stroke="#ffffff"/>
-<text class="value" x="288.0" y="182" text-anchor="middle" fill="#0f172a">0.199</text>
-<rect x="346" y="158" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
-<text class="value" x="404.0" y="182" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="158" width="114" height="36" rx="4" fill="#80b6b3" stroke="#ffffff"/>
-<text class="value" x="520.0" y="182" text-anchor="middle" fill="#0f172a">0.515</text>
-<rect x="578" y="158" width="114" height="36" rx="4" fill="#aed0cf" stroke="#ffffff"/>
-<text class="value" x="636.0" y="182" text-anchor="middle" fill="#0f172a">0.317</text>
+<rect x="230" y="158" width="114" height="36" rx="4" fill="#22817a" stroke="#ffffff"/>
+<text class="value" x="288.0" y="182" text-anchor="middle" fill="#ffffff">0.917</text>
+<rect x="346" y="158" width="114" height="36" rx="4" fill="#28847d" stroke="#ffffff"/>
+<text class="value" x="404.0" y="182" text-anchor="middle" fill="#ffffff">0.894</text>
+<rect x="462" y="158" width="114" height="36" rx="4" fill="#127870" stroke="#ffffff"/>
+<text class="value" x="520.0" y="182" text-anchor="middle" fill="#ffffff">0.988</text>
+<rect x="578" y="158" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="636.0" y="182" text-anchor="middle" fill="#ffffff">0.824</text>
 <text class="label" x="16" y="220">Ep2 static | Policy B | arrival</text>
-<rect x="230" y="196" width="114" height="36" rx="4" fill="#cae0e0" stroke="#ffffff"/>
-<text class="value" x="288.0" y="220" text-anchor="middle" fill="#0f172a">0.199</text>
+<rect x="230" y="196" width="114" height="36" rx="4" fill="#569e9a" stroke="#ffffff"/>
+<text class="value" x="288.0" y="220" text-anchor="middle" fill="#ffffff">0.693</text>
 <rect x="346" y="196" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
 <text class="value" x="404.0" y="220" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="196" width="114" height="36" rx="4" fill="#80b6b3" stroke="#ffffff"/>
-<text class="value" x="520.0" y="220" text-anchor="middle" fill="#0f172a">0.515</text>
-<rect x="578" y="196" width="114" height="36" rx="4" fill="#aed0cf" stroke="#ffffff"/>
-<text class="value" x="636.0" y="220" text-anchor="middle" fill="#0f172a">0.317</text>
+<rect x="462" y="196" width="114" height="36" rx="4" fill="#77b1ad" stroke="#ffffff"/>
+<text class="value" x="520.0" y="220" text-anchor="middle" fill="#ffffff">0.554</text>
+<rect x="578" y="196" width="114" height="36" rx="4" fill="#8cbdba" stroke="#ffffff"/>
+<text class="value" x="636.0" y="220" text-anchor="middle" fill="#0f172a">0.464</text>
 <text class="label" x="16" y="258">Ep3 dynamic NPCs | Policy A | arrival</text>
-<rect x="230" y="234" width="114" height="36" rx="4" fill="#479690" stroke="#ffffff"/>
-<text class="value" x="288.0" y="258" text-anchor="middle" fill="#ffffff">0.761</text>
+<rect x="230" y="234" width="114" height="36" rx="4" fill="#59a09b" stroke="#ffffff"/>
+<text class="value" x="288.0" y="258" text-anchor="middle" fill="#ffffff">0.682</text>
 <rect x="346" y="234" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
 <text class="value" x="404.0" y="258" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="234" width="114" height="36" rx="4" fill="#127870" stroke="#ffffff"/>
-<text class="value" x="520.0" y="258" text-anchor="middle" fill="#ffffff">0.988</text>
-<rect x="578" y="234" width="114" height="36" rx="4" fill="#58a09b" stroke="#ffffff"/>
-<text class="value" x="636.0" y="258" text-anchor="middle" fill="#ffffff">0.686</text>
+<rect x="462" y="234" width="114" height="36" rx="4" fill="#7fb5b2" stroke="#ffffff"/>
+<text class="value" x="520.0" y="258" text-anchor="middle" fill="#0f172a">0.519</text>
+<rect x="578" y="234" width="114" height="36" rx="4" fill="#81b7b3" stroke="#ffffff"/>
+<text class="value" x="636.0" y="258" text-anchor="middle" fill="#0f172a">0.511</text>
 <text class="label" x="16" y="296">Ep3 dynamic NPCs | Policy B | arrival</text>
-<rect x="230" y="272" width="114" height="36" rx="4" fill="#479690" stroke="#ffffff"/>
-<text class="value" x="288.0" y="296" text-anchor="middle" fill="#ffffff">0.761</text>
+<rect x="230" y="272" width="114" height="36" rx="4" fill="#a6ccca" stroke="#ffffff"/>
+<text class="value" x="288.0" y="296" text-anchor="middle" fill="#0f172a">0.350</text>
 <rect x="346" y="272" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
 <text class="value" x="404.0" y="296" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="272" width="114" height="36" rx="4" fill="#127870" stroke="#ffffff"/>
-<text class="value" x="520.0" y="296" text-anchor="middle" fill="#ffffff">0.988</text>
-<rect x="578" y="272" width="114" height="36" rx="4" fill="#58a09b" stroke="#ffffff"/>
-<text class="value" x="636.0" y="296" text-anchor="middle" fill="#ffffff">0.686</text>
+<rect x="462" y="272" width="114" height="36" rx="4" fill="#8abbb9" stroke="#ffffff"/>
+<text class="value" x="520.0" y="296" text-anchor="middle" fill="#0f172a">0.474</text>
+<rect x="578" y="272" width="114" height="36" rx="4" fill="#9dc6c4" stroke="#ffffff"/>
+<text class="value" x="636.0" y="296" text-anchor="middle" fill="#0f172a">0.392</text>
 <text class="label" x="16" y="334">Ep1 open | Policy A | bystander</text>
-<rect x="230" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="288.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="346" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="404.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="230" y="310" width="114" height="36" rx="4" fill="#207f78" stroke="#ffffff"/>
+<text class="value" x="288.0" y="334" text-anchor="middle" fill="#ffffff">0.929</text>
+<rect x="346" y="310" width="114" height="36" rx="4" fill="#24827b" stroke="#ffffff"/>
+<text class="value" x="404.0" y="334" text-anchor="middle" fill="#ffffff">0.909</text>
 <rect x="462" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
 <text class="value" x="520.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="578" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="636.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="578" y="310" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="636.0" y="334" text-anchor="middle" fill="#ffffff">0.824</text>
 <text class="label" x="16" y="372">Ep1 open | Policy B | bystander</text>
-<rect x="230" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="288.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="346" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="404.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="462" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="520.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="578" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="636.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="230" y="348" width="114" height="36" rx="4" fill="#328a83" stroke="#ffffff"/>
+<text class="value" x="288.0" y="372" text-anchor="middle" fill="#ffffff">0.850</text>
+<rect x="346" y="348" width="114" height="36" rx="4" fill="#519b96" stroke="#ffffff"/>
+<text class="value" x="404.0" y="372" text-anchor="middle" fill="#ffffff">0.718</text>
+<rect x="462" y="348" width="114" height="36" rx="4" fill="#75b0ac" stroke="#ffffff"/>
+<text class="value" x="520.0" y="372" text-anchor="middle" fill="#ffffff">0.564</text>
+<rect x="578" y="348" width="114" height="36" rx="4" fill="#6faca8" stroke="#ffffff"/>
+<text class="value" x="636.0" y="372" text-anchor="middle" fill="#ffffff">0.588</text>
 <text class="label" x="16" y="410">Ep2 static | Policy A | bystander</text>
-<rect x="230" y="386" width="114" height="36" rx="4" fill="#c9dfdf" stroke="#ffffff"/>
-<text class="value" x="288.0" y="410" text-anchor="middle" fill="#0f172a">0.202</text>
-<rect x="346" y="386" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
-<text class="value" x="404.0" y="410" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="386" width="114" height="36" rx="4" fill="#80b6b3" stroke="#ffffff"/>
-<text class="value" x="520.0" y="410" text-anchor="middle" fill="#0f172a">0.516</text>
-<rect x="578" y="386" width="114" height="36" rx="4" fill="#aed0cf" stroke="#ffffff"/>
-<text class="value" x="636.0" y="410" text-anchor="middle" fill="#0f172a">0.319</text>
+<rect x="230" y="386" width="114" height="36" rx="4" fill="#22817a" stroke="#ffffff"/>
+<text class="value" x="288.0" y="410" text-anchor="middle" fill="#ffffff">0.917</text>
+<rect x="346" y="386" width="114" height="36" rx="4" fill="#28847d" stroke="#ffffff"/>
+<text class="value" x="404.0" y="410" text-anchor="middle" fill="#ffffff">0.894</text>
+<rect x="462" y="386" width="114" height="36" rx="4" fill="#127870" stroke="#ffffff"/>
+<text class="value" x="520.0" y="410" text-anchor="middle" fill="#ffffff">0.988</text>
+<rect x="578" y="386" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="636.0" y="410" text-anchor="middle" fill="#ffffff">0.824</text>
 <text class="label" x="16" y="448">Ep2 static | Policy B | bystander</text>
-<rect x="230" y="424" width="114" height="36" rx="4" fill="#c9dfdf" stroke="#ffffff"/>
-<text class="value" x="288.0" y="448" text-anchor="middle" fill="#0f172a">0.202</text>
+<rect x="230" y="424" width="114" height="36" rx="4" fill="#579f9a" stroke="#ffffff"/>
+<text class="value" x="288.0" y="448" text-anchor="middle" fill="#ffffff">0.692</text>
 <rect x="346" y="424" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
 <text class="value" x="404.0" y="448" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="424" width="114" height="36" rx="4" fill="#80b6b3" stroke="#ffffff"/>
-<text class="value" x="520.0" y="448" text-anchor="middle" fill="#0f172a">0.516</text>
-<rect x="578" y="424" width="114" height="36" rx="4" fill="#aed0cf" stroke="#ffffff"/>
-<text class="value" x="636.0" y="448" text-anchor="middle" fill="#0f172a">0.319</text>
+<rect x="462" y="424" width="114" height="36" rx="4" fill="#77b1ad" stroke="#ffffff"/>
+<text class="value" x="520.0" y="448" text-anchor="middle" fill="#ffffff">0.554</text>
+<rect x="578" y="424" width="114" height="36" rx="4" fill="#8cbdba" stroke="#ffffff"/>
+<text class="value" x="636.0" y="448" text-anchor="middle" fill="#0f172a">0.463</text>
 <text class="label" x="16" y="486">Ep3 dynamic NPCs | Policy A | bystander</text>
-<rect x="230" y="462" width="114" height="36" rx="4" fill="#479690" stroke="#ffffff"/>
-<text class="value" x="288.0" y="486" text-anchor="middle" fill="#ffffff">0.761</text>
+<rect x="230" y="462" width="114" height="36" rx="4" fill="#59a09b" stroke="#ffffff"/>
+<text class="value" x="288.0" y="486" text-anchor="middle" fill="#ffffff">0.682</text>
 <rect x="346" y="462" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
 <text class="value" x="404.0" y="486" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="462" width="114" height="36" rx="4" fill="#127870" stroke="#ffffff"/>
-<text class="value" x="520.0" y="486" text-anchor="middle" fill="#ffffff">0.988</text>
-<rect x="578" y="462" width="114" height="36" rx="4" fill="#58a09b" stroke="#ffffff"/>
-<text class="value" x="636.0" y="486" text-anchor="middle" fill="#ffffff">0.686</text>
+<rect x="462" y="462" width="114" height="36" rx="4" fill="#7fb5b2" stroke="#ffffff"/>
+<text class="value" x="520.0" y="486" text-anchor="middle" fill="#0f172a">0.519</text>
+<rect x="578" y="462" width="114" height="36" rx="4" fill="#81b7b3" stroke="#ffffff"/>
+<text class="value" x="636.0" y="486" text-anchor="middle" fill="#0f172a">0.511</text>
 <text class="label" x="16" y="524">Ep3 dynamic NPCs | Policy B | bystander</text>
-<rect x="230" y="500" width="114" height="36" rx="4" fill="#2b867f" stroke="#ffffff"/>
-<text class="value" x="288.0" y="524" text-anchor="middle" fill="#ffffff">0.881</text>
+<rect x="230" y="500" width="114" height="36" rx="4" fill="#a6ccca" stroke="#ffffff"/>
+<text class="value" x="288.0" y="524" text-anchor="middle" fill="#0f172a">0.350</text>
 <rect x="346" y="500" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
 <text class="value" x="404.0" y="524" text-anchor="middle" fill="#0f172a">0.200</text>
-<rect x="462" y="500" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
-<text class="value" x="520.0" y="524" text-anchor="middle" fill="#ffffff">1.000</text>
-<rect x="578" y="500" width="114" height="36" rx="4" fill="#41928d" stroke="#ffffff"/>
-<text class="value" x="636.0" y="524" text-anchor="middle" fill="#ffffff">0.784</text>
+<rect x="462" y="500" width="114" height="36" rx="4" fill="#b1d2d1" stroke="#ffffff"/>
+<text class="value" x="520.0" y="524" text-anchor="middle" fill="#0f172a">0.305</text>
+<rect x="578" y="500" width="114" height="36" rx="4" fill="#bbd8d7" stroke="#ffffff"/>
+<text class="value" x="636.0" y="524" text-anchor="middle" fill="#0f172a">0.260</text>
 <text class="note" x="16" y="560">Grey cells mean missing or insufficient evidence in the selected artifact.</text>
 </svg>

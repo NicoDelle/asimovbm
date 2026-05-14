@@ -8,58 +8,58 @@
 <text class="col" x="520.0" y="70" text-anchor="middle">social</text>
 <text class="col" x="636.0" y="70" text-anchor="middle">impression</text>
 <text class="label" x="16" y="106">Ep1 open | arrival</text>
-<rect x="230" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="288.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="346" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="404.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="462" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="520.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="578" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="636.0" y="106" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="230" y="82" width="114" height="36" rx="4" fill="#f5e2e4" stroke="#ffffff"/>
+<text class="value" x="288.0" y="106" text-anchor="middle" fill="#0f172a">-0.079</text>
+<rect x="346" y="82" width="114" height="36" rx="4" fill="#f0c0c1" stroke="#ffffff"/>
+<text class="value" x="404.0" y="106" text-anchor="middle" fill="#0f172a">-0.191</text>
+<rect x="462" y="82" width="114" height="36" rx="4" fill="#e67576" stroke="#ffffff"/>
+<text class="value" x="520.0" y="106" text-anchor="middle" fill="#ffffff">-0.436</text>
+<rect x="578" y="82" width="114" height="36" rx="4" fill="#efb2b3" stroke="#ffffff"/>
+<text class="value" x="636.0" y="106" text-anchor="middle" fill="#0f172a">-0.235</text>
 <text class="label" x="16" y="144">Ep1 open | bystander</text>
-<rect x="230" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="288.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="346" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="404.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="462" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="520.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="578" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="636.0" y="144" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="230" y="120" width="114" height="36" rx="4" fill="#f5e2e4" stroke="#ffffff"/>
+<text class="value" x="288.0" y="144" text-anchor="middle" fill="#0f172a">-0.079</text>
+<rect x="346" y="120" width="114" height="36" rx="4" fill="#f0c0c1" stroke="#ffffff"/>
+<text class="value" x="404.0" y="144" text-anchor="middle" fill="#0f172a">-0.191</text>
+<rect x="462" y="120" width="114" height="36" rx="4" fill="#e67576" stroke="#ffffff"/>
+<text class="value" x="520.0" y="144" text-anchor="middle" fill="#ffffff">-0.436</text>
+<rect x="578" y="120" width="114" height="36" rx="4" fill="#efb2b3" stroke="#ffffff"/>
+<text class="value" x="636.0" y="144" text-anchor="middle" fill="#0f172a">-0.235</text>
 <text class="label" x="16" y="182">Ep2 static | arrival</text>
-<rect x="230" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="288.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="346" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="404.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="462" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="520.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="578" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="636.0" y="182" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="230" y="158" width="114" height="36" rx="4" fill="#efb6b7" stroke="#ffffff"/>
+<text class="value" x="288.0" y="182" text-anchor="middle" fill="#0f172a">-0.223</text>
+<rect x="346" y="158" width="114" height="36" rx="4" fill="#dc2626" stroke="#ffffff"/>
+<text class="value" x="404.0" y="182" text-anchor="middle" fill="#ffffff">-0.694</text>
+<rect x="462" y="158" width="114" height="36" rx="4" fill="#e67576" stroke="#ffffff"/>
+<text class="value" x="520.0" y="182" text-anchor="middle" fill="#ffffff">-0.434</text>
+<rect x="578" y="158" width="114" height="36" rx="4" fill="#ea8c8d" stroke="#ffffff"/>
+<text class="value" x="636.0" y="182" text-anchor="middle" fill="#0f172a">-0.359</text>
 <text class="label" x="16" y="220">Ep2 static | bystander</text>
-<rect x="230" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="288.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="346" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="404.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="462" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="520.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="578" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="636.0" y="220" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="230" y="196" width="114" height="36" rx="4" fill="#efb5b7" stroke="#ffffff"/>
+<text class="value" x="288.0" y="220" text-anchor="middle" fill="#0f172a">-0.225</text>
+<rect x="346" y="196" width="114" height="36" rx="4" fill="#dc2626" stroke="#ffffff"/>
+<text class="value" x="404.0" y="220" text-anchor="middle" fill="#ffffff">-0.694</text>
+<rect x="462" y="196" width="114" height="36" rx="4" fill="#e67576" stroke="#ffffff"/>
+<text class="value" x="520.0" y="220" text-anchor="middle" fill="#ffffff">-0.435</text>
+<rect x="578" y="196" width="114" height="36" rx="4" fill="#e98c8d" stroke="#ffffff"/>
+<text class="value" x="636.0" y="220" text-anchor="middle" fill="#0f172a">-0.361</text>
 <text class="label" x="16" y="258">Ep3 dynamic NPCs | arrival</text>
-<rect x="230" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="288.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="230" y="234" width="114" height="36" rx="4" fill="#eb9596" stroke="#ffffff"/>
+<text class="value" x="288.0" y="258" text-anchor="middle" fill="#0f172a">-0.332</text>
 <rect x="346" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
 <text class="value" x="404.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="462" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="520.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="578" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
-<text class="value" x="636.0" y="258" text-anchor="middle" fill="#0f172a">+0.000</text>
+<rect x="462" y="234" width="114" height="36" rx="4" fill="#f6ecee" stroke="#ffffff"/>
+<text class="value" x="520.0" y="258" text-anchor="middle" fill="#0f172a">-0.045</text>
+<rect x="578" y="234" width="114" height="36" rx="4" fill="#f3d6d7" stroke="#ffffff"/>
+<text class="value" x="636.0" y="258" text-anchor="middle" fill="#0f172a">-0.119</text>
 <text class="label" x="16" y="296">Ep3 dynamic NPCs | bystander</text>
-<rect x="230" y="272" width="114" height="36" rx="4" fill="#2563eb" stroke="#ffffff"/>
-<text class="value" x="288.0" y="296" text-anchor="middle" fill="#ffffff">+0.120</text>
+<rect x="230" y="272" width="114" height="36" rx="4" fill="#eb9596" stroke="#ffffff"/>
+<text class="value" x="288.0" y="296" text-anchor="middle" fill="#0f172a">-0.332</text>
 <rect x="346" y="272" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
 <text class="value" x="404.0" y="296" text-anchor="middle" fill="#0f172a">+0.000</text>
-<rect x="462" y="272" width="114" height="36" rx="4" fill="#e2eafa" stroke="#ffffff"/>
-<text class="value" x="520.0" y="296" text-anchor="middle" fill="#0f172a">+0.012</text>
-<rect x="578" y="272" width="114" height="36" rx="4" fill="#4a7eee" stroke="#ffffff"/>
-<text class="value" x="636.0" y="296" text-anchor="middle" fill="#ffffff">+0.099</text>
+<rect x="462" y="272" width="114" height="36" rx="4" fill="#efb9ba" stroke="#ffffff"/>
+<text class="value" x="520.0" y="296" text-anchor="middle" fill="#0f172a">-0.214</text>
+<rect x="578" y="272" width="114" height="36" rx="4" fill="#eeadaf" stroke="#ffffff"/>
+<text class="value" x="636.0" y="296" text-anchor="middle" fill="#0f172a">-0.251</text>
 <text class="note" x="16" y="332">Grey cells mean missing or insufficient evidence in the selected artifact.</text>
 </svg>

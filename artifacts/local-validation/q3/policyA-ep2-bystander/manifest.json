@@ -3,20 +3,20 @@
     {
       "canonical_backend_id": "g1_robojudo",
       "episode_id": "g1_point_to_point_static_obstacles",
-      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
       "iteration": 0,
-      "proof_status": "not_verified_in_this_run",
-      "real_backend_verified": false,
-      "reason": "metrics came from reference trace backend",
+      "proof_status": "verified_in_this_run",
+      "real_backend_verified": true,
+      "reason": null,
       "robot_selector": "official_g1",
-      "trace_source": "reference"
+      "trace_source": "robojudo_loop"
     }
   ],
   "camera_view": "bystander",
   "canonical_episode_ids": [
     "g1_point_to_point_static_obstacles"
   ],
-  "created_at": "2026-05-14T19:07:31.640321+00:00",
+  "created_at": "2026-05-14T19:26:33.526935+00:00",
   "episodes": [
     {
       "canonical_backend_id": "g1_robojudo",
@@ -46,7 +46,7 @@
         "y": 0.0,
         "yaw": 0.35
       },
-      "steps": 2000,
+      "steps": 1400,
       "title": "G1 point-to-point motion with static obstacles",
       "visualization": {
         "camera": {
@@ -91,23 +91,23 @@
   ],
   "iterations": 1,
   "metadata": {},
-  "metrics_csv_path": "episode-metrics-022.csv",
+  "metrics_csv_path": "episode-metrics-001.csv",
   "policy_id": "g1_robojudo_unitree",
   "policy_path": null,
   "records": [
     {
       "canonical_backend_id": "g1_robojudo",
-      "collision_count": 1131,
+      "collision_count": 0,
       "episode_id": "g1_point_to_point_static_obstacles",
-      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
       "iteration": 0,
       "metrics_path": "g1_point_to_point_static_obstacles/iteration-000/metrics.json",
-      "real_backend_verified": false,
+      "real_backend_verified": true,
       "technical_valid": true,
-      "terminal_status": "timeout",
+      "terminal_status": "success",
       "trace_path": "g1_point_to_point_static_obstacles/iteration-000/trace.json",
-      "trace_source": "reference",
-      "viewer_mode": "visible"
+      "trace_source": "robojudo_loop",
+      "viewer_mode": "headless"
     }
   ],
   "report_path": "report.json",
@@ -120,7 +120,7 @@
   ],
   "start_delay_s": null,
   "start_x_offset_m": null,
-  "trace_backend": "reference",
-  "viewer_mode": "visible",
-  "viewer_speed": 1.0
+  "trace_backend": "real",
+  "viewer_mode": "headless",
+  "viewer_speed": 4.0
 }
