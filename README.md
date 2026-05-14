@@ -94,30 +94,6 @@ Artifacts are written under `artifacts/local-validation/<run-id>/`:
 - `<episode>/iteration-XXX/trace.json`: per-step measurements.
 - `<episode>/iteration-XXX/metrics.json`: metric outputs for that trace.
 
-## Run Unity MuJoCo Validation
-
-Prepare the Windows Unity project from WSL:
-
-```bash
-python tools/unity/prepare_mujoco_unity_project.py \
-  --unity-project /mnt/d/_PROJECTS/Unity/AsimovBM \
-  --package-mode git \
-  --stage-real-g1 \
-  --skip-dll
-```
-
-Then run Unity batchmode validation and ingest Unity JSON traces:
-
-```bash
-PYTHONPATH=src:g1_slam/src python -m asimovbm.local_runner.unity_runner run \
-  --unity-project /mnt/d/_PROJECTS/Unity/AsimovBM \
-  --run-id unity-smoke
-```
-
-Artifacts are written under `artifacts/unity-validation/<run-id>/`. The Unity
-path currently validates `g1_kinematic_smoke` and `g1_real_motion`, with one raw
-Unity trace, normalized trace, and metrics file per scene.
-
 ## Run Metrics Dashboard and Survey
 
 Start the local web dashboard over validation artifacts:
@@ -140,7 +116,7 @@ asimovbm-web \
 
 The same page can also compare objective predictions from `metrics.json`,
 `episode-metrics-XXX.csv`, or trace JSON against survey outcomes. If no
-manifest is provided, the server discovers Unity video-generation outputs with
+manifest is provided, the server discovers survey video outputs with
 matching stems under `artifacts/survey/videos/<policy>/<view>/<episode>.mp4`
 and `artifacts/survey/json/<policy>/<view>/<episode>.json`. Survey responses
 use anonymous hard quota-balanced assignment by robot/policy/viewpoint cell and

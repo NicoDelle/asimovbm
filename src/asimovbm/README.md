@@ -179,19 +179,6 @@ artifacts/survey/metrics-summary-<run-id>.json
 artifacts/survey/metrics-summary-<run-id>.csv
 ```
 
-## Unity Trace Ingest
-
-Unity is a separate visual validation producer. From WSL, run:
-
-```bash
-PYTHONPATH=src:g1_slam/src python -m asimovbm.local_runner.unity_runner run \
-  --unity-project /mnt/d/_PROJECTS/Unity/AsimovBM \
-  --run-id unity-smoke
-```
-
-That command writes `artifacts/unity-validation/<run-id>/manifest.json`,
-`report.json`, and one trace/metrics pair per Unity scene.
-
 ## What The Files Mean
 
 - `manifest.json` records the selected robot and policy, selected episodes,
