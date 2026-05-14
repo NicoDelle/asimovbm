@@ -17,12 +17,12 @@ from typing import Any
 from g1_slam.config import LocomotionConfig, NavigationConfig, load_navigation_config
 
 DEFAULT_EPISODE_IDS: tuple[str, ...] = (
-    "g1_approach_user",
-    "g1_lateral_open",
-    "g1_lateral_static_dynamic_obstacles",
-    "go2_approach_user",
-    "go2_lateral_open",
-    "go2_lateral_static_dynamic_obstacles",
+    "g1_point_to_point_open",
+    "g1_point_to_point_static_obstacles",
+    "g1_point_to_point_dynamic_npcs",
+    "go2_point_to_point_open",
+    "go2_point_to_point_static_obstacles",
+    "go2_point_to_point_dynamic_npcs",
 )
 
 ROBOT_IDS: tuple[str, ...] = ("g1", "go2")
@@ -39,6 +39,19 @@ POLICY_PROFILES: dict[str, dict[str, Any]] = {
             "mode": "robojudo",
             "policy_path": Path("policies/g1/policy.onnx"),
             "robojudo_config": "g1_asap_loco",
+            "observation_size": None,
+            "observation_profile": "generic",
+            "action_scale": 0.25,
+            "kp": 35.0,
+            "kd": 1.0,
+        },
+    },
+    "g1_robojudo_unitree": {
+        "robot_id": "g1",
+        "locomotion": {
+            "mode": "robojudo",
+            "policy_path": Path("policies/g1/policy.onnx"),
+            "robojudo_config": "g1",
             "observation_size": None,
             "observation_profile": "generic",
             "action_scale": 0.25,

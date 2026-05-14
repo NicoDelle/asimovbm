@@ -23,7 +23,7 @@ from g1_slam.planner import AStarPlanner
 from g1_slam.simulation import make_grid_for_world
 from g1_slam.world import World2D, default_world
 
-from g1_slam.config import LocomotionConfig
+from g1_slam.config import LocomotionConfig, visualization_for_camera_view
 
 from .catalog import LocalEpisodeSpec
 from .traces import LocalEpisodeTrace, LocalStepTrace
@@ -39,6 +39,7 @@ class LocalTraceBackend(Protocol):
         iteration: int,
         viewer_enabled: bool,
         viewer_speed: float,
+        camera_view: str,
     ) -> LocalEpisodeTrace:
         ...
 
@@ -79,6 +80,7 @@ class G1SlamReferenceBackend:
         iteration: int,
         viewer_enabled: bool,
         viewer_speed: float = 4.0,
+        camera_view: str = "config",
     ) -> LocalEpisodeTrace:
         world = _episode_world(spec)
         dynamic_obstacles = _dynamic_obstacles(spec)
@@ -88,6 +90,7 @@ class G1SlamReferenceBackend:
             dynamic_obstacles,
             viewer_enabled,
             viewer_speed,
+            camera_view,
         )
         pose = spec.config.start
         goal = spec.config.goal
@@ -162,6 +165,7 @@ class G1SlamReferenceBackend:
             metadata={
                 "reference_backend": True,
                 "viewer_speed": viewer_speed,
+                "camera_view": camera_view,
                 "viewer_proof": viewer_proof,
                 "canonical_backend_proof": backend_proof_for(spec).to_dict(),
             },
@@ -264,13 +268,14 @@ def _maybe_run_real_viewer(
     dynamic_obstacles,
     viewer_enabled: bool,
     viewer_speed: float,
+    camera_view: str,
 ) -> dict[str, object]:
     if not viewer_enabled:
         return {"viewer_requested": False, "viewer_status": "not_requested"}
-    return _run_viewer_subprocess(spec, viewer_speed)
+    return _run_viewer_subprocess(spec, viewer_speed, camera_view)
 
 
-def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float) -> dict[str, object]:
+def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float, camera_view: str) -> dict[str, object]:
     config_path = spec.path.resolve()
     command = [
         sys.executable,
@@ -282,9 +287,19 @@ def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float) -> dict[
         str(spec.config.steps),
         "--realtime-factor",
         str(viewer_speed),
+        "--camera-view",
+        camera_view,
     ]
     if spec.locomotion_mode == "robojudo":
-        command.extend(["--locomotion", "robojudo", "--render"])
+        command.extend(
+            [
+                "--locomotion",
+                "robojudo",
+                "--robojudo-config",
+                spec.config.locomotion.robojudo_config,
+                "--render",
+            ]
+        )
         path = "g1_robojudo"
     else:
         command.extend(["--mujoco", "--render", "--robot", spec.robot_selector])
@@ -306,6 +321,7 @@ def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float) -> dict[
             "viewer_status": "timeout",
             "path": path,
             "viewer_speed": viewer_speed,
+            "camera_view": camera_view,
             "timeout_s": timeout_s,
             "stderr_tail": _text_tail(exc.stderr),
         }
@@ -315,6 +331,8 @@ def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float) -> dict[
         "viewer_status": status,
         "path": path,
         "viewer_speed": viewer_speed,
+        "camera_view": camera_view,
+        "robojudo_config": spec.config.locomotion.robojudo_config if spec.locomotion_mode == "robojudo" else None,
         "returncode": completed.returncode,
         "stderr_tail": _text_tail(completed.stderr),
     }
@@ -334,9 +352,15 @@ def _viewer_working_directory(spec: LocalEpisodeSpec):
     return None
 
 
-def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D, viewer_speed: float) -> dict[str, object]:
+def _run_robojudo_viewer(
+    spec: LocalEpisodeSpec,
+    world: World2D,
+    viewer_speed: float,
+    camera_view: str = "config",
+) -> dict[str, object]:
     from g1_slam.robojudo_backend import RoboJuDoBackendConfig, run_robojudo_navigation
 
+    visualization = visualization_for_camera_view(spec.config.visualization, camera_view=camera_view)
     run_robojudo_navigation(
         world,
         start=spec.config.start,
@@ -344,6 +368,7 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D, viewer_speed: f
         steps=spec.config.steps,
         controller_config=spec.config.controller,
         backend_config=RoboJuDoBackendConfig(
+            config_name=spec.config.locomotion.robojudo_config,
             max_vx=spec.config.controller.max_linear_speed,
             max_vy=spec.config.controller.max_linear_speed,
             max_yaw_rate=spec.config.controller.max_yaw_rate,
@@ -356,7 +381,7 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D, viewer_speed: f
             dynamic_obstacle_count=spec.config.dynamic_obstacles.blue_cylinder_count,
             dynamic_obstacle_specs=spec.config.dynamic_obstacles.obstacles,
             npc_policy=spec.config.dynamic_obstacles.npc_policy,
-            visualization=spec.config.visualization,
+            visualization=visualization,
         ),
     )
     return {
@@ -364,6 +389,7 @@ def _run_robojudo_viewer(spec: LocalEpisodeSpec, world: World2D, viewer_speed: f
         "viewer_status": "launched",
         "path": "g1_robojudo",
         "viewer_speed": viewer_speed,
+        "camera_view": camera_view,
     }
 
 
@@ -372,9 +398,11 @@ def _run_mujoco_viewer(
     world: World2D,
     dynamic_obstacles,
     viewer_speed: float,
+    camera_view: str = "config",
 ) -> dict[str, object]:
     from g1_slam.mujoco_runner import run_mujoco_navigation
 
+    visualization = visualization_for_camera_view(spec.config.visualization, camera_view=camera_view)
     run_mujoco_navigation(
         world,
         robot=spec.robot_selector,
@@ -385,7 +413,7 @@ def _run_mujoco_viewer(
         controller_config=spec.config.controller,
         locomotion_config=_viewer_locomotion_config(spec),
         render=True,
-        visualization_config=spec.config.visualization,
+        visualization_config=visualization,
         dynamic_obstacles=dynamic_obstacles,
         realtime_factor=viewer_speed,
     )
@@ -394,6 +422,7 @@ def _run_mujoco_viewer(
         "viewer_status": "launched",
         "path": "mujoco",
         "viewer_speed": viewer_speed,
+        "camera_view": camera_view,
     }
 
 

@@ -43,9 +43,16 @@ Run repeated metric collection headlessly:
 ```
 
 Select an explicit policy profile, or keep the profile defaults and point at a
-local policy file:
+local policy file. The two G1 RoboJuDo policies used by the survey-video sweep
+are exposed as:
+
+- `g1_robojudo_asap`: RoboJuDo config `g1_asap_loco` (`policy_b` in the survey folders).
+- `g1_robojudo_unitree`: RoboJuDo config `g1` (`policy_a` in the survey folders).
+- Survey labels: `policy_a` is RoboJuDo `g1`; `policy_b` is RoboJuDo `g1_asap_loco`.
 
 ```bash
+.venv/bin/asimovbm-local --robot g1 --policy g1_robojudo_asap --iterations 1
+.venv/bin/asimovbm-local --robot g1 --policy g1_robojudo_unitree --iterations 1
 .venv/bin/asimovbm-local --robot go2 --policy go2_unitree_rl_mjlab --iterations 1
 .venv/bin/asimovbm-local --robot go2 --policy-path policies/go2/my-policy.onnx --iterations 1
 ```
@@ -53,7 +60,7 @@ local policy file:
 Run one selected episode for the selected robot:
 
 ```bash
-.venv/bin/asimovbm-local --robot g1 --episode g1_approach_user --iterations 1
+.venv/bin/asimovbm-local --robot g1 --episode g1_point_to_point_open --iterations 1
 ```
 
 Run the selected robot/policy and export direct MuJoCo-rendered survey videos
@@ -62,7 +69,7 @@ plus metric sidecars:
 ```bash
 .venv/bin/asimovbm-local \
   --robot g1 \
-  --policy g1_robojudo_asap \
+  --policy g1_robojudo_unitree \
   --survey-export \
   --survey-policy-id policy_a \
   --survey-root artifacts/survey \
@@ -131,12 +138,12 @@ are written under `artifacts/survey/<study-id>/`:
 The local catalog is exactly the six JSON files under
 `g1_slam/config/episodes/`:
 
-- `g1_approach_user`
-- `g1_lateral_open`
-- `g1_lateral_static_dynamic_obstacles`
-- `go2_approach_user`
-- `go2_lateral_open`
-- `go2_lateral_static_dynamic_obstacles`
+- `g1_point_to_point_open`
+- `g1_point_to_point_static_obstacles`
+- `g1_point_to_point_dynamic_npcs`
+- `go2_point_to_point_open`
+- `go2_point_to_point_static_obstacles`
+- `go2_point_to_point_dynamic_npcs`
 
 The catalog preserves each config's start, goal, step count, world, controller,
 locomotion, dynamic obstacle, camera, and visualization settings. The active
@@ -186,25 +193,45 @@ then inspect the freshly computed metrics in the local web dashboard. Do not add
   --robot g1 \
   --iterations 1 \
   --visible \
+  --policy g1_robojudo_unitree \
   --viewer-speed 1.0 \
+  --camera-view arrival \
   --episode-steps 900 \
-  --run-id hand-validated-g1
+  --run-id hand-validated-g1-policy-a
+```
+
+Swap `--policy g1_robojudo_asap` and use a different `--run-id` to validate
+the second G1 policy:
+
+```bash
+.venv/bin/asimovbm-local \
+  --robot g1 \
+  --iterations 1 \
+  --visible \
+  --policy g1_robojudo_asap \
+  --viewer-speed 1.0 \
+  --camera-view arrival \
+  --episode-steps 900 \
+  --run-id hand-validated-g1-policy-b
 ```
 
 `--episode-steps` is the run timer override. The local trace backend uses about
 `0.08` simulated seconds per step, so `900` steps is about `72` simulated
 seconds before success/timeout. Omit the flag to use each episode JSON's
 checked-in `steps` value. Use `--viewer-speed 1.0` for realtime visual review,
-or a larger value when you want the viewer to advance faster.
+or a larger value when you want the viewer to advance faster. Use
+`--camera-view config`, `--camera-view arrival`, or `--camera-view bystander`
+to choose the viewer POV from the episode JSON.
 
 To watch just one episode in the MuJoCo viewer without writing benchmark
 metrics:
 
 ```bash
 .venv/bin/python -m g1_slam \
-  --config g1_slam/config/episodes/g1_approach_user.json \
+  --config g1_slam/config/episodes/g1_point_to_point_open.json \
   --locomotion robojudo \
   --render \
+  --camera-view arrival \
   --steps 900 \
   --realtime-factor 1.0
 ```
@@ -224,3 +251,30 @@ Launch the metric dashboard after the validation run:
 
 Open `http://127.0.0.1:8765`, select `hand-validated-g1` in the `Runs` view,
 and compare those metrics against whatever videos you validate manually.
+
+```bash
+.venv/bin/asimovbm-local \
+  --robot g1 \
+  --iterations 1 \
+  --visible \
+  --policy g1_robojudo_unitree \
+  --viewer-speed 1.0 \
+  --camera-view arrival \
+  --episode-steps 900 \
+  --run-id hand-validated-g1-policy-a
+
+  .venv/bin/asimovbm-local \
+  --robot g1 \
+  --iterations 1 \
+  --visible \
+  --policy g1_robojudo_asap \
+  --viewer-speed 1.0 \
+  --camera-view arrival \
+  --episode-steps 900 \
+  --run-id hand-validated-g1-policy-b
+  ```
+
+  episode list (select with --episode):
+  g1_point_to_point_open
+  g1_point_to_point_static_obstacles
+  g1_point_to_point_dynamic_npcs

@@ -40,7 +40,7 @@ One iteration defaults to visible validation mode:
 To run only one canonical episode:
 
 ```bash
-.venv/bin/asimovbm-local --robot g1 --episode g1_approach_user --iterations 1
+.venv/bin/asimovbm-local --robot g1 --episode g1_point_to_point_open --iterations 1
 ```
 
 The visible path requests the canonical robot viewer for the selected episode.
@@ -75,6 +75,11 @@ g1  -> g1_robojudo_asap
 go2 -> go2_unitree_rl_mjlab
 ```
 
+For the two G1 RoboJuDo survey-video policies, use
+`--policy g1_robojudo_unitree` for RoboJuDo `g1` / survey `policy_a`,
+or `--policy g1_robojudo_asap` for RoboJuDo `g1_asap_loco` / survey
+`policy_b`.
+
 Run all canonical scenarios for one robot:
 
 ```bash
@@ -85,6 +90,7 @@ Run all canonical scenarios for one robot:
 Override the policy profile or only the local policy file path:
 
 ```bash
+.venv/bin/asimovbm-local --robot g1 --policy g1_robojudo_unitree --iterations 1
 .venv/bin/asimovbm-local --robot go2 --policy go2_unitree_rl_mjlab --iterations 1
 .venv/bin/asimovbm-local --robot go2 --policy-path policies/go2/my-policy.onnx --iterations 1
 ```
@@ -92,12 +98,12 @@ Override the policy profile or only the local policy file path:
 The available episode ids are:
 
 ```text
-g1_approach_user
-g1_lateral_open
-g1_lateral_static_dynamic_obstacles
-go2_approach_user
-go2_lateral_open
-go2_lateral_static_dynamic_obstacles
+g1_point_to_point_open
+g1_point_to_point_static_obstacles
+g1_point_to_point_dynamic_npcs
+go2_point_to_point_open
+go2_point_to_point_static_obstacles
+go2_point_to_point_dynamic_npcs
 ```
 
 Pass `--episode` more than once to run a subset:
@@ -105,8 +111,8 @@ Pass `--episode` more than once to run a subset:
 ```bash
 .venv/bin/asimovbm-local \
   --robot g1 \
-  --episode g1_approach_user \
-  --episode g1_lateral_open \
+  --episode g1_point_to_point_open \
+  --episode g1_point_to_point_dynamic_npcs \
   --iterations 2 \
   --headless
 ```
@@ -199,7 +205,7 @@ These commands were tested locally from the repository root:
 ```bash
 .venv/bin/asimovbm-local \
   --robot g1 \
-  --episode g1_approach_user \
+  --episode g1_point_to_point_open \
   --iterations 1 \
   --headless \
   --artifact-root /tmp/asimovbm-readme-installed \
@@ -207,7 +213,7 @@ These commands were tested locally from the repository root:
 
 PYTHONPATH=src:g1_slam/src .venv/bin/python -m asimovbm.local_runner.cli \
   --robot g1 \
-  --episode g1_approach_user \
+  --episode g1_point_to_point_open \
   --iterations 1 \
   --artifact-root /tmp/asimovbm-readme-visible \
   --run-id visible-smoke
@@ -221,5 +227,5 @@ PYTHONPATH=src:g1_slam/src .venv/bin/python -m asimovbm.local_runner.cli \
 ```
 
 The one-episode commands produced one trace and one metrics file for
-`g1_approach_user`. The all-scenario command produced traces and metrics for
-the three selected G1 episodes across two iterations.
+`g1_point_to_point_open`. The all-scenario command produced traces and metrics
+for the three selected G1 episodes across two iterations.

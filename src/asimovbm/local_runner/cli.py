@@ -46,6 +46,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Visible playback speed multiplier; use 1.0 for realtime.",
     )
     parser.add_argument(
+        "--camera-view",
+        choices=("config", "arrival", "bystander"),
+        default="config",
+        help=(
+            "Visible viewer POV. config uses the episode JSON default; "
+            "arrival and bystander use the named camera_views from the episode JSON."
+        ),
+    )
+    parser.add_argument(
         "--episode-steps",
         type=int,
         help=(
@@ -127,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
                 episode_ids=tuple(args.episodes or ()),
                 visible=visible,
                 viewer_speed=args.viewer_speed,
+                camera_view=args.camera_view,
                 episode_steps=args.episode_steps,
                 survey_export=args.survey_export,
                 survey_root=args.survey_root,

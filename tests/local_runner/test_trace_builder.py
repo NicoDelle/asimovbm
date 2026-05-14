@@ -8,7 +8,7 @@ from g1_slam.world import World2D
 
 import asimovbm.local_runner.backends as local_backends
 from asimovbm.local_runner.backends import G1SlamReferenceBackend
-from asimovbm.local_runner.catalog import LocalEpisodeSpec
+from asimovbm.local_runner.catalog import LocalEpisodeSpec, load_default_catalog
 from g1_slam.config import (
     DynamicObstaclesConfig,
     LocomotionConfig,
@@ -121,6 +121,32 @@ def test_visible_viewer_failures_are_recorded_without_crashing_trace_collection(
     assert viewer_proof["viewer_status"] == "failed"
     assert viewer_proof["returncode"] == -11
     assert "core dumped" in viewer_proof["stderr_tail"]
+
+
+def test_robojudo_viewer_receives_selected_policy_config(monkeypatch) -> None:
+    spec = load_default_catalog().select(
+        ("g1_point_to_point_open",),
+        robot_id="g1",
+        policy_id="g1_robojudo_unitree",
+    )[0]
+    captured = {}
+
+    class SuccessfulViewer:
+        returncode = 0
+        stderr = ""
+
+    def fake_viewer(command, **kwargs):
+        captured["command"] = command
+        return SuccessfulViewer()
+
+    monkeypatch.setattr(local_backends.subprocess, "run", fake_viewer)
+
+    viewer_proof = local_backends._run_viewer_subprocess(spec, viewer_speed=1.0, camera_view="arrival")
+
+    command = captured["command"]
+    assert command[command.index("--robojudo-config") + 1] == "g1"
+    assert command[command.index("--camera-view") + 1] == "arrival"
+    assert viewer_proof["robojudo_config"] == "g1"
 
 
 def test_visible_viewer_timeout_decodes_byte_stderr(monkeypatch) -> None:
