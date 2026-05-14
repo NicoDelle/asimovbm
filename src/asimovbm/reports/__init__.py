@@ -2,6 +2,7 @@
 
 from .csv_report import (
     EPISODE_METRICS_CSV_STEM,
+    MetricCsvReportError,
     append_episode_metrics_csv_row,
     build_episode_metrics_csv_row,
     episode_metrics_csv_header,
@@ -18,6 +19,7 @@ __all__ = [
     "EPISODE_METRICS_CSV_STEM",
     "JsonReportConfig",
     "JsonReportInput",
+    "MetricCsvReportError",
     "MetricFreezeRequiredError",
     "append_episode_metrics_csv_row",
     "build_behavioral_metric_block",

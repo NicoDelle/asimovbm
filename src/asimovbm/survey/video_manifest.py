@@ -139,7 +139,7 @@ def discover_sim_output_manifest(
     json_root: Path | str,
     include_go2: bool = False,
 ) -> SurveyVideoManifest:
-    """Build a manifest from paired Unity video-generation outputs."""
+    """Build a manifest from paired simulator video and metric sidecar outputs."""
 
     video_root = Path(video_root)
     json_root = Path(json_root)
@@ -289,7 +289,11 @@ def _discover_sim_video(video_path: Path, *, video_root: Path, json_root: Path) 
         group_ids=(group_id,),
         title=_title(policy_id, camera_view, episode_id),
         episode_order=_episode_order(episode_id),
-        metrics={"camera_view": camera_view, "json_sidecar_path": source.path if source else None},
+        metrics={
+            "camera_view": camera_view,
+            "json_sidecar_path": source.path if source else None,
+            "source_episode_id": _metadata_string(metadata, "source_episode_id"),
+        },
         prediction_source=source,
     )
 

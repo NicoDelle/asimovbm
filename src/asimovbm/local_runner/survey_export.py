@@ -10,9 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from g1_slam.mujoco_runner import DEFAULT_NAVIGATION_CONTROL_DT_S, record_mujoco_navigation_video
+
 from asimovbm.metrics import SOCIAL_NAVIGATION_AXIS_IDS
 from g1_slam.config import visualization_for_camera_view
-from g1_slam.mujoco_runner import DEFAULT_NAVIGATION_CONTROL_DT_S, record_mujoco_navigation_video
 
 from .artifacts import write_json
 from .backends import _dynamic_obstacles, _episode_world, _viewer_locomotion_config
@@ -37,9 +38,9 @@ class SurveyVideoExportConfig:
     survey_root: Path = Path("artifacts/survey")
     policy_id: str | None = None
     views: tuple[str, ...] = DEFAULT_SURVEY_VIEWS
-    fps: int = 2
-    width: int = 426
-    height: int = 240
+    fps: int = 24
+    width: int = 1280
+    height: int = 720
     max_duration_s: float | None = 15.0
 
     @property
@@ -255,6 +256,9 @@ def _sidecar_payload(
             "width": config.width,
             "height": config.height,
             "max_duration_s": config.max_duration_s,
+            "container": "mp4",
+            "video_codec": "h264",
+            "pixel_format": "yuv420p",
         },
         "metric_report": record.metrics,
         "metadata": {

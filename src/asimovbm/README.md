@@ -135,12 +135,20 @@ That command writes:
 ```text
 /tmp/asimovbm-local/smoke/manifest.json
 /tmp/asimovbm-local/smoke/report.json
+/tmp/asimovbm-local/smoke/episode-metrics-<NNN>.csv
 /tmp/asimovbm-local/smoke/<episode-id>/iteration-000/trace.json
 /tmp/asimovbm-local/smoke/<episode-id>/iteration-000/metrics.json
 ```
 
 For multiple iterations, each episode gets `iteration-000`, `iteration-001`,
 and so on.
+
+The `episode-metrics-<NNN>.csv` file is the spreadsheet-friendly benchmark
+export for the run. It has one row per episode iteration, metadata columns
+(`run_id`, `episode_id`, `iteration`, status fields), the four macro axes, and
+the current social-navigation submetrics. Score cells are normalized `[0, 1]`;
+empty cells mean unavailable or not applicable, not zero. The detailed status,
+confidence, raw values, and reasons remain in `metrics.json` and `report.json`.
 
 ## Export Survey Videos
 
@@ -157,10 +165,10 @@ MP4/JSON pairs using the survey discovery contract plus a metric summary:
   --iterations 1
 ```
 
-Defaults are bounded `426x240`, `2fps`, 15-second time-lapse clips; raise them
-with `--survey-video-width`, `--survey-video-height`, `--survey-video-fps`, and
-`--survey-video-max-duration 0` when you need full-duration, higher-fidelity
-exports.
+Defaults are browser-compatible H.264 MP4 clips at `1280x720`, `24fps`, and a
+15-second duration cap. Tune them with `--survey-video-width`,
+`--survey-video-height`, `--survey-video-fps`, and `--survey-video-max-duration
+0` when you need full-duration exports.
 
 Outputs:
 
@@ -191,6 +199,8 @@ That command writes `artifacts/unity-validation/<run-id>/manifest.json`,
   and backend proof metadata.
 - `report.json` records run-level reliability plus the behavioral metric blocks
   computed from the traces.
+- `episode-metrics-<NNN>.csv` records one compact benchmark row per episode
+  iteration for spreadsheets and web prediction lookups.
 - `trace.json` records per-step measurements: time, pose, velocity, action,
   lidar ranges, entity state, collisions, public observation, and status.
 - `metrics.json` records the metric outputs computed from one episode trace.

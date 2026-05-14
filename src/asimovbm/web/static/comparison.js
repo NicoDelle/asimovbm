@@ -1,4 +1,6 @@
 let comparisonDesign = null;
+let comparisonItems = [];
+let selectedComparisonVideoId = null;
 
 async function loadComparisonDesign() {
   const response = await fetch("/api/survey/design");
@@ -29,17 +31,28 @@ async function loadComparison() {
     return;
   }
   const comparison = payload.comparison || {};
-  const videos = Object.values(comparison.videos || {});
+  const videos = Object.entries(comparison.videos || {}).map(([videoId, item]) => ({
+    video_id: videoId,
+    ...item
+  }));
+  comparisonItems = videos;
+  if (!videos.some((item) => item.video_id === selectedComparisonVideoId)) {
+    selectedComparisonVideoId = videos[0]?.video_id || null;
+  }
   const compared = videos.filter((video) => video.status === "compared");
   status.textContent = `${compared.length}/${videos.length} videos have both predictions and survey responses.`;
   renderComparisonSummary(comparison, compared);
   renderComparisonGroups(comparison.groups || {});
   renderComparisonTable(videos);
+  renderComparisonInspector(
+    videos.find((item) => item.video_id === selectedComparisonVideoId) || videos[0]
+  );
 }
 
 function clearComparison() {
   document.getElementById("comparison-summary").innerHTML = "";
   document.getElementById("comparison-groups").innerHTML = "";
+  document.getElementById("comparison-inspector").innerHTML = "";
   document.getElementById("comparison-table").innerHTML = "";
 }
 
@@ -88,7 +101,7 @@ function renderComparisonTable(videos) {
       const video = item.video || {};
       const statusClass = item.status === "compared" ? "" : " warning";
       return `
-        <tr>
+        <tr data-video-id="${escapeHtml(item.video_id)}" class="${item.video_id === selectedComparisonVideoId ? "selected-row" : ""}">
           <td>
             <strong>${escapeHtml(video.title || video.video_id || item.video_id)}</strong>
             <div class="muted">${escapeHtml(video.episode_id || "")}</div>
@@ -119,6 +132,49 @@ function renderComparisonTable(videos) {
       <tbody>${rows}</tbody>
     </table>
   `;
+  for (const row of container.querySelectorAll("tbody tr[data-video-id]")) {
+    row.addEventListener("click", () => {
+      selectedComparisonVideoId = row.dataset.videoId;
+      renderComparisonTable(comparisonItems);
+      renderComparisonInspector(comparisonItems.find((item) => item.video_id === selectedComparisonVideoId));
+    });
+  }
+}
+
+function renderComparisonInspector(item) {
+  const container = document.getElementById("comparison-inspector");
+  if (!container) {
+    return;
+  }
+  if (!item) {
+    container.innerHTML = `<p class="muted">No videos available for inspection.</p>`;
+    return;
+  }
+  selectedComparisonVideoId = item.video_id;
+  const video = item.video || {};
+  const player = video.path
+    ? `<video class="research-player" controls preload="metadata" src="${comparisonVideoUrl(video.path)}"></video>`
+    : `<p class="muted">No video path was provided for this entry.</p>`;
+  container.innerHTML = `
+    <div class="inspector-heading">
+      <div>
+        <h3>${escapeHtml(video.title || video.video_id || item.video_id)}</h3>
+        <p>${escapeHtml(video.policy_id || "")} · ${escapeHtml(video.viewpoint || "")} · ${escapeHtml(video.robot_id || "")}</p>
+      </div>
+      <span class="status-pill${item.status === "compared" ? "" : " warning"}">${escapeHtml(item.status || "unknown")}</span>
+    </div>
+    <div class="media-score-layout">
+      <div class="research-video">${player}</div>
+      <div class="mini-score-grid">
+        ${scoreTile("Prediction", item.prediction_global, "0-100")}
+        ${scoreTile("Survey", item.survey_global, `${item.survey_response_count || 0} responses`)}
+        ${scoreTile("Error", item.global_absolute_error, "absolute")}
+      </div>
+    </div>
+    <div class="axis-table">
+      ${axisComparisonRows(item.prediction_axes || {}, item.survey_axes || {}, item.axis_absolute_errors || {})}
+    </div>
+  `;
 }
 
 function axisErrorText(errors) {
@@ -129,6 +185,42 @@ function axisErrorText(errors) {
   return entries
     .map(([axisId, value]) => `${axisId.replace("perceived_", "")}: ${formatScore(value, 1)}`)
     .join(" · ");
+}
+
+function axisComparisonRows(predictionAxes, surveyAxes, errors) {
+  const axisIds = [
+    "perceived_dexterity",
+    "perceived_safety",
+    "perceived_social_awareness",
+    "impression"
+  ];
+  const rows = axisIds.map((axisId) => `
+    <div class="score-row">
+      <span>${axisId.replace("perceived_", "").replaceAll("_", " ")}</span>
+      <strong>${formatScore(predictionAxes[axisId], 1)} / ${formatScore(surveyAxes[axisId], 1)}</strong>
+      <em>${formatScore(errors[axisId], 1)}</em>
+    </div>
+  `).join("");
+  return `
+    <div class="score-row score-header">
+      <span>Axis</span><strong>Prediction / Survey</strong><em>Error</em>
+    </div>
+    ${rows}
+  `;
+}
+
+function scoreTile(label, value, note) {
+  return `
+    <article class="summary-item">
+      <span>${escapeHtml(label)}</span>
+      <strong>${formatScore(value, 1)}</strong>
+      <div class="muted">${escapeHtml(note)}</div>
+    </article>
+  `;
+}
+
+function comparisonVideoUrl(path) {
+  return `/videos/${String(path || "").split("/").map(encodeURIComponent).join("/")}`;
 }
 
 function mean(values) {

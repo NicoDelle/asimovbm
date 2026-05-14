@@ -26,6 +26,14 @@ def test_visible_and_headless_flags_are_mutually_exclusive() -> None:
         parser.parse_args(["--robot", "g1", "--visible", "--headless"])
 
 
+def test_survey_video_defaults_are_browser_quality() -> None:
+    args = build_parser().parse_args(["--robot", "g1"])
+
+    assert args.survey_video_fps == 24
+    assert args.survey_video_width == 1280
+    assert args.survey_video_height == 720
+
+
 def test_robot_is_required_to_avoid_mixed_robot_benchmark_runs() -> None:
     with pytest.raises(SystemExit):
         build_parser().parse_args(["--iterations", "1"])

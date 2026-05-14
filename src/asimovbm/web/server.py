@@ -58,13 +58,14 @@ class WebApp:
         method: str,
         raw_path: str,
         body: bytes = b"",
+        headers: Any | None = None,
     ) -> WebResponse:
         parsed = urlsplit(raw_path)
         path = parsed.path
         query = parse_qs(parsed.query)
         try:
             if method == "GET":
-                return self._handle_get(path, query)
+                return self._handle_get(path, query, headers=headers)
             if method == "POST":
                 return self._handle_post(path, body)
         except (FileNotFoundError, KeyError, SurveyStorageError, VideoManifestError, ValueError) as exc:
@@ -72,7 +73,13 @@ class WebApp:
             return _json_response({"error": str(exc)}, status=status)
         return _json_response({"error": "method not allowed"}, status=405)
 
-    def _handle_get(self, path: str, query: dict[str, list[str]]) -> WebResponse:
+    def _handle_get(
+        self,
+        path: str,
+        query: dict[str, list[str]],
+        *,
+        headers: Any | None,
+    ) -> WebResponse:
         if path in {"/", "/survey"}:
             return _static_response("index.html")
         if path.startswith("/static/"):
@@ -90,15 +97,18 @@ class WebApp:
                 )
             )
         if path == "/api/survey/videos":
-            group_id = _single_query(query, "group")
+            group_id = _single_query_default(query, "group", "")
             manifest = self._video_manifest()
+            videos = (
+                manifest.videos_for_group(group_id)
+                if group_id
+                else tuple(sorted(manifest.videos, key=lambda video: (video.episode_order, video.video_id)))
+            )
             return _json_response(
                 {
                     "study_id": manifest.study_id,
-                    "group_id": group_id,
-                    "videos": [
-                        video.to_dict() for video in manifest.videos_for_group(group_id)
-                    ],
+                    "group_id": group_id or None,
+                    "videos": [video.to_dict() for video in videos],
                 }
             )
         if path == "/api/survey/analysis":
@@ -161,7 +171,8 @@ class WebApp:
             )
         if path.startswith("/videos/"):
             return _file_response(
-                _safe_child(self.config.video_root, unquote(path.removeprefix("/videos/")))
+                _safe_child(self.config.video_root, unquote(path.removeprefix("/videos/"))),
+                range_header=_header(headers, "Range"),
             )
         return _json_response({"error": "not found"}, status=404)
 
@@ -278,7 +289,7 @@ def serve(config: WebConfig) -> None:
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:  # noqa: N802
-            self._send(app.handle_request("GET", self.path))
+            self._send(app.handle_request("GET", self.path, headers=self.headers))
 
         def do_POST(self) -> None:  # noqa: N802
             length = int(self.headers.get("Content-Length") or 0)
@@ -321,15 +332,65 @@ def _static_response(name: str) -> WebResponse:
     return _file_response(Path(__file__).with_name("static") / name)
 
 
-def _file_response(path: Path) -> WebResponse:
+def _file_response(path: Path, *, range_header: str | None = None) -> WebResponse:
     if not path.exists() or not path.is_file():
         raise FileNotFoundError(path.as_posix())
     content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    size = path.stat().st_size
+    if range_header:
+        byte_range = _parse_range_header(range_header, size)
+        if byte_range is None:
+            return WebResponse(
+                status=416,
+                body=b"",
+                content_type=content_type,
+                headers={
+                    "Accept-Ranges": "bytes",
+                    "Content-Range": f"bytes */{size}",
+                },
+            )
+        start, end = byte_range
+        with path.open("rb") as handle:
+            handle.seek(start)
+            body = handle.read(end - start + 1)
+        return WebResponse(
+            status=206,
+            body=body,
+            content_type=content_type,
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Range": f"bytes {start}-{end}/{size}",
+            },
+        )
     return WebResponse(
         status=200,
         body=path.read_bytes(),
         content_type=content_type,
+        headers={"Accept-Ranges": "bytes"},
     )
+
+
+def _parse_range_header(value: str, size: int) -> tuple[int, int] | None:
+    if size < 1 or not value.startswith("bytes=") or "," in value:
+        return None
+    start_text, separator, end_text = value.removeprefix("bytes=").partition("-")
+    if separator != "-":
+        return None
+    try:
+        if start_text == "":
+            suffix_length = int(end_text)
+            if suffix_length <= 0:
+                return None
+            start = max(0, size - suffix_length)
+            end = size - 1
+        else:
+            start = int(start_text)
+            end = int(end_text) if end_text else size - 1
+    except ValueError:
+        return None
+    if start < 0 or end < start or start >= size:
+        return None
+    return start, min(end, size - 1)
 
 
 def _decode_json(body: bytes) -> dict[str, Any]:
@@ -354,6 +415,13 @@ def _single_query_default(query: dict[str, list[str]], name: str, default: str) 
     if not values or values[0] == "":
         return default
     return values[0]
+
+
+def _header(headers: Any | None, name: str) -> str | None:
+    if headers is None:
+        return None
+    value = headers.get(name)
+    return str(value) if value is not None else None
 
 
 def _safe_child(root: Path, child: str | Path) -> Path:

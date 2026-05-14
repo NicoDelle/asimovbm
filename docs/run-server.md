@@ -22,6 +22,11 @@ will discover videos from:
 - `artifacts/survey/videos/<policy>/<view>/<episode>.mp4`
 - `artifacts/survey/json/<policy>/<view>/<episode>.json`
 
+The researcher surfaces use the same discovered media: click an episode in
+`Runs` to see its matching videos beside benchmark scores, or click a row in
+`Prediction vs Survey` to inspect the exact video behind that comparison. MP4s
+should be H.264/yuv420p for browser playback.
+
 Useful alternatives:
 
 - `--survey-quota-per-group 30` to enforce a hard completion quota per cell.

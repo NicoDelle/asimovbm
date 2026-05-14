@@ -3,7 +3,10 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+import pytest
+
 from asimovbm.reports import (
+    MetricCsvReportError,
     append_episode_metrics_csv_row,
     build_episode_metrics_csv_row,
     episode_metrics_csv_header,
@@ -20,11 +23,12 @@ def _metric_report() -> dict:
             "axes": {
                 "perceived_dexterity": {"score": 0.8},
                 "perceived_safety": {"score": 0.7},
-            }
-        },
-        "metrics": {
-            "task_success_rate": {"normalized_score": 1.0},
-            "task_completion_time": {"normalized_score": 0.5},
+            },
+            "features": {
+                "task_success_rate": {"normalized_score": 1.0},
+                "task_completion_time": {"normalized_score": 0.5},
+                "proxemic_intrusion_dose": {"normalized_score": None},
+            },
         },
     }
 
@@ -56,3 +60,11 @@ def test_append_episode_metrics_csv_row_writes_header_once(tmp_path: Path) -> No
     records = list(csv.DictReader(lines))
     assert lines[0].split(",") == list(episode_metrics_csv_header())
     assert len(records) == 2
+
+
+def test_build_episode_metrics_csv_row_rejects_malformed_behavioral_blocks() -> None:
+    report = _metric_report()
+    report["behavioral_metrics"]["features"] = []
+
+    with pytest.raises(MetricCsvReportError, match="behavioral_metrics.features"):
+        build_episode_metrics_csv_row("run-1", report)

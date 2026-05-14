@@ -143,6 +143,20 @@ input:focus-visible {
   background: #fbfcfc;
 }
 
+.metric-card-button {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: inherit;
+  cursor: pointer;
+}
+
+.metric-card-button:hover,
+.metric-card-button:focus-visible {
+  border-color: #6fb7b0;
+  background: #f4fbfa;
+}
+
 .metric-card h3,
 .video-card h3 {
   margin: 0 0 8px;
@@ -155,6 +169,81 @@ input:focus-visible {
   gap: 12px;
   border-top: 1px solid #edf1f1;
   padding: 6px 0;
+}
+
+.score-row em {
+  min-width: 56px;
+  color: #687779;
+  font-style: normal;
+  text-align: right;
+}
+
+.score-header {
+  color: #445254;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.episode-inspector,
+.comparison-inspector {
+  margin-top: 16px;
+  border-top: 1px solid #e5ebeb;
+  padding-top: 16px;
+}
+
+.inspector-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.inspector-heading h3,
+.inspector-heading p {
+  margin: 0;
+}
+
+.media-score-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.5fr) minmax(220px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.research-video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.research-video {
+  display: grid;
+  gap: 8px;
+}
+
+.research-player {
+  width: 100%;
+  max-height: 440px;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #d8e0e0;
+  border-radius: 8px;
+  background: #101819;
+}
+
+.compact-card {
+  margin: 0;
+}
+
+.mini-score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.axis-table {
+  margin-top: 12px;
 }
 
 .survey-form {
@@ -276,6 +365,15 @@ th {
   text-transform: uppercase;
 }
 
+tbody tr[data-video-id] {
+  cursor: pointer;
+}
+
+tbody tr[data-video-id]:hover td,
+tr.selected-row td {
+  background: #f4fbfa;
+}
+
 .muted {
   color: #687779;
 }
@@ -306,5 +404,9 @@ th {
   .panel-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .media-score-layout {
+    grid-template-columns: 1fr;
   }
 }

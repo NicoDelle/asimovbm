@@ -32,7 +32,7 @@ artifacts/survey/videos/
   policy_a/bystander/g1_point_to_point_open.mp4
 ```
 
-Unity video generation writes matching JSON sidecars under a parallel root:
+Simulator video export writes matching JSON sidecars under a parallel root:
 
 ```text
 artifacts/survey/json/
@@ -41,7 +41,9 @@ artifacts/survey/json/
 ```
 
 The MP4 and JSON files share the same relative stem. The server can discover
-that structured layout when no explicit manifest is supplied.
+that structured layout when no explicit manifest is supplied. Generated MP4s
+should be browser-compatible H.264 (`yuv420p`) files; old `mp4v` files should be
+regenerated or transcoded before data collection.
 
 Large video files should normally stay out of git. Commit only an example
 manifest or a manifest that points to local/external storage intentionally.
@@ -71,8 +73,8 @@ sample size exist.
 
 `prediction_source` points to the objective signal used for the comparison
 page. Paths are resolved under `--artifact-root` by default and must stay
-inside the selected source root. Use `"root": "survey_json_root"` for Unity
-video-generation JSON under `--survey-json-root`.
+inside the selected source root. Use `"root": "survey_json_root"` for generated
+simulator sidecars under `--survey-json-root`.
 
 Supported source kinds:
 
@@ -80,8 +82,8 @@ Supported source kinds:
 - `episode_metrics_csv`: a run-level `episode-metrics-XXX.csv` file. The
   loader selects a row by `episode_id` plus optional `run_id`, `iteration`, and
   `row_selector`.
-- `simulation_json`: a raw local/Unity trace JSON, or a JSON object that already
-  contains a metric report.
+- `simulation_json`: a raw local trace JSON, or a generated sidecar JSON object
+  that already contains a metric report.
 
 Example:
 
@@ -132,13 +134,14 @@ builds a transient manifest from paired files matching
 
 The page has three surfaces:
 
-- `Runs`: browse objective validation runs and per-episode axis scores.
+- `Runs`: browse objective validation runs, click an episode, and inspect the
+  matching survey video beside per-episode axis scores.
 - `Survey`: show an anonymous research-use start screen, assign the participant
   to the least-completed eligible cell, play the assigned videos, and collect
   the four Likert questions after each full video.
 - `Prediction vs Survey`: compare predictions against submitted survey means,
-  switch global-score weight presets, inspect per-video absolute errors, and
-  export participant CSV.
+  switch global-score weight presets, click a row to inspect the exact video,
+  and export participant CSV.
 
 Use `--include-q5` when you want to collect the optional validation question:
 

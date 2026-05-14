@@ -77,19 +77,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--survey-video-fps",
         type=int,
-        default=2,
+        default=24,
         help="Frame rate for generated survey videos.",
     )
     parser.add_argument(
         "--survey-video-width",
         type=int,
-        default=426,
+        default=1280,
         help="Pixel width for generated survey videos.",
     )
     parser.add_argument(
         "--survey-video-height",
         type=int,
-        default=240,
+        default=720,
         help="Pixel height for generated survey videos.",
     )
     parser.add_argument(
@@ -135,6 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"local validation run: {result.run_id}")
     print(f"manifest: {result.manifest_path}")
     print(f"report: {result.report_path}")
+    print(f"metrics csv: {result.metrics_csv_path}")
     if result.survey_export is not None:
         print(f"survey videos: {result.survey_export.video_root}")
         print(f"survey json: {result.survey_export.json_root}")

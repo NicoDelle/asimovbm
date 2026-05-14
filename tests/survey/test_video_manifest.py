@@ -156,6 +156,7 @@ def test_discovers_sim_output_video_json_pair(tmp_path: Path) -> None:
         """
         {
           "episode_id": "g1_point_to_point_open",
+          "source_episode_id": "g1_approach_user",
           "robot_id": "g1",
           "policy_id": "policy_a",
           "camera_view": "arrival"
@@ -175,6 +176,7 @@ def test_discovers_sim_output_video_json_pair(tmp_path: Path) -> None:
     assert video.path == "policy_a/arrival/g1_point_to_point_open.mp4"
     assert video.viewpoint == "first_person"
     assert video.group_ids == ("policy_a_fp",)
+    assert video.metrics["source_episode_id"] == "g1_approach_user"
     assert video.prediction_source is not None
     assert video.prediction_source.root == "survey_json_root"
     assert video.prediction_source.path == "policy_a/arrival/g1_point_to_point_open.json"

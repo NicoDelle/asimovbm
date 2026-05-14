@@ -60,9 +60,9 @@ class LocalRunConfig:
     survey_root: Path = Path("artifacts/survey")
     survey_policy_id: str | None = None
     survey_views: tuple[str, ...] = DEFAULT_SURVEY_VIEWS
-    survey_video_fps: int = 2
-    survey_video_width: int = 426
-    survey_video_height: int = 240
+    survey_video_fps: int = 24
+    survey_video_width: int = 1280
+    survey_video_height: int = 720
     survey_video_max_duration_s: float | None = 15.0
     run_id: str | None = None
     catalog: EpisodeCatalog | None = None

@@ -195,8 +195,9 @@ def test_local_run_can_export_survey_videos_and_sidecars(tmp_path: Path, monkeyp
         assert sidecar["camera_view"] == view
         assert sidecar["render_backend"]["kind"] == "mujoco_offscreen"
         assert sidecar["render_backend"]["robot_selector"] == "official_g1"
-        assert sidecar["render_backend"]["width"] == 426
-        assert sidecar["render_backend"]["height"] == 240
+        assert sidecar["render_backend"]["width"] == 1280
+        assert sidecar["render_backend"]["height"] == 720
+        assert sidecar["render_backend"]["video_codec"] == "h264"
         assert sidecar["render_backend"]["max_duration_s"] == 15.0
         assert set(sidecar["metric_report"]["behavioral_metrics"]["axes"]) >= {
             "perceived_dexterity",

@@ -74,6 +74,7 @@ def test_compare_predictions_with_survey_reports_group_and_rank_metrics() -> Non
     )
 
     assert comparison["videos"]["video-a"]["status"] == "compared"
+    assert comparison["videos"]["video-a"]["video"]["path"] == "video-a.mp4"
     assert comparison["videos"]["video-a"]["global_absolute_error"] == 10
     assert comparison["groups"]["policy_a_fp"]["compared_count"] == 2
     assert comparison["rank_order_correlation"] == 1

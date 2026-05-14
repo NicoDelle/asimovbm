@@ -120,8 +120,10 @@ to physical human/obstacle bodies later.
 Active execution lives in `src/asimovbm/local_runner/`. It loads the six
 canonical `g1_slam` configs, records per-step traces, maps trace fields into
 the pure metric functions under `src/asimovbm/metrics/`, and writes
-`manifest.json`, `report.json`, trace files, and metric files under
-`artifacts/local-validation/<run-id>/`.
+`manifest.json`, `report.json`, `episode-metrics-<NNN>.csv`, trace files, and
+metric files under `artifacts/local-validation/<run-id>/`. The CSV is an export
+projection for spreadsheet and web prediction lookup; JSON remains authoritative
+for metric status, confidence, reasons, raw values, and aggregation metadata.
 
 The portable default execution backend is `g1_slam_reference_trace_v1`, which
 instruments the existing `g1_slam` planner, lidar, controller, world, and

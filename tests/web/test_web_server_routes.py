@@ -138,6 +138,43 @@ def test_survey_video_and_response_flow_writes_artifacts(tmp_path: Path) -> None
     assert (tmp_path / "survey" / "pilot" / "responses.jsonl").exists()
 
 
+def test_survey_videos_endpoint_can_return_all_videos_for_researcher_views(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "manifest.json"
+    video_root = tmp_path / "videos"
+    video_root.mkdir()
+    (video_root / "video-1.mp4").write_bytes(b"fake")
+    _manifest(manifest_path)
+    app = WebApp(
+        WebConfig(
+            artifact_root=tmp_path / "runs",
+            survey_root=tmp_path / "survey",
+            video_root=video_root,
+            video_manifest_path=manifest_path,
+        )
+    )
+
+    response = app.handle_request("GET", "/api/survey/videos")
+    payload = json.loads(response.body)
+
+    assert response.status == 200
+    assert payload["group_id"] is None
+    assert payload["videos"][0]["video_id"] == "video-1"
+
+
+def test_video_route_supports_byte_ranges_for_browser_playback(tmp_path: Path) -> None:
+    video_root = tmp_path / "videos"
+    video_root.mkdir()
+    (video_root / "video-1.mp4").write_bytes(b"0123456789")
+    app = WebApp(WebConfig(video_root=video_root))
+
+    response = app.handle_request("GET", "/videos/video-1.mp4", headers={"Range": "bytes=2-5"})
+
+    assert response.status == 206
+    assert response.body == b"2345"
+    assert response.headers["Accept-Ranges"] == "bytes"
+    assert response.headers["Content-Range"] == "bytes 2-5/10"
+
+
 def test_unknown_survey_group_returns_structured_error(tmp_path: Path) -> None:
     manifest_path = tmp_path / "manifest.json"
     video_root = tmp_path / "videos"
@@ -373,6 +410,7 @@ def test_prediction_and_comparison_routes_join_manifest_metrics_and_survey(tmp_p
     comparison = json.loads(comparison_response.body)["comparison"]
     assert predictions["video-1"]["axes"]["perceived_dexterity"]["score"] == 80
     assert comparison["videos"]["video-1"]["status"] == "compared"
+    assert comparison["videos"]["video-1"]["video"]["path"] == "video-1.mp4"
     assert comparison["videos"]["video-1"]["survey_global"] == 100
 
 

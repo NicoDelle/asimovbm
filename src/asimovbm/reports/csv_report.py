@@ -21,6 +21,10 @@ EPISODE_METRICS_METADATA_COLUMNS: tuple[str, ...] = (
 )
 
 
+class MetricCsvReportError(ValueError):
+    """Raised when a metric report cannot be projected to CSV safely."""
+
+
 def episode_metrics_csv_header() -> tuple[str, ...]:
     return (
         EPISODE_METRICS_METADATA_COLUMNS
@@ -36,7 +40,10 @@ def build_episode_metrics_csv_row(
     episode_title: str | None = None,
     tier_id: str | None = None,
 ) -> dict[str, str]:
-    behavioral = _mapping(metric_report.get("behavioral_metrics"))
+    behavioral = _required_mapping(
+        metric_report.get("behavioral_metrics"),
+        "behavioral_metrics",
+    )
     row = {
         "run_id": run_id,
         "episode_id": _string(metric_report.get("episode_id")),
@@ -46,13 +53,17 @@ def build_episode_metrics_csv_row(
         "technical_valid": _bool_string(metric_report.get("technical_valid")),
         "terminal_status": _string(metric_report.get("terminal_status")),
     }
-    axes = _mapping(behavioral.get("axes"))
+    axes = _required_mapping(behavioral.get("axes"), "behavioral_metrics.axes")
     for axis_id in SOCIAL_NAVIGATION_AXIS_IDS:
-        axis = _mapping(axes.get(axis_id))
+        axis = _optional_mapping(axes, axis_id, f"behavioral_metrics.axes.{axis_id}")
         row[axis_id] = _score_string(axis.get("score"))
-    features = _mapping(metric_report.get("metrics"))
+    features = _required_mapping(behavioral.get("features"), "behavioral_metrics.features")
     for metric_id in SOCIAL_NAVIGATION_METRIC_IDS:
-        feature = _mapping(features.get(metric_id))
+        feature = _optional_mapping(
+            features,
+            metric_id,
+            f"behavioral_metrics.features.{metric_id}",
+        )
         row[metric_id] = _score_string(feature.get("normalized_score"))
     return row
 
@@ -67,8 +78,19 @@ def append_episode_metrics_csv_row(path: Path, row: Mapping[str, str]) -> None:
         writer.writerow({column: row.get(column, "") for column in episode_metrics_csv_header()})
 
 
-def _mapping(value: Any) -> Mapping[str, Any]:
-    return value if isinstance(value, Mapping) else {}
+def _required_mapping(value: Any, label: str) -> Mapping[str, Any]:
+    if isinstance(value, Mapping):
+        return value
+    raise MetricCsvReportError(f"metric report field {label!r} must be a JSON object")
+
+
+def _optional_mapping(container: Mapping[str, Any], key: str, label: str) -> Mapping[str, Any]:
+    if key not in container:
+        return {}
+    value = container[key]
+    if isinstance(value, Mapping):
+        return value
+    raise MetricCsvReportError(f"metric report field {label!r} must be a JSON object")
 
 
 def _score_string(value: Any) -> str:

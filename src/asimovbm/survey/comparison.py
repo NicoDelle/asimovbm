@@ -151,12 +151,14 @@ def _video_metadata(video: SurveyVideo) -> dict[str, Any]:
     return {
         "video_id": video.video_id,
         "title": video.title,
+        "path": video.path,
         "policy_id": video.policy_id,
         "viewpoint": video.viewpoint,
         "robot_id": video.robot_id,
         "episode_id": video.episode_id,
         "episode_order": video.episode_order,
         "group_ids": list(video.group_ids),
+        "metrics": dict(video.metrics),
     }
 
 
