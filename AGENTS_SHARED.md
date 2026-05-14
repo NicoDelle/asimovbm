@@ -34,14 +34,17 @@ launcher command and defaults are canonical.
 ## Suggested Lookup Order
 
 1. Read the local repository for current files and artifacts.
-2. Inspect `final-rush-choices.md` for current final-rush implementation
+2. Search `docs/solutions/` for documented solutions to past problems. Entries
+   are organized by category with YAML frontmatter such as `module`, `tags`,
+   and `problem_type`.
+3. Inspect `final-rush-choices.md` for current final-rush implementation
    decisions.
-3. Inspect canonical project planning material when available.
-4. Inspect relevant metric or document pages before changing derived benchmark
+4. Inspect canonical project planning material when available.
+5. Inspect relevant metric or document pages before changing derived benchmark
    content.
-5. Inspect brainstorms, diagrams, or visual reasoning boards when
+6. Inspect brainstorms, diagrams, or visual reasoning boards when
    reconstructing decisions or updating benchmark scope.
-6. Only then update files, definitions, or implementation plans.
+7. Only then update files, definitions, or implementation plans.
 
 ## Benchmark Content
 

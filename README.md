@@ -20,6 +20,7 @@ asimovbm/metrics/              Editable objective HRI metric implementations.
 metrics/                       Human-facing metric editing guide.
 g1_slam/                       Active robot episode configs and simulation package.
 docs/specs/                    Metric specification.
+docs/solutions/                Searchable notes from solved repo problems.
 tests/                         Python tests for active package behavior.
 ```
 
@@ -31,6 +32,7 @@ tests/                         Python tests for active package behavior.
 - Metric editing guide: `metrics/README.md`
 - Objective metric code: `asimovbm/metrics/`
 - Metric tests: `tests/metrics/`
+- Solved-problem notes: `docs/solutions/`
 - Local runner: `asimovbm/local_runner/`
 - Web dashboard and survey app: `asimovbm/web/`
 
