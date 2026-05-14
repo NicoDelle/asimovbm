@@ -1,5 +1,9 @@
 # Social Navigation Metrics
 
+For the paper workflow and where these metrics fit in the repo, start with
+[docs/paper-workflow.md](../paper-workflow.md). This file is the metric
+formula/specification reference.
+
 Status: v1 draft, supersedes the v0 spec dated 2026-05-05. Approved for
 implementation as a pure-function metric library; calibration constants and
 per-axis weights remain prototype-only until pilot rater data is collected.

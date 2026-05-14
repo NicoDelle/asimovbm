@@ -1,33 +1,8 @@
-# Run Survey Webserver
+# Run Server
 
-From the repository root, start the local survey/metrics webserver with:
+The current webserver workflow is documented in:
 
-```bash
-PYTHONPATH=src asimovbm-web \
-  --artifact-root artifacts/local-validation \
-  --survey-root artifacts/survey \
-  --video-root artifacts/survey/videos \
-  --survey-json-root artifacts/survey/json \
-  --video-manifest examples/survey/video_manifest.example.json \
-  --study-id pilot
-```
+- [docs/paper-workflow.md](paper-workflow.md)
 
-Then open:
-
-- `http://127.0.0.1:8765`
-
-If you do not want to use a manifest file, omit `--video-manifest` and the server
-will discover videos from:
-
-- `artifacts/survey/videos/<policy>/<view>/<episode>.mp4`
-- `artifacts/survey/json/<policy>/<view>/<episode>.json`
-
-The researcher surfaces use the same discovered media: click an episode in
-`Runs` to see its matching videos beside benchmark scores, or click a row in
-`Prediction vs Survey` to inspect the exact video behind that comparison. MP4s
-should be H.264/yuv420p for browser playback.
-
-Useful alternatives:
-
-- `--survey-quota-per-group 30` to enforce a hard completion quota per cell.
-- `--include-q5` to add the optional validation question.
+Use that guide for the supported artifact roots, survey roots, and dashboard
+entry points.

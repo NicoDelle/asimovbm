@@ -1,7 +1,7 @@
 ---
 title: "refactor: Simplify paper workflow repo layout"
 type: refactor
-status: active
+status: completed
 date: 2026-05-14
 origin: docs/brainstorms/2026-05-14-paper-workflow-repo-cleanup-requirements.md
 ---
