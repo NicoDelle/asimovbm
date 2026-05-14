@@ -29,14 +29,23 @@ asimovbm-web = "asimovbm.web.server:main"
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-where = ["src", "g1_slam/src"]
+[tool.setuptools]
+packages = [
+  "asimovbm",
+  "asimovbm.local_runner",
+  "asimovbm.metrics",
+  "asimovbm.reports",
+  "asimovbm.survey",
+  "asimovbm.web",
+  "g1_slam",
+]
+package-dir = {"" = ".", "g1_slam" = "g1_slam/src/g1_slam"}
 
 [tool.setuptools.package-data]
 asimovbm = ["web/static/*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "g1_slam/src"]
+pythonpath = [".", "g1_slam/src"]
 testpaths = ["tests"]
 filterwarnings = [
   "ignore::DeprecationWarning",
@@ -45,7 +54,7 @@ filterwarnings = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-extend-exclude = ["archive", "g1_slam/tests"]
+extend-exclude = ["g1_slam/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]

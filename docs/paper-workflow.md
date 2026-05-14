@@ -27,7 +27,7 @@ artifacts/survey/
 ```
 
 The `paper/` directory is for paper-facing notebooks and human-survey data.
-Source code stays in `src/asimovbm/` and `g1_slam/`.
+Source code stays in `asimovbm/` and `g1_slam/`.
 
 ## Workflow Overview
 
@@ -41,7 +41,7 @@ asimovbm-local runner
 artifacts/local-validation/
         |
         v
-src/asimovbm/metrics/ objective scores
+asimovbm/metrics/ objective scores
         |
         v
 paper/notebooks/simulation_results.ipynb
@@ -60,7 +60,13 @@ paper/notebooks/paper_results.ipynb
 Metric implementation lives here:
 
 ```text
-src/asimovbm/metrics/
+asimovbm/metrics/
+```
+
+Metric editing starts here:
+
+```text
+metrics/README.md
 ```
 
 Metric tests live here:
@@ -239,7 +245,8 @@ dependencies available:
 
 ## Maintenance Rules
 
-- Keep `src/asimovbm/metrics/` and `tests/metrics/` discoverable and stable.
+- Keep `asimovbm/metrics/`, `metrics/README.md`, and `tests/metrics/`
+  discoverable and stable.
 - Keep curated paper data and outputs tracked in git.
 - Keep `artifacts/local-validation/` as the local runner output/evidence root
   unless a separate cleanup proves a narrower move is safe.

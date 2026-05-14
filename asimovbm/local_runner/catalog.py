@@ -270,4 +270,4 @@ def _policy_profile_for(robot_id: str, policy_id: str) -> dict[str, Any]:
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    return Path(__file__).resolve().parents[2]
