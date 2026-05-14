@@ -15,7 +15,7 @@ from asimovbm.reports import (
 
 def _metric_report() -> dict:
     return {
-        "episode_id": "g1_approach_user",
+        "episode_id": "g1_point_to_point_open",
         "iteration": 0,
         "technical_valid": True,
         "terminal_status": "success",
@@ -42,7 +42,7 @@ def test_build_episode_metrics_csv_row_serializes_axes_and_metrics() -> None:
     )
 
     assert row["run_id"] == "run-1"
-    assert row["episode_id"] == "g1_approach_user"
+    assert row["episode_id"] == "g1_point_to_point_open"
     assert row["technical_valid"] == "true"
     assert row["perceived_dexterity"] == "0.8"
     assert row["task_success_rate"] == "1.0"

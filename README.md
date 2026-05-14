@@ -150,6 +150,11 @@ locomotion, dynamic obstacle, camera, and visualization settings. The active
 runner selects one robot per run and records the policy profile used for that
 testbench run.
 
+G1 can run the point-to-point set with `g1_robojudo_asap` or
+`g1_robojudo_unitree`. Go2 remains available as the robot-dog replacement for
+the humanoid on the same three point-to-point scenario types through
+`go2_unitree_rl_mjlab`.
+
 ## Metrics
 
 Metric implementations live in `src/asimovbm/metrics/`. They are pure functions

@@ -23,7 +23,7 @@ def _manifest(path: Path) -> None:
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_approach_user",
+                    "episode_id": "g1_point_to_point_open",
                     "group_ids": ["policy_a_fp"],
                     "episode_order": 1,
                 }
@@ -44,7 +44,7 @@ def _two_group_manifest(path: Path) -> None:
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_approach_user",
+                    "episode_id": "g1_point_to_point_open",
                     "group_ids": ["policy_a_fp"],
                     "episode_order": 1,
                 },
@@ -54,7 +54,7 @@ def _two_group_manifest(path: Path) -> None:
                     "policy_id": "policy_b",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_approach_user",
+                    "episode_id": "g1_point_to_point_open",
                     "group_ids": ["policy_b_fp"],
                     "episode_order": 1,
                 },
@@ -333,9 +333,9 @@ def test_prediction_and_comparison_routes_join_manifest_metrics_and_survey(tmp_p
     artifact_root.mkdir()
     (video_root / "video-1.mp4").write_bytes(b"fake")
     _write_json(
-        artifact_root / "run-1" / "g1_approach_user" / "iteration-000" / "metrics.json",
+        artifact_root / "run-1" / "g1_point_to_point_open" / "iteration-000" / "metrics.json",
         {
-            "episode_id": "g1_approach_user",
+            "episode_id": "g1_point_to_point_open",
             "iteration": 0,
             "technical_valid": True,
             "terminal_status": "success",
@@ -361,12 +361,12 @@ def test_prediction_and_comparison_routes_join_manifest_metrics_and_survey(tmp_p
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_approach_user",
+                    "episode_id": "g1_point_to_point_open",
                     "group_ids": ["policy_a_fp"],
                     "episode_order": 1,
                     "prediction_source": {
                         "kind": "metrics_json",
-                        "path": "run-1/g1_approach_user/iteration-000/metrics.json",
+                        "path": "run-1/g1_point_to_point_open/iteration-000/metrics.json",
                     },
                 }
             ],

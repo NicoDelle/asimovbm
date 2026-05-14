@@ -82,3 +82,16 @@ def test_policy_path_override_is_applied_to_selected_specs() -> None:
     )
 
     assert specs[0].config.locomotion.policy_path.as_posix() == "policies/go2/custom.onnx"
+
+
+def test_g1_unitree_robojudo_policy_profile_is_available() -> None:
+    catalog = load_default_catalog()
+
+    specs = catalog.select(
+        ("g1_point_to_point_open",),
+        robot_id="g1",
+        policy_id="g1_robojudo_unitree",
+    )
+
+    assert specs[0].policy_id == "g1_robojudo_unitree"
+    assert specs[0].config.locomotion.robojudo_config == "g1"

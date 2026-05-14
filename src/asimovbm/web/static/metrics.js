@@ -124,19 +124,6 @@ function episodeAliases(episodeId) {
   const aliases = new Set([episodeId]);
   const suffix = String(episodeId).replace(/^(g1|go2)_/, "");
   aliases.add(suffix);
-  const map = {
-    approach_user: "point_to_point_open",
-    lateral_open: "point_to_point_static_obstacles",
-    lateral_static_dynamic_obstacles: "point_to_point_dynamic_npcs",
-    point_to_point_open: "approach_user",
-    point_to_point_static_obstacles: "lateral_open",
-    point_to_point_dynamic_npcs: "lateral_static_dynamic_obstacles"
-  };
-  if (map[suffix]) {
-    aliases.add(map[suffix]);
-    aliases.add(`g1_${map[suffix]}`);
-    aliases.add(`go2_${map[suffix]}`);
-  }
   return aliases;
 }
 

@@ -106,6 +106,10 @@ go2_point_to_point_static_obstacles
 go2_point_to_point_dynamic_npcs
 ```
 
+The Go2 point-to-point configs are the robot-dog counterparts to the G1
+humanoid configs. They stay in the canonical catalog so the same scenario type
+can be run with either robot.
+
 Pass `--episode` more than once to run a subset:
 
 ```bash

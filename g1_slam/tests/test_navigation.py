@@ -155,11 +155,20 @@ class NavigationTests(unittest.TestCase):
     def test_episode_configs_load(self):
         config_dir = Path(__file__).resolve().parents[1] / "config" / "episodes"
         config_paths = sorted(config_dir.glob("*.json"))
-        self.assertEqual(len(config_paths), 12)
+        self.assertEqual(len(config_paths), 6)
+        self.assertEqual(
+            [path.stem for path in config_paths],
+            [
+                "g1_point_to_point_dynamic_npcs",
+                "g1_point_to_point_open",
+                "g1_point_to_point_static_obstacles",
+                "go2_point_to_point_dynamic_npcs",
+                "go2_point_to_point_open",
+                "go2_point_to_point_static_obstacles",
+            ],
+        )
         configs = {path.stem: load_navigation_config(path) for path in config_paths}
 
-        self.assertEqual(configs["g1_lateral_open"].world.obstacles, ())
-        self.assertFalse(configs["g1_lateral_open"].dynamic_obstacles.blue_cylinders)
         self.assertEqual(configs["g1_point_to_point_open"].world.obstacles, ())
         self.assertEqual(configs["g1_point_to_point_open"].dynamic_obstacles.mode, "none")
         self.assertEqual(configs["g1_point_to_point_open"].world.x_min, -8.0)
@@ -210,35 +219,17 @@ class NavigationTests(unittest.TestCase):
             configs["go2_point_to_point_dynamic_npcs"].dynamic_obstacles.blue_cylinder_count,
             3,
         )
-        self.assertTrue(configs["g1_lateral_static_dynamic_obstacles"].world.obstacles)
+        self.assertEqual(configs["go2_point_to_point_open"].locomotion.mode, "policy")
         self.assertEqual(
-            configs["g1_lateral_static_dynamic_obstacles"].dynamic_obstacles.mode,
-            "npcs",
-        )
-        self.assertEqual(
-            configs["g1_lateral_static_dynamic_obstacles"].dynamic_obstacles.blue_cylinder_count,
-            3,
-        )
-        self.assertEqual(configs["go2_lateral_open"].world.obstacles, ())
-        self.assertEqual(configs["go2_lateral_open"].locomotion.mode, "policy")
-        self.assertEqual(
-            configs["go2_lateral_open"].locomotion.policy_path,
+            configs["go2_point_to_point_open"].locomotion.policy_path,
             DEFAULT_GO2_POLICY_PATH,
         )
-        self.assertEqual(configs["go2_lateral_open"].locomotion.observation_size, 45)
+        self.assertEqual(configs["go2_point_to_point_open"].locomotion.observation_size, 45)
         self.assertEqual(
-            configs["go2_lateral_open"].locomotion.observation_profile,
+            configs["go2_point_to_point_open"].locomotion.observation_profile,
             "dias_ai_master_go2_velocity_flat",
         )
-        self.assertEqual(configs["go2_lateral_open"].locomotion.action_scale, 0.5)
-        self.assertEqual(
-            configs["go2_lateral_static_dynamic_obstacles"].dynamic_obstacles.mode,
-            "npcs",
-        )
-        self.assertEqual(
-            configs["go2_lateral_static_dynamic_obstacles"].dynamic_obstacles.blue_cylinder_count,
-            3,
-        )
+        self.assertEqual(configs["go2_point_to_point_open"].locomotion.action_scale, 0.5)
         for config in configs.values():
             self.assertEqual(config.controller.start_delay_s, 1.0)
             self.assertTrue(config.visualization.fixed_camera)
@@ -247,8 +238,8 @@ class NavigationTests(unittest.TestCase):
             self.assertFalse(config.visualization.show_trajectory)
             if config.locomotion.mode == "robojudo":
                 self.assertEqual(config.locomotion.robojudo_config, "g1_asap_loco")
-        self.assertLess(configs["g1_approach_user"].goal[0], 0.0)
-        self.assertLess(configs["go2_approach_user"].goal[0], 0.0)
+            if config.locomotion.mode == "policy":
+                self.assertEqual(config.locomotion.policy_path, DEFAULT_GO2_POLICY_PATH)
 
     def test_camera_view_presets_select_named_json_cameras(self):
         config = load_navigation_config(
@@ -413,6 +404,7 @@ class NavigationTests(unittest.TestCase):
         with (
             patch.object(RoboJuDoBackend, "_install_repo_path", return_value=Path("RoboJuDo")),
             patch.object(RoboJuDoBackend, "_install_mujoco_viewer_compat"),
+            patch.object(RoboJuDoBackend, "_install_headless_mujoco_viewer"),
             patch.object(RoboJuDoBackend, "_install_virtual_joystick_controller"),
             patch.object(RoboJuDoBackend, "_build_pipeline", return_value=FakePipeline()),
             patch.object(RoboJuDoBackend, "reset"),

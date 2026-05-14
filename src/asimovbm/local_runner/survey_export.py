@@ -22,11 +22,6 @@ from .traces import LocalRunRecord
 
 SURVEY_SCHEMA_VERSION = "asimovbm.simulation_episode.v1"
 DEFAULT_SURVEY_VIEWS: tuple[str, ...] = ("arrival", "bystander")
-KNOWN_EPISODE_STEMS: dict[str, str] = {
-    "approach_user": "point_to_point_open",
-    "lateral_open": "point_to_point_static_obstacles",
-    "lateral_static_dynamic_obstacles": "point_to_point_dynamic_npcs",
-}
 
 
 class SurveyExportError(RuntimeError):
@@ -367,10 +362,6 @@ def _survey_policy_id(policy_id: str) -> str:
 
 
 def _survey_episode_id(episode_id: str) -> str:
-    for suffix, survey_suffix in KNOWN_EPISODE_STEMS.items():
-        if episode_id.endswith(suffix):
-            robot = episode_id.split("_", 1)[0]
-            return f"{robot}_{survey_suffix}"
     return episode_id.strip().lower().replace("-", "_")
 
 

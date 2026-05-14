@@ -104,7 +104,7 @@ def test_report_builder_accepts_local_technical_context() -> None:
             run_id="run-1",
             maturity="local_g1_slam_validation",
             reliability={"attempts": 1},
-            validation_results=({"maturity": "local_g1_slam_validation", "episode_id": "g1_approach_user"},),
+            validation_results=({"maturity": "local_g1_slam_validation", "episode_id": "g1_point_to_point_open"},),
         )
     )
 

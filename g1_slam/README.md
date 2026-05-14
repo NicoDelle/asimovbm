@@ -77,7 +77,7 @@ For episode configs that use Go2 policy locomotion, use the Go2 robot selector:
 
 ```bash
 PYTHONPATH=src python3 -m g1_slam \
-  --config config/episodes/go2_lateral_open.json \
+  --config config/episodes/go2_point_to_point_static_obstacles.json \
   --mujoco \
   --robot official_go2 \
   --render

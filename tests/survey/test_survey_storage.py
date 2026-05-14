@@ -19,7 +19,7 @@ def _manifest(tmp_path: Path):
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_approach_user",
+                    "episode_id": "g1_point_to_point_open",
                     "group_ids": ["policy_a_fp"],
                     "episode_order": 1,
                 }

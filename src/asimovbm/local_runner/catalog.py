@@ -1,4 +1,4 @@
-"""Catalog for the six canonical `g1_slam` validation episodes.
+"""Catalog for the six canonical point-to-point `g1_slam` validation episodes.
 
 The catalog is deliberately small and file-backed. Each entry points at one of
 the checked-in JSON configs, stores a checksum of the exact bytes used for the
