@@ -19,7 +19,7 @@ def test_list_runs_returns_manifest_and_report_summary(tmp_path: Path) -> None:
             "run_id": "local-test",
             "created_at": "2026-05-13T10:00:00+00:00",
             "viewer_mode": "headless",
-            "selected_episode_ids": ["g1_approach_user"],
+            "selected_episode_ids": ["g1_point_to_point_open"],
             "records": [],
         },
     )
@@ -41,7 +41,7 @@ def test_list_runs_returns_manifest_and_report_summary(tmp_path: Path) -> None:
             "status": "ready",
             "created_at": "2026-05-13T10:00:00+00:00",
             "viewer_mode": "headless",
-            "selected_episode_ids": ["g1_approach_user"],
+            "selected_episode_ids": ["g1_point_to_point_open"],
             "reliability": {
                 "total_episode_runs": 1,
                 "technical_valid_episode_runs": 1,
@@ -59,19 +59,19 @@ def test_load_run_resolves_record_metric_paths(tmp_path: Path) -> None:
             "run_id": "local-test",
             "records": [
                 {
-                    "episode_id": "g1_approach_user",
-                    "trace_path": "g1_approach_user/iteration-000/trace.json",
-                    "metrics_path": "g1_approach_user/iteration-000/metrics.json",
+                    "episode_id": "g1_point_to_point_open",
+                    "trace_path": "g1_point_to_point_open/iteration-000/trace.json",
+                    "metrics_path": "g1_point_to_point_open/iteration-000/metrics.json",
                 }
             ],
         },
     )
     _write_json(run_dir / "report.json", {"technical_reliability": {}})
     _write_json(
-        run_dir / "g1_approach_user" / "iteration-000" / "metrics.json",
+        run_dir / "g1_point_to_point_open" / "iteration-000" / "metrics.json",
         {"behavioral_metrics": {"status": "scored"}},
     )
-    (run_dir / "g1_approach_user" / "iteration-000" / "trace.json").write_text(
+    (run_dir / "g1_point_to_point_open" / "iteration-000" / "trace.json").write_text(
         "{}",
         encoding="utf-8",
     )

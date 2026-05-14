@@ -22,7 +22,7 @@ def test_manifest_returns_group_videos_in_episode_order(tmp_path: Path) -> None:
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_lateral_open",
+                    "episode_id": "g1_point_to_point_static_obstacles",
                     "group_ids": ["policy_a_fp"],
                     "episode_order": 2,
                 },
@@ -32,7 +32,7 @@ def test_manifest_returns_group_videos_in_episode_order(tmp_path: Path) -> None:
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_approach_user",
+                    "episode_id": "g1_point_to_point_open",
                     "group_ids": ["policy_a_fp"],
                     "episode_order": 1,
                 },
@@ -57,7 +57,7 @@ def test_optional_go2_entries_do_not_affect_required_group(tmp_path: Path) -> No
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "go2",
-                    "episode_id": "go2_approach_user",
+                    "episode_id": "go2_point_to_point_open",
                     "group_ids": ["go2_policy_a_fp"],
                 }
             ]
@@ -79,7 +79,7 @@ def test_manifest_rejects_paths_outside_video_root(tmp_path: Path) -> None:
                         "policy_id": "policy_a",
                         "viewpoint": "first_person",
                         "robot_id": "g1",
-                        "episode_id": "g1_approach_user",
+                        "episode_id": "g1_point_to_point_open",
                         "group_ids": ["policy_a_fp"],
                     }
                 ]
@@ -98,7 +98,7 @@ def test_manifest_parses_prediction_source_under_artifact_root(tmp_path: Path) -
                     "policy_id": "policy_a",
                     "viewpoint": "first_person",
                     "robot_id": "g1",
-                    "episode_id": "g1_approach_user",
+                    "episode_id": "g1_point_to_point_open",
                     "group_ids": ["policy_a_fp"],
                     "prediction_source": {
                         "kind": "episode_metrics_csv",
@@ -130,7 +130,7 @@ def test_manifest_rejects_prediction_source_outside_artifact_root(tmp_path: Path
                         "policy_id": "policy_a",
                         "viewpoint": "first_person",
                         "robot_id": "g1",
-                        "episode_id": "g1_approach_user",
+                        "episode_id": "g1_point_to_point_open",
                         "group_ids": ["policy_a_fp"],
                         "prediction_source": {
                             "kind": "metrics_json",
@@ -156,7 +156,7 @@ def test_discovers_sim_output_video_json_pair(tmp_path: Path) -> None:
         """
         {
           "episode_id": "g1_point_to_point_open",
-          "source_episode_id": "g1_approach_user",
+          "source_episode_id": "g1_point_to_point_open",
           "robot_id": "g1",
           "policy_id": "policy_a",
           "camera_view": "arrival"
@@ -176,7 +176,7 @@ def test_discovers_sim_output_video_json_pair(tmp_path: Path) -> None:
     assert video.path == "policy_a/arrival/g1_point_to_point_open.mp4"
     assert video.viewpoint == "first_person"
     assert video.group_ids == ("policy_a_fp",)
-    assert video.metrics["source_episode_id"] == "g1_approach_user"
+    assert video.metrics["source_episode_id"] == "g1_point_to_point_open"
     assert video.prediction_source is not None
     assert video.prediction_source.root == "survey_json_root"
     assert video.prediction_source.path == "policy_a/arrival/g1_point_to_point_open.json"

@@ -41,8 +41,8 @@ Normalized RoboJudo-derived pack run:
 ```bash
 asimovbm-server local-validation run \
   --episode-pack robojudo \
-  --tier-id static_dynamic_obstacles \
-  --episode-id lateral_static_dynamic_obstacles \
+  --tier-id point_to_point_dynamic_npcs \
+  --episode-id point_to_point_dynamic_npcs \
   --robot-profile go2-kinematic \
   --agent-profile obstacle-aware-nav \
   --artifact-root artifacts/local-validation
@@ -108,12 +108,14 @@ runner does not silently replace a missing real robot with a marker.
 ## Normalized RoboJudo Pack
 
 `examples/episode_packs/robojudo_navigation_validation.json` contains the
-robot-neutral versions of the paired `g1_slam/config/episodes` configs:
+robot-neutral versions of the paired point-to-point
+`g1_slam/config/episodes` configs:
 
-- `approach_user / approach_user`: direct approach to a viewer/user position.
-- `lateral_open / lateral_open`: lateral traversal with no obstacles.
-- `static_dynamic_obstacles / lateral_static_dynamic_obstacles`: rectangular
-  red obstacles plus deterministic moving blue cylinders.
+- `point_to_point_open / point_to_point_open`: point A to point B with no obstacles.
+- `point_to_point_static_obstacles / point_to_point_static_obstacles`:
+  point-to-point navigation around static red blocks.
+- `point_to_point_dynamic_npcs / point_to_point_dynamic_npcs`:
+  point-to-point navigation with deterministic moving pedestrian NPCs.
 
 Outputs are written to:
 

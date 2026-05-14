@@ -61,7 +61,7 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
             run_id="test-run",
             iterations=1,
             robot_id="g1",
-            episode_ids=("g1_approach_user",),
+            episode_ids=("g1_point_to_point_open",),
             backend=backend,
         )
     )
@@ -72,8 +72,8 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
     assert manifest["robot_id"] == "g1"
     assert manifest["policy_id"] == "g1_robojudo_asap"
     assert manifest["viewer_mode"] == "visible"
-    assert manifest["selected_episode_ids"] == ["g1_approach_user"]
-    assert manifest["records"][0]["trace_path"] == "g1_approach_user/iteration-000/trace.json"
+    assert manifest["selected_episode_ids"] == ["g1_point_to_point_open"]
+    assert manifest["records"][0]["trace_path"] == "g1_point_to_point_open/iteration-000/trace.json"
     assert manifest["metrics_csv_path"] == "episode-metrics-000.csv"
     assert result.metrics_csv_path.name == "episode-metrics-000.csv"
     assert (result.run_dir / manifest["records"][0]["trace_path"]).exists()
@@ -97,15 +97,15 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
     assert behavioral["axes"]["perceived_dexterity"]["confidence"] == "partial"
     assert behavioral["axes"]["perceived_dexterity"]["source_episode_evidence_gaps"]
     assert behavioral["axes"]["perceived_dexterity"]["contributing_episode_runs"] == [
-        {"episode_id": "g1_approach_user", "iteration": 0}
+        {"episode_id": "g1_point_to_point_open", "iteration": 0}
     ]
-    assert behavioral["episode_blocks"][0]["episode_id"] == "g1_approach_user"
+    assert behavioral["episode_blocks"][0]["episode_id"] == "g1_point_to_point_open"
     metrics_csv = (result.run_dir / manifest["metrics_csv_path"]).read_text(encoding="utf-8")
     assert "perceived_dexterity" in metrics_csv
-    assert "g1_approach_user" in metrics_csv
+    assert "g1_point_to_point_open" in metrics_csv
     assert backend.calls == [
         {
-            "episode_id": "g1_approach_user",
+            "episode_id": "g1_point_to_point_open",
             "iteration": 0,
             "viewer_enabled": True,
             "viewer_speed": 4.0,
@@ -129,9 +129,9 @@ def test_default_single_iteration_requests_visible_viewer_for_selected_robot_epi
     assert len(backend.calls) == 3
     assert all(call["viewer_enabled"] is True for call in backend.calls)
     assert [call["episode_id"] for call in backend.calls] == [
-        "g1_approach_user",
-        "g1_lateral_open",
-        "g1_lateral_static_dynamic_obstacles",
+        "g1_point_to_point_open",
+        "g1_point_to_point_static_obstacles",
+        "g1_point_to_point_dynamic_npcs",
     ]
 
 
@@ -150,7 +150,7 @@ def test_local_run_can_export_survey_videos_and_sidecars(tmp_path: Path, monkeyp
             run_id="survey-run",
             iterations=1,
             robot_id="g1",
-            episode_ids=("g1_approach_user",),
+            episode_ids=("g1_point_to_point_open",),
             backend=backend,
             survey_export=True,
             survey_root=tmp_path / "survey",
@@ -162,8 +162,8 @@ def test_local_run_can_export_survey_videos_and_sidecars(tmp_path: Path, monkeyp
     assert result.survey_export is not None
     assert backend.calls[0]["viewer_enabled"] is False
     assert rendered == [
-        ("g1_approach_user", "official_g1", "arrival", 4),
-        ("g1_approach_user", "official_g1", "bystander", 4),
+        ("g1_point_to_point_open", "official_g1", "arrival", 4),
+        ("g1_point_to_point_open", "official_g1", "bystander", 4),
     ]
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["survey_export"]["summary_json_path"].endswith("metrics-summary-survey-run.json")
@@ -190,7 +190,7 @@ def test_local_run_can_export_survey_videos_and_sidecars(tmp_path: Path, monkeyp
         assert video_path.stat().st_size > 0
         sidecar = json.loads(json_path.read_text(encoding="utf-8"))
         assert sidecar["episode_id"] == "g1_point_to_point_open"
-        assert sidecar["source_episode_id"] == "g1_approach_user"
+        assert sidecar["source_episode_id"] == "g1_point_to_point_open"
         assert sidecar["policy_id"] == "policy_a"
         assert sidecar["camera_view"] == view
         assert sidecar["render_backend"]["kind"] == "mujoco_offscreen"

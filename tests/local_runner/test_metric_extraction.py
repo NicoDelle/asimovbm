@@ -7,7 +7,7 @@ from asimovbm.metrics import MetricStatus
 
 def test_metric_bridge_computes_core_metrics_and_marks_missing_human_telemetry_insufficient() -> None:
     trace = LocalEpisodeTrace(
-        episode_id="g1_approach_user",
+        episode_id="g1_point_to_point_open",
         iteration=0,
         tier_id="g1_slam_canonical",
         technical_valid=True,
@@ -25,7 +25,7 @@ def test_metric_bridge_computes_core_metrics_and_marks_missing_human_telemetry_i
             for index in range(5)
         ),
         config_checksum_sha256="abc123",
-        config_path="g1_slam/config/episodes/g1_approach_user.json",
+        config_path="g1_slam/config/episodes/g1_point_to_point_open.json",
         robot_selector="official_g1",
         canonical_backend_id="g1_robojudo",
         execution_backend_id="g1_slam_reference_trace_v1",

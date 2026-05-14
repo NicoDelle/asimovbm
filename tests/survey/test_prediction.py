@@ -14,7 +14,7 @@ def _video(source: PredictionSource) -> SurveyVideo:
         policy_id="policy_a",
         viewpoint="first_person",
         robot_id="g1",
-        episode_id="g1_approach_user",
+        episode_id="g1_point_to_point_open",
         group_ids=("policy_a_fp",),
         prediction_source=source,
     )
@@ -22,7 +22,7 @@ def _video(source: PredictionSource) -> SurveyVideo:
 
 def _metric_report() -> dict:
     return {
-        "episode_id": "g1_approach_user",
+        "episode_id": "g1_point_to_point_open",
         "iteration": 0,
         "technical_valid": True,
         "terminal_status": "success",
@@ -75,7 +75,7 @@ def test_loads_prediction_from_episode_metrics_csv(tmp_path: Path) -> None:
                 "min_human_robot_distance,proxemic_intrusion_dose,speed_near_humans_p95,"
                 "gesture_response_success,acknowledgement_clarity,human_aware_approach,bystander_ack,"
                 "sparc,heading_jerk,stability,legibility,behavioral_naturalness",
-                "run-1,g1_approach_user,Approach,0,local,true,success,0.8,0.7,0.6,0.5,1.0,,,,,,,,,,,,,,,",
+                "run-1,g1_point_to_point_open,Approach,0,local,true,success,0.8,0.7,0.6,0.5,1.0,,,,,,,,,,,,,,,",
             ]
         )
         + "\n",
@@ -99,7 +99,7 @@ def test_loads_prediction_from_episode_metrics_csv(tmp_path: Path) -> None:
 
 def test_loads_prediction_from_local_trace_json(tmp_path: Path) -> None:
     trace = {
-        "episode_id": "g1_approach_user",
+        "episode_id": "g1_point_to_point_open",
         "iteration": 0,
         "tier_id": "local",
         "technical_valid": True,
@@ -149,7 +149,7 @@ def test_loads_prediction_from_local_trace_json(tmp_path: Path) -> None:
 
 def test_loads_prediction_from_nested_sidecar_replay(tmp_path: Path) -> None:
     sidecar = {
-        "episode_id": "g1_approach_user",
+        "episode_id": "g1_point_to_point_open",
         "robot_id": "g1",
         "policy_id": "policy_a",
         "camera_view": "arrival",
@@ -168,7 +168,7 @@ def test_loads_prediction_from_nested_sidecar_replay(tmp_path: Path) -> None:
 
 def _local_trace_payload() -> dict:
     return {
-        "episode_id": "g1_approach_user",
+        "episode_id": "g1_point_to_point_open",
         "iteration": 0,
         "tier_id": "local",
         "technical_valid": True,

@@ -17,15 +17,15 @@ def test_default_catalog_loads_exactly_the_six_g1_slam_episodes() -> None:
 def test_catalog_preserves_robot_and_backend_selectors() -> None:
     catalog = load_default_catalog()
 
-    assert catalog.get("g1_approach_user").robot_selector == "official_g1"
-    assert catalog.get("g1_approach_user").robot_id == "g1"
-    assert catalog.get("g1_approach_user").policy_id == "g1_robojudo_asap"
-    assert catalog.get("g1_approach_user").canonical_backend_id == "g1_robojudo"
-    assert catalog.get("go2_lateral_open").robot_selector == "official_go2"
-    assert catalog.get("go2_lateral_open").robot_id == "go2"
-    assert catalog.get("go2_lateral_open").policy_id == "go2_unitree_rl_mjlab"
-    assert catalog.get("go2_lateral_open").canonical_backend_id == "go2_mujoco_onnx"
-    assert catalog.get("g1_lateral_static_dynamic_obstacles").checksum_sha256
+    assert catalog.get("g1_point_to_point_open").robot_selector == "official_g1"
+    assert catalog.get("g1_point_to_point_open").robot_id == "g1"
+    assert catalog.get("g1_point_to_point_open").policy_id == "g1_robojudo_asap"
+    assert catalog.get("g1_point_to_point_open").canonical_backend_id == "g1_robojudo"
+    assert catalog.get("go2_point_to_point_static_obstacles").robot_selector == "official_go2"
+    assert catalog.get("go2_point_to_point_static_obstacles").robot_id == "go2"
+    assert catalog.get("go2_point_to_point_static_obstacles").policy_id == "go2_unitree_rl_mjlab"
+    assert catalog.get("go2_point_to_point_static_obstacles").canonical_backend_id == "go2_mujoco_onnx"
+    assert catalog.get("g1_point_to_point_dynamic_npcs").checksum_sha256
 
 
 def test_catalog_selects_one_robot_at_a_time_with_default_policy() -> None:
@@ -35,15 +35,15 @@ def test_catalog_selects_one_robot_at_a_time_with_default_policy() -> None:
     go2_specs = catalog.select(robot_id="go2")
 
     assert [spec.id for spec in g1_specs] == [
-        "g1_approach_user",
-        "g1_lateral_open",
-        "g1_lateral_static_dynamic_obstacles",
+        "g1_point_to_point_open",
+        "g1_point_to_point_static_obstacles",
+        "g1_point_to_point_dynamic_npcs",
     ]
     assert {spec.policy_id for spec in g1_specs} == {"g1_robojudo_asap"}
     assert [spec.id for spec in go2_specs] == [
-        "go2_approach_user",
-        "go2_lateral_open",
-        "go2_lateral_static_dynamic_obstacles",
+        "go2_point_to_point_open",
+        "go2_point_to_point_static_obstacles",
+        "go2_point_to_point_dynamic_npcs",
     ]
     assert {spec.policy_id for spec in go2_specs} == {"go2_unitree_rl_mjlab"}
 
@@ -52,17 +52,30 @@ def test_catalog_rejects_cross_robot_episode_selection() -> None:
     catalog = load_default_catalog()
 
     with pytest.raises(EpisodeCatalogError):
-        catalog.select(("go2_approach_user",), robot_id="g1")
+        catalog.select(("go2_point_to_point_open",), robot_id="g1")
 
 
 def test_policy_path_override_is_applied_to_selected_specs() -> None:
     catalog = load_default_catalog()
 
     specs = catalog.select(
-        ("go2_approach_user",),
+        ("go2_point_to_point_open",),
         robot_id="go2",
         policy_id="go2_unitree_rl_mjlab",
         policy_path="policies/go2/custom.onnx",
     )
 
     assert specs[0].config.locomotion.policy_path.as_posix() == "policies/go2/custom.onnx"
+
+
+def test_g1_unitree_robojudo_policy_profile_is_available() -> None:
+    catalog = load_default_catalog()
+
+    specs = catalog.select(
+        ("g1_point_to_point_open",),
+        robot_id="g1",
+        policy_id="g1_robojudo_unitree",
+    )
+
+    assert specs[0].policy_id == "g1_robojudo_unitree"
+    assert specs[0].config.locomotion.robojudo_config == "g1"

@@ -89,17 +89,17 @@ Example:
 
 ```json
 {
-  "video_id": "policy_a_fp_g1_approach_user",
-  "path": "policy_a/fp/g1_approach_user.mp4",
+  "video_id": "policy_a_fp_g1_point_to_point_open",
+  "path": "policy_a/fp/g1_point_to_point_open.mp4",
   "policy_id": "policy_a",
   "viewpoint": "first_person",
   "robot_id": "g1",
-  "episode_id": "g1_approach_user",
+  "episode_id": "g1_point_to_point_open",
   "group_ids": ["policy_a_fp"],
   "episode_order": 1,
   "prediction_source": {
     "kind": "metrics_json",
-    "path": "local-run/g1_approach_user/iteration-000/metrics.json"
+    "path": "local-run/g1_point_to_point_open/iteration-000/metrics.json"
   }
 }
 ```

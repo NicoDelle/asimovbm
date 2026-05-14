@@ -46,6 +46,7 @@ Select an explicit policy profile, or keep the profile defaults and point at a
 local policy file:
 
 ```bash
+.venv/bin/asimovbm-local --robot g1 --policy g1_robojudo_unitree --iterations 1
 .venv/bin/asimovbm-local --robot go2 --policy go2_unitree_rl_mjlab --iterations 1
 .venv/bin/asimovbm-local --robot go2 --policy-path policies/go2/my-policy.onnx --iterations 1
 ```
@@ -53,7 +54,7 @@ local policy file:
 Run one selected episode for the selected robot:
 
 ```bash
-.venv/bin/asimovbm-local --robot g1 --episode g1_approach_user --iterations 1
+.venv/bin/asimovbm-local --robot g1 --episode g1_point_to_point_open --iterations 1
 ```
 
 Run the selected robot/policy and export direct MuJoCo-rendered survey videos
@@ -131,17 +132,22 @@ are written under `artifacts/survey/<study-id>/`:
 The local catalog is exactly the six JSON files under
 `g1_slam/config/episodes/`:
 
-- `g1_approach_user`
-- `g1_lateral_open`
-- `g1_lateral_static_dynamic_obstacles`
-- `go2_approach_user`
-- `go2_lateral_open`
-- `go2_lateral_static_dynamic_obstacles`
+- `g1_point_to_point_open`
+- `g1_point_to_point_static_obstacles`
+- `g1_point_to_point_dynamic_npcs`
+- `go2_point_to_point_open`
+- `go2_point_to_point_static_obstacles`
+- `go2_point_to_point_dynamic_npcs`
 
 The catalog preserves each config's start, goal, step count, world, controller,
 locomotion, dynamic obstacle, camera, and visualization settings. The active
 runner selects one robot per run and records the policy profile used for that
 testbench run.
+
+G1 can run the point-to-point set with `g1_robojudo_asap` or
+`g1_robojudo_unitree`. Go2 remains available as the robot-dog replacement for
+the humanoid on the same three point-to-point scenario types through
+`go2_unitree_rl_mjlab`.
 
 ## Metrics
 

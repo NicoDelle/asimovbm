@@ -352,11 +352,11 @@ def _humanize(value: str) -> str:
 
 
 def _episode_order(episode_id: str) -> int:
-    if episode_id.endswith("approach_user") or episode_id.endswith("point_to_point_open"):
+    if episode_id.endswith("point_to_point_open"):
         return 1
-    if episode_id.endswith("lateral_open") or episode_id.endswith("point_to_point_static_obstacles"):
+    if episode_id.endswith("point_to_point_static_obstacles"):
         return 2
-    if episode_id.endswith("lateral_static_dynamic_obstacles") or episode_id.endswith("point_to_point_dynamic_npcs"):
+    if episode_id.endswith("point_to_point_dynamic_npcs"):
         return 3
     return 999
 
