@@ -38,7 +38,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.9693255507339218,
+        "score": 0.9996981503102081,
         "status": "computed"
       },
       "perceived_dexterity": {
@@ -76,7 +76,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.9875841514875398,
+        "score": 0.999877822744608,
         "status": "computed"
       },
       "perceived_safety": {
@@ -115,7 +115,7 @@
           "bystander_ack"
         ],
         "reason": null,
-        "score": 0.9841980109841415,
+        "score": 0.9998445016749556,
         "status": "computed"
       },
       "perceived_social_awareness": {
@@ -220,12 +220,12 @@
         "confidence": "sufficient",
         "metadata": {},
         "metric_id": "heading_jerk",
-        "normalized_score": 0.8261781208255572,
+        "normalized_score": 0.9982895184245127,
         "raw_inputs_summary": {
-          "sample_count": 105,
-          "sample_rate_hz": 12.5
+          "sample_count": 110,
+          "sample_rate_hz": 12.499999999999998
         },
-        "raw_value": -2.6952875166977712,
+        "raw_value": -2.006841926301949,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -237,7 +237,7 @@
         "normalized_score": 1.0,
         "raw_inputs_summary": {
           "hesitation_epochs": 0,
-          "max_heading_error": 0.1468190172608299,
+          "max_heading_error": 0.2835604517954249,
           "reversal_epochs": 0
         },
         "raw_value": 0.0,
@@ -298,10 +298,10 @@
         "metric_id": "sparc",
         "normalized_score": 1.0,
         "raw_inputs_summary": {
-          "sample_count": 105,
-          "sample_rate_hz": 12.5
+          "sample_count": 110,
+          "sample_rate_hz": 12.499999999999998
         },
-        "raw_value": -1.4119442202095482,
+        "raw_value": -1.4012376148497068,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -340,7 +340,7 @@
         "raw_inputs_summary": {
           "successful_episodes": 1
         },
-        "raw_value": 8.4,
+        "raw_value": 8.8,
         "reason": null,
         "status": "computed",
         "units": "s"
@@ -452,7 +452,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.9875841514875398,
+        "score": 0.999877822744608,
         "status": "computed"
       },
       {
@@ -491,7 +491,7 @@
           "bystander_ack"
         ],
         "reason": null,
-        "score": 0.9841980109841415,
+        "score": 0.9998445016749556,
         "status": "computed"
       },
       {
@@ -566,7 +566,7 @@
           "behavioral_naturalness"
         ],
         "reason": null,
-        "score": 0.9693255507339218,
+        "score": 0.9996981503102081,
         "status": "computed"
       }
     ],
@@ -599,7 +599,7 @@
         "raw_inputs_summary": {
           "successful_episodes": 1
         },
-        "raw_value": 8.4,
+        "raw_value": 8.8,
         "reason": null,
         "status": "computed",
         "units": "s"
@@ -625,7 +625,7 @@
         "normalized_score": 1.0,
         "raw_inputs_summary": {
           "hesitation_epochs": 0,
-          "max_heading_error": 0.1468190172608299,
+          "max_heading_error": 0.2835604517954249,
           "reversal_epochs": 0
         },
         "raw_value": 0.0,
@@ -719,10 +719,10 @@
         "metric_id": "sparc",
         "normalized_score": 1.0,
         "raw_inputs_summary": {
-          "sample_count": 105,
-          "sample_rate_hz": 12.5
+          "sample_count": 110,
+          "sample_rate_hz": 12.499999999999998
         },
-        "raw_value": -1.4119442202095482,
+        "raw_value": -1.4012376148497068,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -731,12 +731,12 @@
         "confidence": "sufficient",
         "metadata": {},
         "metric_id": "heading_jerk",
-        "normalized_score": 0.8261781208255572,
+        "normalized_score": 0.9982895184245127,
         "raw_inputs_summary": {
-          "sample_count": 105,
-          "sample_rate_hz": 12.5
+          "sample_count": 110,
+          "sample_rate_hz": 12.499999999999998
         },
-        "raw_value": -2.6952875166977712,
+        "raw_value": -2.006841926301949,
         "reason": null,
         "status": "computed",
         "units": "spectral_arc_length"
@@ -783,7 +783,7 @@
       }
     ]
   },
-  "episode_id": "g1_approach_user",
+  "episode_id": "g1_point_to_point_open",
   "iteration": 0,
   "metrics": {
     "acknowledgement_clarity": {
@@ -851,12 +851,12 @@
       "confidence": "sufficient",
       "metadata": {},
       "metric_id": "heading_jerk",
-      "normalized_score": 0.8261781208255572,
+      "normalized_score": 0.9982895184245127,
       "raw_inputs_summary": {
-        "sample_count": 105,
-        "sample_rate_hz": 12.5
+        "sample_count": 110,
+        "sample_rate_hz": 12.499999999999998
       },
-      "raw_value": -2.6952875166977712,
+      "raw_value": -2.006841926301949,
       "reason": null,
       "status": "computed",
       "units": "spectral_arc_length"
@@ -868,7 +868,7 @@
       "normalized_score": 1.0,
       "raw_inputs_summary": {
         "hesitation_epochs": 0,
-        "max_heading_error": 0.1468190172608299,
+        "max_heading_error": 0.2835604517954249,
         "reversal_epochs": 0
       },
       "raw_value": 0.0,
@@ -929,10 +929,10 @@
       "metric_id": "sparc",
       "normalized_score": 1.0,
       "raw_inputs_summary": {
-        "sample_count": 105,
-        "sample_rate_hz": 12.5
+        "sample_count": 110,
+        "sample_rate_hz": 12.499999999999998
       },
-      "raw_value": -1.4119442202095482,
+      "raw_value": -1.4012376148497068,
       "reason": null,
       "status": "computed",
       "units": "spectral_arc_length"
@@ -971,7 +971,7 @@
       "raw_inputs_summary": {
         "successful_episodes": 1
       },
-      "raw_value": 8.4,
+      "raw_value": 8.8,
       "reason": null,
       "status": "computed",
       "units": "s"

@@ -75,6 +75,11 @@ g1  -> g1_robojudo_asap
 go2 -> go2_unitree_rl_mjlab
 ```
 
+For the two G1 RoboJuDo survey-video policies, use
+`--policy g1_robojudo_unitree` for RoboJuDo `g1` / survey `policy_a`,
+or `--policy g1_robojudo_asap` for RoboJuDo `g1_asap_loco` / survey
+`policy_b`.
+
 Run all canonical scenarios for one robot:
 
 ```bash
@@ -111,7 +116,7 @@ Pass `--episode` more than once to run a subset:
 .venv/bin/asimovbm-local \
   --robot g1 \
   --episode g1_point_to_point_open \
-  --episode g1_point_to_point_static_obstacles \
+  --episode g1_point_to_point_dynamic_npcs \
   --iterations 2 \
   --headless
 ```
@@ -226,5 +231,5 @@ PYTHONPATH=src:g1_slam/src .venv/bin/python -m asimovbm.local_runner.cli \
 ```
 
 The one-episode commands produced one trace and one metrics file for
-`g1_point_to_point_open`. The all-scenario command produced traces and metrics for
-the three selected G1 episodes across two iterations.
+`g1_point_to_point_open`. The all-scenario command produced traces and metrics
+for the three selected G1 episodes across two iterations.

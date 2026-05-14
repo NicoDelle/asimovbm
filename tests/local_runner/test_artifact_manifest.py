@@ -14,13 +14,22 @@ class FakeTraceBackend:
     def __init__(self) -> None:
         self.calls = []
 
-    def run_episode(self, spec, *, iteration: int, viewer_enabled: bool, viewer_speed: float):
+    def run_episode(
+        self,
+        spec,
+        *,
+        iteration: int,
+        viewer_enabled: bool,
+        viewer_speed: float,
+        camera_view: str,
+    ):
         self.calls.append(
             {
                 "episode_id": spec.id,
                 "iteration": iteration,
                 "viewer_enabled": viewer_enabled,
                 "viewer_speed": viewer_speed,
+                "camera_view": camera_view,
             }
         )
         return LocalEpisodeTrace(
@@ -109,6 +118,7 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
             "iteration": 0,
             "viewer_enabled": True,
             "viewer_speed": 4.0,
+            "camera_view": "config",
         }
     ]
 
@@ -150,6 +160,7 @@ def test_local_run_can_export_survey_videos_and_sidecars(tmp_path: Path, monkeyp
             run_id="survey-run",
             iterations=1,
             robot_id="g1",
+            policy_id="g1_robojudo_unitree",
             episode_ids=("g1_point_to_point_open",),
             backend=backend,
             survey_export=True,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from math import fsum
 from pathlib import Path
@@ -46,6 +46,12 @@ from .survey_export import (
 from .traces import LocalRunRecord
 
 
+G1_SURVEY_POLICY_ID_BY_PROFILE: dict[str, str] = {
+    "g1_robojudo_unitree": "policy_a",
+    "g1_robojudo_asap": "policy_b",
+}
+
+
 @dataclass(frozen=True)
 class LocalRunConfig:
     artifact_root: Path = Path("artifacts/local-validation")
@@ -56,6 +62,8 @@ class LocalRunConfig:
     episode_ids: tuple[str, ...] = ()
     visible: bool | None = None
     viewer_speed: float = 4.0
+    camera_view: str = "config"
+    episode_steps: int | None = None
     survey_export: bool = False
     survey_root: Path = Path("artifacts/survey")
     survey_policy_id: str | None = None
@@ -81,9 +89,24 @@ class LocalRunConfig:
             raise ValueError("iterations must be >= 1")
         if self.viewer_speed <= 0.0:
             raise ValueError("viewer_speed must be > 0")
+        if self.camera_view not in {"config", "arrival", "bystander"}:
+            raise ValueError("camera_view must be one of config, arrival, bystander")
+        if self.episode_steps is not None and self.episode_steps < 1:
+            raise ValueError("episode_steps must be >= 1")
         if self.robot_id not in ROBOT_IDS:
             raise ValueError(f"robot_id must be one of {', '.join(ROBOT_IDS)}")
         if self.survey_export:
+            expected_survey_policy_id = G1_SURVEY_POLICY_ID_BY_PROFILE.get(self.effective_policy_id())
+            if (
+                self.robot_id == "g1"
+                and self.survey_policy_id in {"policy_a", "policy_b"}
+                and expected_survey_policy_id is not None
+                and self.survey_policy_id != expected_survey_policy_id
+            ):
+                raise ValueError(
+                    f"{self.effective_policy_id()} maps to survey {expected_survey_policy_id}; "
+                    f"got --survey-policy-id {self.survey_policy_id}"
+                )
             SurveyVideoExportConfig(
                 survey_root=self.survey_root,
                 policy_id=self.survey_policy_id,
@@ -129,6 +152,7 @@ def run_local_validation(config: LocalRunConfig | None = None) -> LocalRunResult
                 iteration=iteration,
                 viewer_enabled=visible,
                 viewer_speed=config.viewer_speed,
+                camera_view=config.camera_view,
             )
             trace = _with_episode_metadata(trace, spec)
             episode_dir = paths.run_dir / spec.id / f"iteration-{iteration:03d}"
@@ -401,6 +425,7 @@ def _build_manifest(
         "policy_path": config.policy_path.as_posix() if config.policy_path is not None else None,
         "viewer_mode": "visible" if config.resolved_visible() else "headless",
         "viewer_speed": config.viewer_speed,
+        "camera_view": config.camera_view,
         "canonical_episode_ids": tuple(spec.id for spec in selected_specs),
         "selected_episode_ids": tuple(spec.id for spec in selected_specs),
         "episodes": [spec.to_manifest() for spec in selected_specs],
@@ -420,9 +445,15 @@ def _new_run_id() -> str:
 
 
 def _selected_specs(config: LocalRunConfig, catalog: EpisodeCatalog):
-    return catalog.select(
+    specs = catalog.select(
         config.episode_ids,
         robot_id=config.robot_id,
         policy_id=config.effective_policy_id(),
         policy_path=config.policy_path,
+    )
+    if config.episode_steps is None:
+        return specs
+    return tuple(
+        replace(spec, config=replace(spec.config, steps=config.episode_steps))
+        for spec in specs
     )

@@ -2,11 +2,14 @@
   "camera_view": "arrival",
   "episode_id": "g1_point_to_point_dynamic_npcs",
   "metadata": {
+    "computed_metric_run_id": "survey-computed-metrics-visible-20260514",
     "iteration": 0,
+    "metric_binding_note": "Video was reused from the survey-style media folder; metrics were freshly computed by the visible local validation run.",
     "metrics_path": "g1_lateral_static_dynamic_obstacles/iteration-000/metrics.json",
     "technical_valid": true,
     "terminal_status": "timeout",
-    "trace_path": "g1_lateral_static_dynamic_obstacles/iteration-000/trace.json"
+    "trace_path": "g1_lateral_static_dynamic_obstacles/iteration-000/trace.json",
+    "video_source": "existing_survey_video_reused_after_visible_metric_run"
   },
   "metric_report": {
     "behavioral_metrics": {
@@ -1015,17 +1018,20 @@
   },
   "policy_id": "policy_a",
   "render_backend": {
+    "container": "mp4",
     "control_dt_s": 0.08,
-    "fps": 2,
-    "height": 240,
+    "fps": 24,
+    "height": 720,
     "kind": "mujoco_offscreen",
     "locomotion_mode": "kinematic",
-    "max_duration_s": 15.0,
+    "max_duration_s": 20.0,
+    "pixel_format": "yuv420p",
     "robot_selector": "official_g1",
-    "width": 426
+    "video_codec": "h264",
+    "width": 1280
   },
   "robot_id": "g1",
-  "run_id": "local-20260513T233036Z-7844ecb7",
+  "run_id": "survey-computed-metrics-visible-20260514",
   "schema_version": "asimovbm.simulation_episode.v1",
   "source_episode_id": "g1_lateral_static_dynamic_obstacles",
   "video_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_dynamic_npcs.mp4"

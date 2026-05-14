@@ -20,10 +20,12 @@ asimovbm-local --iterations 1
 headless metric collection unless `--visible` is explicitly passed. `--visible`
 and `--headless` are mutually exclusive.
 
-The six `g1_slam/config/episodes/*.json` files are the canonical local
-validation set for this submission path. The validation glue owns episode
-catalog loading, sequential execution, trace recording, metric invocation,
-artifact manifests, and final reporting.
+The six point-to-point `g1_slam/config/episodes/*.json` files are the canonical
+local validation set for this submission path. The dynamic NPC episode must use
+`*_point_to_point_dynamic_npcs`, which has no static red walls/blocks, so local
+runs match the survey episode layout. The validation glue owns episode catalog
+loading, sequential execution, trace recording, metric invocation, artifact
+manifests, and final reporting.
 
 ## Episode Ownership
 
@@ -118,8 +120,8 @@ to physical human/obstacle bodies later.
 ## Implemented Local Path
 
 Active execution lives in `src/asimovbm/local_runner/`. It loads the six
-canonical `g1_slam` configs, records per-step traces, maps trace fields into
-the pure metric functions under `src/asimovbm/metrics/`, and writes
+canonical point-to-point `g1_slam` configs, records per-step traces, maps trace
+fields into the pure metric functions under `src/asimovbm/metrics/`, and writes
 `manifest.json`, `report.json`, `episode-metrics-<NNN>.csv`, trace files, and
 metric files under `artifacts/local-validation/<run-id>/`. The CSV is an export
 projection for spreadsheet and web prediction lookup; JSON remains authoritative
@@ -131,6 +133,11 @@ dynamic-obstacle scripts. Manifests still record the canonical backend selector
 for each episode (`g1_robojudo` for G1 and `go2_mujoco_onnx` for Go2) so
 release-smoke and visible runs with optional assets can prove those paths
 explicitly.
+
+G1 policy selection exposes both RoboJuDo configs used by the survey-video
+sweep: `g1_robojudo_unitree` maps to RoboJuDo `g1` and survey folder
+`policy_a`; `g1_robojudo_asap` maps to RoboJuDo `g1_asap_loco` and survey
+folder `policy_b`. The default G1 policy remains `g1_robojudo_asap`.
 
 ## Metric Aggregation Model
 

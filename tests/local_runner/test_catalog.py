@@ -26,6 +26,7 @@ def test_catalog_preserves_robot_and_backend_selectors() -> None:
     assert catalog.get("go2_point_to_point_static_obstacles").policy_id == "go2_unitree_rl_mjlab"
     assert catalog.get("go2_point_to_point_static_obstacles").canonical_backend_id == "go2_mujoco_onnx"
     assert catalog.get("g1_point_to_point_dynamic_npcs").checksum_sha256
+    assert catalog.get("g1_point_to_point_dynamic_npcs").raw_config["world"]["obstacles"] == []
 
 
 def test_catalog_selects_one_robot_at_a_time_with_default_policy() -> None:
@@ -46,6 +47,21 @@ def test_catalog_selects_one_robot_at_a_time_with_default_policy() -> None:
         "go2_point_to_point_dynamic_npcs",
     ]
     assert {spec.policy_id for spec in go2_specs} == {"go2_unitree_rl_mjlab"}
+
+
+def test_catalog_can_select_second_g1_robojudo_policy() -> None:
+    catalog = load_default_catalog()
+
+    specs = catalog.select(
+        ("g1_point_to_point_open",),
+        robot_id="g1",
+        policy_id="g1_robojudo_unitree",
+    )
+
+    assert specs[0].policy_id == "g1_robojudo_unitree"
+    assert specs[0].config.locomotion.mode == "robojudo"
+    assert specs[0].config.locomotion.robojudo_config == "g1"
+    assert specs[0].canonical_backend_id == "g1_robojudo"
 
 
 def test_catalog_rejects_cross_robot_episode_selection() -> None:
