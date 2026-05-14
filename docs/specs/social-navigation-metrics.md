@@ -940,7 +940,7 @@ collection:
 ## Python Library Structure
 
 The implementation is a pure-function library under
-`src/asimovbm_server/metrics/`. Each metric is one file with one public
+`asimovbm/metrics/`. Each metric is one file with one public
 function. Inputs are explicit and narrow. The log-extraction layer (later
 phase) is responsible for pulling the right arrays from an episode log and
 calling each metric.
@@ -948,7 +948,7 @@ calling each metric.
 Proposed layout (v0 — flat module per metric, no subpackages):
 
 ```
-src/asimovbm_server/metrics/
+asimovbm/metrics/
 ├── __init__.py
 ├── conventions.py                  # shared thresholds and clip helpers
 ├── weights.py                      # 16x4 v0 matrix + load_weights()
