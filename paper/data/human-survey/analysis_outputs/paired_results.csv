@@ -1,0 +1,21 @@
+comparison,meaning,axis,left,right,n,mean_delta,median_delta,wins,ties,losses,relative_perceived_advantage
+A vs B - first-person POV,"Policy A minus Policy B, first-person videos",global,q1,q2,69,0.4528985507246377,0.5,41,8,20,0.6521739130434783
+A vs B - third-person POV,"Policy A minus Policy B, third-person videos",global,q3,q4,69,0.75,0.75,46,11,12,0.7463768115942029
+First vs third POV - Policy A,First-person minus third-person for Policy A,global,q1,q3,69,-0.15579710144927536,0.0,20,18,31,0.42028985507246375
+First vs third POV - Policy B,First-person minus third-person for Policy B,global,q2,q4,69,0.14130434782608695,0.0,24,17,28,0.47101449275362317
+A vs B - first-person POV,"Policy A minus Policy B, first-person videos",competence_control,q1,q2,70,1.0714285714285714,1.0,43,17,10,0.7357142857142858
+A vs B - third-person POV,"Policy A minus Policy B, third-person videos",competence_control,q3,q4,70,1.4,1.0,47,21,2,0.8214285714285714
+First vs third POV - Policy A,First-person minus third-person for Policy A,competence_control,q1,q3,70,-0.22857142857142856,0.0,10,38,22,0.4142857142857143
+First vs third POV - Policy B,First-person minus third-person for Policy B,competence_control,q2,q4,70,0.1,0.0,22,24,24,0.4857142857142857
+A vs B - first-person POV,"Policy A minus Policy B, first-person videos",safety,q1,q2,70,0.04285714285714286,0.0,24,25,21,0.5214285714285715
+A vs B - third-person POV,"Policy A minus Policy B, third-person videos",safety,q3,q4,70,0.5428571428571428,0.5,35,20,15,0.6428571428571429
+First vs third POV - Policy A,First-person minus third-person for Policy A,safety,q1,q3,70,-0.22857142857142856,0.0,13,34,23,0.42857142857142855
+First vs third POV - Policy B,First-person minus third-person for Policy B,safety,q2,q4,70,0.2714285714285714,0.0,26,26,18,0.5571428571428572
+A vs B - first-person POV,"Policy A minus Policy B, first-person videos",awareness,q1,q2,70,0.0,0.0,25,24,21,0.5285714285714286
+A vs B - third-person POV,"Policy A minus Policy B, third-person videos",awareness,q3,q4,70,0.34285714285714286,0.0,32,26,12,0.6428571428571429
+First vs third POV - Policy A,First-person minus third-person for Policy A,awareness,q1,q3,70,-0.22857142857142856,0.0,13,30,27,0.4
+First vs third POV - Policy B,First-person minus third-person for Policy B,awareness,q2,q4,70,0.11428571428571428,0.0,19,33,18,0.5071428571428571
+A vs B - first-person POV,"Policy A minus Policy B, first-person videos",positive_impression,q1,q2,70,0.6714285714285714,1.0,36,20,14,0.6571428571428571
+A vs B - third-person POV,"Policy A minus Policy B, third-person videos",positive_impression,q3,q4,70,0.7285714285714285,1.0,39,24,7,0.7285714285714285
+First vs third POV - Policy A,First-person minus third-person for Policy A,positive_impression,q1,q3,70,0.05714285714285714,0.0,19,34,17,0.5142857142857142
+First vs third POV - Policy B,First-person minus third-person for Policy B,positive_impression,q2,q4,70,0.11428571428571428,0.0,19,32,19,0.5

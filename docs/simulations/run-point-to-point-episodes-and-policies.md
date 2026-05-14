@@ -1,5 +1,9 @@
 # Run Point-To-Point Episodes And Swap Policies
 
+For the current paper workflow, start with
+[docs/paper-workflow.md](../paper-workflow.md). This file is a lower-level
+command reference for direct `g1_slam` episode experiments.
+
 This guide covers the six new point-to-point episodes:
 
 - G1 humanoid with RoboJuDo locomotion.
