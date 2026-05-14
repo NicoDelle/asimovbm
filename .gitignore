@@ -2,7 +2,6 @@
 !AGENTS_SHARED.md
 !README.md
 !docs/**/*.md
-!unity_mujoco_slam/**/*.md
 .obsidian
 .venv/
 __pycache__/
@@ -11,10 +10,3 @@ __pycache__/
 *.pyc
 .compound-engineering/*.local.yaml
 .worktrees
-unity_mujoco_slam/Library/
-unity_mujoco_slam/Temp/
-unity_mujoco_slam/Logs/
-unity_mujoco_slam/UserSettings/
-unity_mujoco_slam/obj/
-unity_mujoco_slam/[Bb]uild/
-unity_mujoco_slam/[Bb]uilds/

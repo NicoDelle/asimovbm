@@ -153,7 +153,7 @@ def _metric_report_from_payload(payload: Mapping[str, Any]) -> Mapping[str, Any]
 
 def _metric_report_from_trace_payload(payload: Mapping[str, Any]) -> Mapping[str, Any] | None:
     try:
-        for key in ("trace", "replay", "simulation_trace", "unity_trace"):
+        for key in ("trace", "replay", "simulation_trace"):
             nested = payload.get(key)
             if isinstance(nested, Mapping):
                 report = _metric_report_from_trace_payload(
@@ -161,11 +161,6 @@ def _metric_report_from_trace_payload(payload: Mapping[str, Any]) -> Mapping[str
                 )
                 if report is not None:
                     return report
-        if payload.get("schema_version") == "asimovbm.unity_trace.v1":
-            from asimovbm.local_runner.metrics_bridge import build_trace_metric_report
-            from asimovbm.local_runner.unity_ingest import unity_payload_to_trace
-
-            return build_trace_metric_report(unity_payload_to_trace(dict(payload)))
         if "steps" in payload and "episode_id" in payload:
             from asimovbm.local_runner.metrics_bridge import build_trace_metric_report
             from asimovbm.local_runner.traces import LocalEpisodeTrace, LocalStepTrace
