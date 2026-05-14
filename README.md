@@ -174,3 +174,53 @@ tests/survey/                 # Survey design/storage/export/analysis tests.
 tests/local_runner/           # Local validation tests.
 tests/metrics/                # Pure metric library tests.
 ```
+
+## Manual MuJoCo Validation Shortcut
+
+Use this path when you want to watch the proper MuJoCo/RoboJuDo viewer yourself,
+then inspect the freshly computed metrics in the local web dashboard. Do not add
+`--survey-export` for this workflow.
+
+```bash
+.venv/bin/asimovbm-local \
+  --robot g1 \
+  --iterations 1 \
+  --visible \
+  --viewer-speed 1.0 \
+  --episode-steps 900 \
+  --run-id hand-validated-g1
+```
+
+`--episode-steps` is the run timer override. The local trace backend uses about
+`0.08` simulated seconds per step, so `900` steps is about `72` simulated
+seconds before success/timeout. Omit the flag to use each episode JSON's
+checked-in `steps` value. Use `--viewer-speed 1.0` for realtime visual review,
+or a larger value when you want the viewer to advance faster.
+
+To watch just one episode in the MuJoCo viewer without writing benchmark
+metrics:
+
+```bash
+.venv/bin/python -m g1_slam \
+  --config g1_slam/config/episodes/g1_approach_user.json \
+  --locomotion robojudo \
+  --render \
+  --steps 900 \
+  --realtime-factor 1.0
+```
+
+Launch the metric dashboard after the validation run:
+
+```bash
+.venv/bin/python -m asimovbm.web.server \
+  --artifact-root artifacts/local-validation \
+  --survey-root artifacts/survey \
+  --video-root artifacts/survey/videos \
+  --survey-json-root artifacts/survey/json \
+  --study-id pilot \
+  --host 127.0.0.1 \
+  --port 8765
+```
+
+Open `http://127.0.0.1:8765`, select `hand-validated-g1` in the `Runs` view,
+and compare those metrics against whatever videos you validate manually.

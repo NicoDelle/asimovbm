@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from math import fsum
 from pathlib import Path
@@ -56,6 +56,7 @@ class LocalRunConfig:
     episode_ids: tuple[str, ...] = ()
     visible: bool | None = None
     viewer_speed: float = 4.0
+    episode_steps: int | None = None
     survey_export: bool = False
     survey_root: Path = Path("artifacts/survey")
     survey_policy_id: str | None = None
@@ -81,6 +82,8 @@ class LocalRunConfig:
             raise ValueError("iterations must be >= 1")
         if self.viewer_speed <= 0.0:
             raise ValueError("viewer_speed must be > 0")
+        if self.episode_steps is not None and self.episode_steps < 1:
+            raise ValueError("episode_steps must be >= 1")
         if self.robot_id not in ROBOT_IDS:
             raise ValueError(f"robot_id must be one of {', '.join(ROBOT_IDS)}")
         if self.survey_export:
@@ -420,9 +423,15 @@ def _new_run_id() -> str:
 
 
 def _selected_specs(config: LocalRunConfig, catalog: EpisodeCatalog):
-    return catalog.select(
+    specs = catalog.select(
         config.episode_ids,
         robot_id=config.robot_id,
         policy_id=config.effective_policy_id(),
         policy_path=config.policy_path,
+    )
+    if config.episode_steps is None:
+        return specs
+    return tuple(
+        replace(spec, config=replace(spec.config, steps=config.episode_steps))
+        for spec in specs
     )

@@ -284,7 +284,7 @@ def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float) -> dict[
         str(viewer_speed),
     ]
     if spec.locomotion_mode == "robojudo":
-        command.extend(["--locomotion", "robojudo"])
+        command.extend(["--locomotion", "robojudo", "--render"])
         path = "g1_robojudo"
     else:
         command.extend(["--mujoco", "--render", "--robot", spec.robot_selector])

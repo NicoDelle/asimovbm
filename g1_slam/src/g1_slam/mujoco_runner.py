@@ -685,8 +685,14 @@ def _open_ffmpeg_writer(output_path: Path, *, fps: int, width: int, height: int)
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg is None:
         raise RuntimeError("ffmpeg is required to record MuJoCo survey videos")
-    if not _ffmpeg_has_encoder(ffmpeg, "libx264"):
-        raise RuntimeError("ffmpeg must include the libx264 encoder to write browser-compatible MP4")
+
+    encoder_args = _h264_encoder_args(ffmpeg)
+    if encoder_args is None:
+        raise RuntimeError(
+            "ffmpeg must include an H.264 encoder (libx264 or libopenh264) "
+            "to write browser-compatible MP4"
+        )
+
     command = (
         ffmpeg,
         "-y",
@@ -703,12 +709,7 @@ def _open_ffmpeg_writer(output_path: Path, *, fps: int, width: int, height: int)
         "-i",
         "-",
         "-an",
-        "-c:v",
-        "libx264",
-        "-preset",
-        "veryfast",
-        "-crf",
-        "18",
+        *encoder_args,
         "-r",
         str(fps),
         "-pix_fmt",
@@ -718,6 +719,30 @@ def _open_ffmpeg_writer(output_path: Path, *, fps: int, width: int, height: int)
         str(output_path),
     )
     return subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def _h264_encoder_args(ffmpeg: str) -> tuple[str, ...] | None:
+    if _ffmpeg_has_encoder(ffmpeg, "libx264"):
+        return (
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "18",
+        )
+    if _ffmpeg_has_encoder(ffmpeg, "libopenh264"):
+        return (
+            "-c:v",
+            "libopenh264",
+            "-b:v",
+            "5000k",
+            "-maxrate",
+            "7000k",
+            "-bufsize",
+            "10000k",
+        )
+    return None
 
 
 def _ffmpeg_has_encoder(ffmpeg: str, encoder: str) -> bool:

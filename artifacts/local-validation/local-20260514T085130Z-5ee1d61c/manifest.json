@@ -1,0 +1,338 @@
+{
+  "backend_proof": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "proof_status": "not_verified_in_this_run",
+      "real_backend_verified": false,
+      "reason": "portable local trace backend; run visible backend validation with RoboJuDo/Go2 assets to mark the canonical backend verified",
+      "robot_selector": "official_g1"
+    },
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "proof_status": "not_verified_in_this_run",
+      "real_backend_verified": false,
+      "reason": "portable local trace backend; run visible backend validation with RoboJuDo/Go2 assets to mark the canonical backend verified",
+      "robot_selector": "official_g1"
+    },
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "proof_status": "not_verified_in_this_run",
+      "real_backend_verified": false,
+      "reason": "portable local trace backend; run visible backend validation with RoboJuDo/Go2 assets to mark the canonical backend verified",
+      "robot_selector": "official_g1"
+    }
+  ],
+  "canonical_episode_ids": [
+    "g1_approach_user",
+    "g1_lateral_open",
+    "g1_lateral_static_dynamic_obstacles"
+  ],
+  "created_at": "2026-05-14T08:55:13.555159+00:00",
+  "episodes": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "checksum_sha256": "d5e92661f1b5492218d2468d501d094e836dee13703542944f377387a6220e9d",
+      "description": "The humanoid starts several meters away and walks toward a laptop-like viewer position, stopping at a comfortable distance.",
+      "dynamic_obstacles": {
+        "blue_cylinder_seed": 7,
+        "blue_cylinders": false
+      },
+      "goal": {
+        "x": -0.9,
+        "y": 0.0
+      },
+      "id": "g1_approach_user",
+      "locomotion_mode": "robojudo",
+      "path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_approach_user.json",
+      "policy_id": "g1_robojudo_asap",
+      "policy_path": "policies/g1/policy.onnx",
+      "robot_id": "g1",
+      "robot_selector": "official_g1",
+      "start": {
+        "x": -5.0,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      "steps": 1400,
+      "title": "G1 approaching the user viewpoint",
+      "visualization": {
+        "camera": {
+          "azimuth": 180,
+          "distance": 0.5,
+          "elevation": -15.0,
+          "fixed": true,
+          "lookat": {
+            "x": -1.4,
+            "y": 0.0,
+            "z": 1.35
+          }
+        },
+        "camera_views": {
+          "arrival": {
+            "azimuth": 90.0,
+            "distance": 2.5,
+            "elevation": -8.0,
+            "fixed": true,
+            "lookat": {
+              "x": -2.335,
+              "y": 0.0,
+              "z": 1.35
+            }
+          },
+          "bystander": {
+            "azimuth": 180.0,
+            "distance": 6.0,
+            "elevation": -18.0,
+            "fixed": true,
+            "lookat": {
+              "x": -2.95,
+              "y": 0.0,
+              "z": 1.35
+            }
+          }
+        },
+        "show_trajectory": false,
+        "trajectory_interval_steps": 20
+      }
+    },
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "checksum_sha256": "0a95c091fa6f8b37cd20201110848f4865988031cf036fb67b5eb65e59818eb3",
+      "description": "The humanoid walks from one side of the scene to the other with SLAM active and no static or dynamic obstacles.",
+      "dynamic_obstacles": {
+        "blue_cylinder_seed": 7,
+        "blue_cylinders": false
+      },
+      "goal": {
+        "x": -3.0,
+        "y": 2.2
+      },
+      "id": "g1_lateral_open",
+      "locomotion_mode": "robojudo",
+      "path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_lateral_open.json",
+      "policy_id": "g1_robojudo_asap",
+      "policy_path": "policies/g1/policy.onnx",
+      "robot_id": "g1",
+      "robot_selector": "official_g1",
+      "start": {
+        "x": -3.0,
+        "y": -2.2,
+        "yaw": 1.5708
+      },
+      "steps": 1200,
+      "title": "G1 lateral motion in an open MuJoCo scene",
+      "visualization": {
+        "camera": {
+          "azimuth": 180.0,
+          "distance": 0.5,
+          "elevation": -15.0,
+          "fixed": true,
+          "lookat": {
+            "x": 3.8,
+            "y": 0.0,
+            "z": 1.35
+          }
+        },
+        "camera_views": {
+          "arrival": {
+            "azimuth": 180.0,
+            "distance": 2.5,
+            "elevation": -8.0,
+            "fixed": true,
+            "lookat": {
+              "x": -3.0,
+              "y": 0.66,
+              "z": 1.35
+            }
+          },
+          "bystander": {
+            "azimuth": 270.0,
+            "distance": 6.0,
+            "elevation": -18.0,
+            "fixed": true,
+            "lookat": {
+              "x": -3.0,
+              "y": 0.0,
+              "z": 1.35
+            }
+          }
+        },
+        "show_trajectory": false,
+        "trajectory_interval_steps": 20
+      }
+    },
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "checksum_sha256": "60a33e33ebcbd3ba442998ef966f88d09ab2a80e19221b7ec7a9a8805fb17876",
+      "description": "The humanoid traverses the MuJoCo navigation corridor while SLAM tracks static red blocks and lightweight pedestrian NPCs.",
+      "dynamic_obstacles": {
+        "count": 3,
+        "mode": "npcs",
+        "npc_policy": "social_patrol",
+        "seed": 11
+      },
+      "goal": {
+        "x": 4.2,
+        "y": 0.0
+      },
+      "id": "g1_lateral_static_dynamic_obstacles",
+      "locomotion_mode": "robojudo",
+      "path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_lateral_static_dynamic_obstacles.json",
+      "policy_id": "g1_robojudo_asap",
+      "policy_path": "policies/g1/policy.onnx",
+      "robot_id": "g1",
+      "robot_selector": "official_g1",
+      "start": {
+        "x": -3.8,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      "steps": 950,
+      "title": "G1 lateral motion with static red obstacles and moving NPCs",
+      "visualization": {
+        "camera": {
+          "azimuth": 90.0,
+          "distance": 4.0,
+          "elevation": -20.0,
+          "fixed": true,
+          "lookat": {
+            "x": 0,
+            "y": -4.0,
+            "z": 2.0
+          }
+        },
+        "camera_views": {
+          "arrival": {
+            "azimuth": 90.0,
+            "distance": 3.2,
+            "elevation": -8.0,
+            "fixed": true,
+            "lookat": {
+              "x": 1.4,
+              "y": 0.0,
+              "z": 1.35
+            }
+          },
+          "bystander": {
+            "azimuth": 180.0,
+            "distance": 6.8,
+            "elevation": -18.0,
+            "fixed": true,
+            "lookat": {
+              "x": 0.2,
+              "y": 0.0,
+              "z": 1.35
+            }
+          }
+        },
+        "show_trajectory": false,
+        "trajectory_interval_steps": 15
+      }
+    }
+  ],
+  "iterations": 1,
+  "metadata": {},
+  "metrics_csv_path": "episode-metrics-004.csv",
+  "policy_id": "g1_robojudo_asap",
+  "policy_path": null,
+  "records": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "episode_id": "g1_approach_user",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "iteration": 0,
+      "metrics_path": "g1_approach_user/iteration-000/metrics.json",
+      "technical_valid": true,
+      "terminal_status": "success",
+      "trace_path": "g1_approach_user/iteration-000/trace.json",
+      "viewer_mode": "headless"
+    },
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "episode_id": "g1_lateral_open",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "iteration": 0,
+      "metrics_path": "g1_lateral_open/iteration-000/metrics.json",
+      "technical_valid": true,
+      "terminal_status": "success",
+      "trace_path": "g1_lateral_open/iteration-000/trace.json",
+      "viewer_mode": "headless"
+    },
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "episode_id": "g1_lateral_static_dynamic_obstacles",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "iteration": 0,
+      "metrics_path": "g1_lateral_static_dynamic_obstacles/iteration-000/metrics.json",
+      "technical_valid": true,
+      "terminal_status": "timeout",
+      "trace_path": "g1_lateral_static_dynamic_obstacles/iteration-000/trace.json",
+      "viewer_mode": "headless"
+    }
+  ],
+  "report_path": "report.json",
+  "robot_id": "g1",
+  "run_id": "local-20260514T085130Z-5ee1d61c",
+  "schema_version": "asimovbm.local_validation.v1",
+  "selected_episode_ids": [
+    "g1_approach_user",
+    "g1_lateral_open",
+    "g1_lateral_static_dynamic_obstacles"
+  ],
+  "survey_export": {
+    "json_root": "artifacts/survey/json",
+    "summary_csv_path": "artifacts/survey/metrics-summary-local-20260514T085130Z-5ee1d61c.csv",
+    "summary_json_path": "artifacts/survey/metrics-summary-local-20260514T085130Z-5ee1d61c.json",
+    "survey_root": "artifacts/survey",
+    "video_root": "artifacts/survey/videos",
+    "videos": [
+      {
+        "camera_view": "arrival",
+        "episode_id": "g1_point_to_point_open",
+        "json_path": "artifacts/survey/json/policy_a/arrival/g1_point_to_point_open.json",
+        "policy_id": "policy_a",
+        "video_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_open.mp4"
+      },
+      {
+        "camera_view": "bystander",
+        "episode_id": "g1_point_to_point_open",
+        "json_path": "artifacts/survey/json/policy_a/bystander/g1_point_to_point_open.json",
+        "policy_id": "policy_a",
+        "video_path": "artifacts/survey/videos/policy_a/bystander/g1_point_to_point_open.mp4"
+      },
+      {
+        "camera_view": "arrival",
+        "episode_id": "g1_point_to_point_static_obstacles",
+        "json_path": "artifacts/survey/json/policy_a/arrival/g1_point_to_point_static_obstacles.json",
+        "policy_id": "policy_a",
+        "video_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_static_obstacles.mp4"
+      },
+      {
+        "camera_view": "bystander",
+        "episode_id": "g1_point_to_point_static_obstacles",
+        "json_path": "artifacts/survey/json/policy_a/bystander/g1_point_to_point_static_obstacles.json",
+        "policy_id": "policy_a",
+        "video_path": "artifacts/survey/videos/policy_a/bystander/g1_point_to_point_static_obstacles.mp4"
+      },
+      {
+        "camera_view": "arrival",
+        "episode_id": "g1_point_to_point_dynamic_npcs",
+        "json_path": "artifacts/survey/json/policy_a/arrival/g1_point_to_point_dynamic_npcs.json",
+        "policy_id": "policy_a",
+        "video_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_dynamic_npcs.mp4"
+      },
+      {
+        "camera_view": "bystander",
+        "episode_id": "g1_point_to_point_dynamic_npcs",
+        "json_path": "artifacts/survey/json/policy_a/bystander/g1_point_to_point_dynamic_npcs.json",
+        "policy_id": "policy_a",
+        "video_path": "artifacts/survey/videos/policy_a/bystander/g1_point_to_point_dynamic_npcs.mp4"
+      }
+    ]
+  },
+  "viewer_mode": "headless",
+  "viewer_speed": 4.0
+}
