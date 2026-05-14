@@ -127,6 +127,9 @@ class LocalEpisodeSpec:
                 "yaw": self.config.start.yaw,
             },
             "goal": {"x": self.config.goal[0], "y": self.config.goal[1]},
+            "controller": {
+                "start_delay_s": self.config.controller.start_delay_s,
+            },
             "dynamic_obstacles": dict(self.raw_config.get("dynamic_obstacles", {})),
             "visualization": dict(self.raw_config.get("visualization", {})),
         }

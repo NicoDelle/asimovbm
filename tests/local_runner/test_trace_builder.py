@@ -146,6 +146,9 @@ def test_robojudo_viewer_receives_selected_policy_config(monkeypatch) -> None:
     command = captured["command"]
     assert command[command.index("--robojudo-config") + 1] == "g1"
     assert command[command.index("--camera-view") + 1] == "arrival"
+    assert command[command.index("--start-delay") + 1] == "1.0"
+    assert command[command.index("--start") + 1 : command.index("--start") + 4] == ["-2.5", "1.6", "0.35"]
+    assert command[command.index("--goal") + 1 : command.index("--goal") + 3] == ["2.5", "1.6"]
     assert viewer_proof["robojudo_config"] == "g1"
 
 

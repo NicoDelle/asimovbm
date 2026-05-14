@@ -51,6 +51,14 @@ G1_SURVEY_POLICY_ID_BY_PROFILE: dict[str, str] = {
     "g1_robojudo_asap": "policy_b",
 }
 
+SURVEY_TIMING_START_DELAY_OVERRIDES: dict[tuple[str, str], float] = {
+    ("g1_point_to_point_dynamic_npcs", "g1_robojudo_asap"): 0.0,
+}
+
+SURVEY_START_X_OFFSETS_M: dict[tuple[str, str], float] = {
+    ("g1_point_to_point_dynamic_npcs", "g1_robojudo_asap"): 0.35,
+}
+
 
 @dataclass(frozen=True)
 class LocalRunConfig:
@@ -64,6 +72,9 @@ class LocalRunConfig:
     viewer_speed: float = 4.0
     camera_view: str = "config"
     episode_steps: int | None = None
+    start_delay_s: float | None = None
+    start_x_offset_m: float | None = None
+    route_y_offset_m: float | None = None
     survey_export: bool = False
     survey_root: Path = Path("artifacts/survey")
     survey_policy_id: str | None = None
@@ -93,6 +104,8 @@ class LocalRunConfig:
             raise ValueError("camera_view must be one of config, arrival, bystander")
         if self.episode_steps is not None and self.episode_steps < 1:
             raise ValueError("episode_steps must be >= 1")
+        if self.start_delay_s is not None and self.start_delay_s < 0.0:
+            raise ValueError("start_delay must be >= 0")
         if self.robot_id not in ROBOT_IDS:
             raise ValueError(f"robot_id must be one of {', '.join(ROBOT_IDS)}")
         if self.survey_export:
@@ -233,6 +246,9 @@ def _with_episode_metadata(trace, spec):
             "policy_path": spec.config.locomotion.policy_path.as_posix()
             if spec.config.locomotion.policy_path is not None
             else None,
+            "controller_start_delay_s": spec.config.controller.start_delay_s,
+            "start_x_offset_m": spec.raw_config.get("local_start_x_offset_m", 0.0),
+            "route_y_offset_m": spec.raw_config.get("local_route_y_offset_m", 0.0),
         }
     )
     return trace.__class__(
@@ -426,6 +442,9 @@ def _build_manifest(
         "viewer_mode": "visible" if config.resolved_visible() else "headless",
         "viewer_speed": config.viewer_speed,
         "camera_view": config.camera_view,
+        "start_delay_s": config.start_delay_s,
+        "start_x_offset_m": config.start_x_offset_m,
+        "route_y_offset_m": config.route_y_offset_m,
         "canonical_episode_ids": tuple(spec.id for spec in selected_specs),
         "selected_episode_ids": tuple(spec.id for spec in selected_specs),
         "episodes": [spec.to_manifest() for spec in selected_specs],
@@ -451,9 +470,56 @@ def _selected_specs(config: LocalRunConfig, catalog: EpisodeCatalog):
         policy_id=config.effective_policy_id(),
         policy_path=config.policy_path,
     )
-    if config.episode_steps is None:
-        return specs
-    return tuple(
-        replace(spec, config=replace(spec.config, steps=config.episode_steps))
-        for spec in specs
-    )
+    adjusted_specs = []
+    for spec in specs:
+        spec_config = spec.config
+        if config.episode_steps is not None:
+            spec_config = replace(spec_config, steps=config.episode_steps)
+        start_delay_s = _effective_start_delay_s(config, spec)
+        if start_delay_s is not None:
+            spec_config = replace(
+                spec_config,
+                controller=replace(spec_config.controller, start_delay_s=start_delay_s),
+            )
+        start_x_offset_m = _start_x_offset_m(config, spec)
+        route_y_offset_m = _route_y_offset_m(config, spec)
+        if start_x_offset_m or route_y_offset_m:
+            spec_config = replace(
+                spec_config,
+                start=replace(
+                    spec_config.start,
+                    x=spec_config.start.x + start_x_offset_m,
+                    y=spec_config.start.y + route_y_offset_m,
+                ),
+                goal=(spec_config.goal[0], spec_config.goal[1] + route_y_offset_m),
+            )
+        adjusted_specs.append(
+            replace(
+                spec,
+                config=spec_config,
+                raw_config={
+                    **spec.raw_config,
+                    "local_start_x_offset_m": start_x_offset_m,
+                    "local_route_y_offset_m": route_y_offset_m,
+                },
+            )
+        )
+    return tuple(adjusted_specs)
+
+
+def _effective_start_delay_s(config: LocalRunConfig, spec) -> float | None:
+    if config.start_delay_s is not None:
+        return config.start_delay_s
+    return SURVEY_TIMING_START_DELAY_OVERRIDES.get((spec.id, spec.policy_id))
+
+
+def _start_x_offset_m(config: LocalRunConfig, spec) -> float:
+    if config.start_x_offset_m is not None:
+        return config.start_x_offset_m
+    return SURVEY_START_X_OFFSETS_M.get((spec.id, spec.policy_id), 0.0)
+
+
+def _route_y_offset_m(config: LocalRunConfig, spec) -> float:
+    if config.route_y_offset_m is not None:
+        return config.route_y_offset_m
+    return 0.0

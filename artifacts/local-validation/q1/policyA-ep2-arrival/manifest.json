@@ -1,0 +1,113 @@
+{
+  "backend_proof": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "proof_status": "not_verified_in_this_run",
+      "real_backend_verified": false,
+      "reason": "portable local trace backend; run visible backend validation with RoboJuDo/Go2 assets to mark the canonical backend verified",
+      "robot_selector": "official_g1"
+    }
+  ],
+  "camera_view": "arrival",
+  "canonical_episode_ids": [
+    "g1_point_to_point_static_obstacles"
+  ],
+  "created_at": "2026-05-14T14:18:29.660370+00:00",
+  "episodes": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "checksum_sha256": "01bd270cab4a970524053809d58c7de31ed2062a16d4d3a8375e1d52c6c20c27",
+      "description": "The humanoid walks from point A to point B while SLAM routes around two static red block obstacles.",
+      "dynamic_obstacles": {
+        "blue_cylinder_seed": 7,
+        "blue_cylinders": false,
+        "mode": "none"
+      },
+      "goal": {
+        "x": 5.0,
+        "y": 0.0
+      },
+      "id": "g1_point_to_point_static_obstacles",
+      "locomotion_mode": "robojudo",
+      "path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_point_to_point_static_obstacles.json",
+      "policy_id": "g1_robojudo_unitree",
+      "policy_path": "policies/g1/policy.onnx",
+      "robot_id": "g1",
+      "robot_selector": "official_g1",
+      "start": {
+        "x": -2.0,
+        "y": 0.0,
+        "yaw": 0.35
+      },
+      "steps": 900,
+      "title": "G1 point-to-point motion with static obstacles",
+      "visualization": {
+        "camera": {
+          "azimuth": 90.0,
+          "distance": 8.0,
+          "elevation": -20.0,
+          "fixed": true,
+          "lookat": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.4
+          }
+        },
+        "camera_views": {
+          "arrival": {
+            "azimuth": -180.0,
+            "distance": 0.3,
+            "elevation": -15.0,
+            "fixed": true,
+            "lookat": {
+              "x": 5.0,
+              "y": 0.5,
+              "z": 1.35
+            }
+          },
+          "bystander": {
+            "azimuth": 90.0,
+            "distance": 6.5,
+            "elevation": -10.0,
+            "fixed": true,
+            "lookat": {
+              "x": 1.5,
+              "y": 0.0,
+              "z": 1.1
+            }
+          }
+        },
+        "show_trajectory": false,
+        "trajectory_interval_steps": 20
+      }
+    }
+  ],
+  "iterations": 1,
+  "metadata": {},
+  "metrics_csv_path": "episode-metrics-003.csv",
+  "policy_id": "g1_robojudo_unitree",
+  "policy_path": null,
+  "records": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "episode_id": "g1_point_to_point_static_obstacles",
+      "execution_backend_id": "g1_slam_reference_trace_v1",
+      "iteration": 0,
+      "metrics_path": "g1_point_to_point_static_obstacles/iteration-000/metrics.json",
+      "technical_valid": true,
+      "terminal_status": "timeout",
+      "trace_path": "g1_point_to_point_static_obstacles/iteration-000/trace.json",
+      "viewer_mode": "visible"
+    }
+  ],
+  "report_path": "report.json",
+  "robot_id": "g1",
+  "run_id": "policyA-ep2-arrival",
+  "schema_version": "asimovbm.local_validation.v1",
+  "selected_episode_ids": [
+    "g1_point_to_point_static_obstacles"
+  ],
+  "viewer_mode": "visible",
+  "viewer_speed": 1.0
+}

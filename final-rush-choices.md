@@ -137,7 +137,14 @@ explicitly.
 G1 policy selection exposes both RoboJuDo configs used by the survey-video
 sweep: `g1_robojudo_unitree` maps to RoboJuDo `g1` and survey folder
 `policy_a`; `g1_robojudo_asap` maps to RoboJuDo `g1_asap_loco` and survey
-folder `policy_b`. The default G1 policy remains `g1_robojudo_asap`.
+folder `policy_b`. The default G1 policy remains `g1_robojudo_asap`. To match
+the recorded policy-B dynamic-NPC survey episode, the local runner applies a
+start-delay override of `0.0` seconds for
+`g1_point_to_point_dynamic_npcs` + `g1_robojudo_asap`; callers can override
+that with `--start-delay`. That same pairing applies a `+0.35 m` x-axis start
+offset so the robot begins slightly farther forward in the dynamic-NPC episode;
+callers can override that with `--start-x-offset`. `--route-y-offset` remains
+available for manual side-lane tuning, but has no default offset.
 
 ## Metric Aggregation Model
 

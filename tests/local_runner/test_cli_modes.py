@@ -25,6 +25,23 @@ def test_camera_view_defaults_to_config_but_can_match_survey_pov() -> None:
     assert build_parser().parse_args(["--robot", "g1", "--camera-view", "arrival"]).camera_view == "arrival"
 
 
+def test_start_delay_can_be_overridden_for_hand_matching() -> None:
+    assert LocalRunConfig().start_delay_s is None
+    assert build_parser().parse_args(["--robot", "g1", "--start-delay", "0"]).start_delay_s == 0.0
+    with pytest.raises(ValueError, match="start_delay must be >= 0"):
+        LocalRunConfig(robot_id="g1", start_delay_s=-0.1).validate()
+
+
+def test_route_y_offset_can_be_overridden_for_hand_matching() -> None:
+    assert LocalRunConfig().route_y_offset_m is None
+    assert build_parser().parse_args(["--robot", "g1", "--route-y-offset", "0.6"]).route_y_offset_m == 0.6
+
+
+def test_start_x_offset_can_be_overridden_for_hand_matching() -> None:
+    assert LocalRunConfig().start_x_offset_m is None
+    assert build_parser().parse_args(["--robot", "g1", "--start-x-offset", "0.2"]).start_x_offset_m == 0.2
+
+
 def test_g1_unitree_robojudo_policy_is_selectable() -> None:
     args = build_parser().parse_args(["--robot", "g1", "--policy", "g1_robojudo_unitree"])
 

@@ -283,12 +283,21 @@ def _run_viewer_subprocess(spec: LocalEpisodeSpec, viewer_speed: float, camera_v
         "g1_slam",
         "--config",
         config_path.as_posix(),
+        "--start",
+        str(spec.config.start.x),
+        str(spec.config.start.y),
+        str(spec.config.start.yaw),
+        "--goal",
+        str(spec.config.goal[0]),
+        str(spec.config.goal[1]),
         "--steps",
         str(spec.config.steps),
         "--realtime-factor",
         str(viewer_speed),
         "--camera-view",
         camera_view,
+        "--start-delay",
+        str(spec.config.controller.start_delay_s),
     ]
     if spec.locomotion_mode == "robojudo":
         command.extend(

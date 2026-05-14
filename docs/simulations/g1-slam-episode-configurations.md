@@ -77,9 +77,16 @@ without changing Python code.
 
 ## G1 Episodes
 
-The three point-to-point G1 episodes set `controller.start_delay_s: 2.0`, so
-the viewer opens with a two-second hold before navigation commands move the
-robot forward.
+The three point-to-point G1 episode JSON files set `controller.start_delay_s:
+1.0`, so the viewer opens with a one-second hold before navigation commands
+move the robot forward. The local `asimovbm-local` wrapper applies a
+survey-timing override for `g1_point_to_point_dynamic_npcs` with policy B
+(`g1_robojudo_asap` / RoboJuDo `g1_asap_loco`): start delay `0.0`, matching the
+recording where ASAP walks straight away. That same local-run pairing also
+moves the start pose by `+0.35 m` on the x-axis, placing the robot slightly
+farther forward in the dynamic-NPC episode. Use `--start-x-offset <meters>` to
+tune that forward nudge, `--route-y-offset <meters>` to tune a side-lane nudge,
+and `--start-delay <seconds>` to tune the hold time manually.
 
 ### 1. Point-To-Point Motion Without Obstacles
 

@@ -63,6 +63,33 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--start-delay",
+        type=float,
+        dest="start_delay_s",
+        help=(
+            "Override controller.start_delay_s in seconds. "
+            "Use 0 for immediate navigation commands in hand-matched survey runs."
+        ),
+    )
+    parser.add_argument(
+        "--route-y-offset",
+        type=float,
+        dest="route_y_offset_m",
+        help=(
+            "Shift the selected route laterally on the world y-axis in meters. "
+            "Useful for hand-matching the dynamic NPC pass side."
+        ),
+    )
+    parser.add_argument(
+        "--start-x-offset",
+        type=float,
+        dest="start_x_offset_m",
+        help=(
+            "Shift only the selected episode start pose on the world x-axis in meters. "
+            "Positive values move the robot forward toward the point-to-point goal."
+        ),
+    )
+    parser.add_argument(
         "--episode",
         action="append",
         choices=DEFAULT_EPISODE_IDS,
@@ -138,6 +165,9 @@ def main(argv: list[str] | None = None) -> int:
                 viewer_speed=args.viewer_speed,
                 camera_view=args.camera_view,
                 episode_steps=args.episode_steps,
+                start_delay_s=args.start_delay_s,
+                start_x_offset_m=args.start_x_offset_m,
+                route_y_offset_m=args.route_y_offset_m,
                 survey_export=args.survey_export,
                 survey_root=args.survey_root,
                 survey_policy_id=args.survey_policy_id,

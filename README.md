@@ -197,6 +197,7 @@ then inspect the freshly computed metrics in the local web dashboard. Do not add
   --viewer-speed 1.0 \
   --camera-view arrival \
   --episode-steps 900 \
+  --start-delay 1.0 \
   --run-id hand-validated-g1-policy-a
 ```
 
@@ -212,6 +213,8 @@ the second G1 policy:
   --viewer-speed 1.0 \
   --camera-view arrival \
   --episode-steps 900 \
+  --start-delay 0 \
+  --start-x-offset 0.35 \
   --run-id hand-validated-g1-policy-b
 ```
 
@@ -221,17 +224,25 @@ seconds before success/timeout. Omit the flag to use each episode JSON's
 checked-in `steps` value. Use `--viewer-speed 1.0` for realtime visual review,
 or a larger value when you want the viewer to advance faster. Use
 `--camera-view config`, `--camera-view arrival`, or `--camera-view bystander`
-to choose the viewer POV from the episode JSON.
+to choose the viewer POV from the episode JSON. `--start-delay` overrides the
+controller hold time before navigation commands are sent; policy B's dynamic
+NPC episode defaults to `0` in `asimovbm-local` so the ASAP run starts walking
+immediately like the survey recording. That same policy-B dynamic NPC run also
+uses a `+0.35 m` start offset on the x-axis, which moves the robot slightly
+forward toward the goal in ep3. Tune it with `--start-x-offset`; use
+`--route-y-offset` only if the bystander view still needs a side-lane tweak.
 
 To watch just one episode in the MuJoCo viewer without writing benchmark
 metrics:
 
 ```bash
-.venv/bin/python -m g1_slam \
-  --config g1_slam/config/episodes/g1_point_to_point_open.json \
+cd g1_slam
+../.venv/bin/python -m g1_slam \
+  --config config/episodes/g1_point_to_point_open.json \
   --locomotion robojudo \
   --render \
   --camera-view arrival \
+  --start-delay 0 \
   --steps 900 \
   --realtime-factor 1.0
 ```
@@ -261,6 +272,7 @@ and compare those metrics against whatever videos you validate manually.
   --viewer-speed 1.0 \
   --camera-view arrival \
   --episode-steps 900 \
+  --start-delay 1.0 \
   --run-id hand-validated-g1-policy-a
 
   .venv/bin/asimovbm-local \
@@ -271,6 +283,8 @@ and compare those metrics against whatever videos you validate manually.
   --viewer-speed 1.0 \
   --camera-view arrival \
   --episode-steps 900 \
+  --start-delay 0 \
+  --start-x-offset 0.35 \
   --run-id hand-validated-g1-policy-b
   ```
 
@@ -278,3 +292,5 @@ and compare those metrics against whatever videos you validate manually.
   g1_point_to_point_open
   g1_point_to_point_static_obstacles
   g1_point_to_point_dynamic_npcs
+
+  asap_loco is policy B

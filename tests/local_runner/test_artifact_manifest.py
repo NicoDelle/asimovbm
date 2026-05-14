@@ -30,6 +30,9 @@ class FakeTraceBackend:
                 "viewer_enabled": viewer_enabled,
                 "viewer_speed": viewer_speed,
                 "camera_view": camera_view,
+                "controller_start_delay_s": spec.config.controller.start_delay_s,
+                "start": (spec.config.start.x, spec.config.start.y, spec.config.start.yaw),
+                "goal": spec.config.goal,
             }
         )
         return LocalEpisodeTrace(
@@ -119,6 +122,9 @@ def test_local_run_writes_manifest_trace_metrics_and_report(tmp_path: Path) -> N
             "viewer_enabled": True,
             "viewer_speed": 4.0,
             "camera_view": "config",
+            "controller_start_delay_s": 1.0,
+            "start": (-2.5, 1.6, 0.35),
+            "goal": (2.5, 1.6),
         }
     ]
 
@@ -143,6 +149,99 @@ def test_default_single_iteration_requests_visible_viewer_for_selected_robot_epi
         "g1_point_to_point_static_obstacles",
         "g1_point_to_point_dynamic_npcs",
     ]
+    assert backend.calls[-1]["controller_start_delay_s"] == 0.0
+    assert backend.calls[-1]["start"] == (-3.65, -1.6, 0.35)
+    assert backend.calls[-1]["goal"] == (5.0, -1.6)
+
+
+def test_policy_b_dynamic_npc_episode_uses_survey_start_timing(tmp_path: Path) -> None:
+    backend = FakeTraceBackend()
+
+    run_local_validation(
+        LocalRunConfig(
+            artifact_root=tmp_path,
+            run_id="policy-b-dynamic",
+            iterations=1,
+            robot_id="g1",
+            policy_id="g1_robojudo_asap",
+            episode_ids=("g1_point_to_point_dynamic_npcs",),
+            backend=backend,
+        )
+    )
+
+    assert backend.calls == [
+        {
+            "episode_id": "g1_point_to_point_dynamic_npcs",
+            "iteration": 0,
+            "viewer_enabled": True,
+            "viewer_speed": 4.0,
+            "camera_view": "config",
+            "controller_start_delay_s": 0.0,
+            "start": (-3.65, -1.6, 0.35),
+            "goal": (5.0, -1.6),
+        }
+    ]
+
+
+def test_start_x_offset_override_applies_to_selected_episode(tmp_path: Path) -> None:
+    backend = FakeTraceBackend()
+
+    run_local_validation(
+        LocalRunConfig(
+            artifact_root=tmp_path,
+            run_id="explicit-start-x-offset",
+            iterations=1,
+            robot_id="g1",
+            policy_id="g1_robojudo_asap",
+            episode_ids=("g1_point_to_point_dynamic_npcs",),
+            start_x_offset_m=0.2,
+            backend=backend,
+        )
+    )
+
+    assert backend.calls[0]["start"] == (-3.8, -1.6, 0.35)
+    assert backend.calls[0]["goal"] == (5.0, -1.6)
+
+
+def test_route_y_offset_override_still_applies_to_selected_episode(tmp_path: Path) -> None:
+    backend = FakeTraceBackend()
+
+    run_local_validation(
+        LocalRunConfig(
+            artifact_root=tmp_path,
+            run_id="explicit-route-offset",
+            iterations=1,
+            robot_id="g1",
+            policy_id="g1_robojudo_asap",
+            episode_ids=("g1_point_to_point_dynamic_npcs",),
+            start_x_offset_m=0.0,
+            route_y_offset_m=-0.2,
+            backend=backend,
+        )
+    )
+
+    assert backend.calls[0]["start"] == (-4.0, -1.8, 0.35)
+    assert backend.calls[0]["goal"] == (5.0, -1.8)
+
+
+def test_start_delay_override_applies_to_selected_episode(tmp_path: Path) -> None:
+    backend = FakeTraceBackend()
+
+    run_local_validation(
+        LocalRunConfig(
+            artifact_root=tmp_path,
+            run_id="explicit-start-delay",
+            iterations=1,
+            robot_id="g1",
+            policy_id="g1_robojudo_unitree",
+            episode_ids=("g1_point_to_point_open",),
+            start_delay_s=0.25,
+            backend=backend,
+        )
+    )
+
+    assert backend.calls[0]["controller_start_delay_s"] == 0.25
+    assert backend.calls[0]["start"] == (-2.5, 1.6, 0.35)
 
 
 def test_local_run_can_export_survey_videos_and_sidecars(tmp_path: Path, monkeypatch) -> None:

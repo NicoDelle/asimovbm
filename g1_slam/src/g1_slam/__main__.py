@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from .config import LocomotionConfig, load_navigation_config, visualization_for_camera_view
@@ -25,6 +26,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="SLAM and navigation for Unitree robots in MuJoCo.")
     parser.add_argument("--config", type=Path, default=Path("config/navigation.json"))
     parser.add_argument("--steps", type=int)
+    parser.add_argument(
+        "--start-delay",
+        type=float,
+        help="override controller.start_delay_s in seconds before navigation commands are sent",
+    )
     parser.add_argument("--start", nargs=3, type=float, metavar=("X", "Y", "YAW"))
     parser.add_argument("--goal", nargs=2, type=float, metavar=("X", "Y"))
     parser.add_argument("--out", type=Path, default=Path("runs"))
@@ -126,6 +132,11 @@ def main() -> None:
     start = Pose2D(*args.start) if args.start is not None else default_start
     goal = (args.goal[0], args.goal[1]) if args.goal is not None else default_goal
     steps = args.steps if args.steps is not None else default_steps
+    controller_config = nav_config.controller
+    if args.start_delay is not None:
+        if args.start_delay < 0.0:
+            parser.error("--start-delay must be >= 0")
+        controller_config = replace(controller_config, start_delay_s=args.start_delay)
     locomotion_config = nav_config.locomotion
     if args.locomotion is not None:
         locomotion_config = locomotion_config.__class__(
@@ -171,13 +182,13 @@ def main() -> None:
             start=start,
             goal=goal,
             steps=steps,
-            controller_config=nav_config.controller,
+            controller_config=controller_config,
             backend_config=RoboJuDoBackendConfig(
                 repo_path=args.robojudo_repo,
                 config_name=robojudo_config_name,
-                max_vx=nav_config.controller.max_linear_speed,
-                max_vy=nav_config.controller.max_linear_speed,
-                max_yaw_rate=nav_config.controller.max_yaw_rate,
+                max_vx=controller_config.max_linear_speed,
+                max_vy=controller_config.max_linear_speed,
+                max_yaw_rate=controller_config.max_yaw_rate,
                 dynamic_obstacle_mode=dynamic_obstacle_mode,
                 dynamic_obstacle_seed=dynamic_obstacle_seed,
                 dynamic_obstacle_count=dynamic_obstacle_count,
@@ -197,7 +208,7 @@ def main() -> None:
             start=start,
             goal=goal,
             steps=steps,
-            controller_config=nav_config.controller,
+            controller_config=controller_config,
             locomotion_config=locomotion_config,
             visualization_config=visualization_config,
             render=args.render,
@@ -206,7 +217,7 @@ def main() -> None:
         )
         return
 
-    result = run_navigation(world, start=start, goal=goal, steps=steps, controller_config=nav_config.controller)
+    result = run_navigation(world, start=start, goal=goal, steps=steps, controller_config=controller_config)
     args.out.mkdir(parents=True, exist_ok=True)
     result.grid.save_pgm(args.out / "map.pgm")
     save_trajectory(args.out / "path.csv", result.trajectory)
