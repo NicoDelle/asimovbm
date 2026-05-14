@@ -6,6 +6,7 @@
   "execution_backend_id": "g1_slam_reference_trace_v1",
   "iteration": 0,
   "metadata": {
+    "backend_proof_status": "not_verified_in_this_run",
     "camera_view": "bystander",
     "canonical_backend_proof": {
       "canonical_backend_id": "g1_robojudo",
@@ -16,7 +17,7 @@
       "robot_selector": "official_g1"
     },
     "config_checksum_sha256": "01bd270cab4a970524053809d58c7de31ed2062a16d4d3a8375e1d52c6c20c27",
-    "controller_start_delay_s": 0.5,
+    "controller_start_delay_s": 1.0,
     "episode_title": "G1 point-to-point motion with static obstacles",
     "goal": [
       5.0,
@@ -24,12 +25,16 @@
     ],
     "policy_id": "g1_robojudo_unitree",
     "policy_path": "policies/g1/policy.onnx",
+    "real_backend_verified": false,
     "reference_backend": true,
     "robot_id": "g1",
+    "route_y_offset_m": 0.0,
     "start": [
       -2.0,
       0.0
     ],
+    "start_x_offset_m": 0.0,
+    "trace_source": "reference",
     "viewer_proof": {
       "camera_view": "bystander",
       "path": "g1_robojudo",

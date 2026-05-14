@@ -797,7 +797,10 @@
       }
     ]
   },
+  "canonical_backend_id": "g1_robojudo",
+  "collision_count": 1131,
   "episode_id": "g1_point_to_point_static_obstacles",
+  "execution_backend_id": "g1_slam_reference_trace_v1",
   "iteration": 0,
   "metrics": {
     "acknowledgement_clarity": {
@@ -1000,6 +1003,8 @@
       "units": "ratio"
     }
   },
+  "real_backend_verified": false,
   "technical_valid": true,
-  "terminal_status": "timeout"
+  "terminal_status": "timeout",
+  "trace_source": "reference"
 }
