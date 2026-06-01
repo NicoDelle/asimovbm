@@ -1,0 +1,13 @@
+policy,policy_label,axis,axis_label,Daily robot contact,No daily robot contact,daily_minus_no_contact
+A,Policy A,competence_control,Dexterity,55.128205128205124,53.86904761904761,1.259157509157511
+A,Policy A,safety,Safety,37.179487179487175,39.88095238095237,-2.701465201465197
+A,Policy A,awareness,Social Awareness,28.2051282051282,38.24404761904761,-10.038919413919412
+A,Policy A,positive_impression,Impression,44.23076923076923,50.74404761904761,-6.51327838827838
+B,Policy B,competence_control,Dexterity,23.717948717948715,35.56547619047619,-11.847527472527474
+B,Policy B,safety,Safety,29.487179487179485,35.71428571428571,-6.227106227106223
+B,Policy B,awareness,Social Awareness,30.128205128205124,34.37499999999999,-4.246794871794869
+B,Policy B,positive_impression,Impression,29.487179487179485,39.732142857142854,-10.244963369963369
+All,Participant mean across Policies A and B,competence_control,Dexterity,39.42307692307692,44.717261904761905,-5.294184981684985
+All,Participant mean across Policies A and B,safety,Safety,33.33333333333333,37.797619047619044,-4.464285714285715
+All,Participant mean across Policies A and B,awareness,Social Awareness,29.166666666666664,36.30952380952381,-7.142857142857146
+All,Participant mean across Policies A and B,positive_impression,Impression,36.85897435897436,45.238095238095234,-8.379120879120876
