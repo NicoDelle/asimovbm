@@ -19,13 +19,21 @@ g1_slam/MUJOCO_LOG.TXT
 
 # LaTeX and notebook build products
 *.aux
+*.bbl
+*.blg
 *.fdb_latexmk
 *.fls
 *.log
+*.lof
+*.lot
 *.nav
 *.out
+*.idx
+*.ilg
+*.ind
 *.snm
 *.synctex.gz
+*.synctex(busy)
 *.toc
 *.vrb
 paper/*_backup.*
