@@ -1,7 +1,7 @@
 {
   "canonical_backend_id": "g1_robojudo",
   "config_checksum_sha256": "788b2d810a585a4cc84b30edbf574cf00d19f038e54055edbf9a3452be41264b",
-  "config_path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_point_to_point_open.json",
+  "config_path": "g1_slam/config/episodes/g1_point_to_point_open.json",
   "episode_id": "g1_point_to_point_open",
   "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
   "iteration": 0,
@@ -22,7 +22,7 @@
     "real_backend_verified": true,
     "reference_backend": false,
     "render": false,
-    "repo_path": "/home/nico/Code/asimovbm/g1_slam/third_party/RoboJuDo",
+    "repo_path": "g1_slam/third_party/RoboJuDo",
     "robojudo_config": "g1",
     "robot_id": "g1",
     "route_y_offset_m": 0.0,

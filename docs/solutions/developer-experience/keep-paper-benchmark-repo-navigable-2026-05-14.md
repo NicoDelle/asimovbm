@@ -1,7 +1,7 @@
 ---
 title: Keep The Paper Benchmark Repo Navigable
 date: 2026-05-14
-last_updated: 2026-05-14
+last_updated: 2026-08-20
 category: developer-experience
 module: repository-structure
 problem_type: developer_experience
@@ -38,16 +38,18 @@ Use an evidence-preserving cleanup sequence instead of deleting by intuition.
    - `README.md` stays short: project identity, start-here pointer, repo map, active entry points, setup, and tests.
    - `docs/paper-workflow.md` carries detail: asset map, evidence pipeline, commands, notebook roles, old-to-new paths, and maintenance rules.
 4. Make the core paths obvious:
-   - `paper/notebooks/` for paper-facing notebooks.
-   - `paper/data/human-survey/` for curated human survey data and analysis outputs.
+   - `paper/analysis/` for the active notebooks and paper-figure scripts.
+   - `paper/data/human-survey/responses.csv` for the final de-identified survey cohort.
+   - `paper/results/` for compact publication-facing CSV evidence.
+   - `paper/assets/` for the published figures only.
    - `artifacts/local-validation/` for curated objective validation evidence.
    - `asimovbm/metrics/` for editable metric implementations.
    - `metrics/README.md` for the metric editing guide.
    - `docs/paper-workflow.md` for the canonical workflow map.
-5. Split notebooks by evidence domain:
-   - `paper/notebooks/survey_results.ipynb` for human survey exploration.
-   - `paper/notebooks/simulation_results.ipynb` for logged simulation metrics.
-   - `paper/notebooks/paper_results.ipynb` for the mixed survey/simulation validation check.
+5. Keep notebooks separated by evidence domain:
+   - `paper/analysis/simulation_results.ipynb` for logged simulation metrics.
+   - `paper/analysis/paper_results.ipynb` for the mixed survey/simulation validation check.
+   - focused scripts beside them for the final paper figures and appendix statistics.
 6. Preserve scientific semantics during navigation cleanup. Do not change metric formulas, survey scoring, simulation behavior, or paper conclusions as part of moving folders.
 7. Before deleting a path, verify it with both exact path searches and broader symbol/name searches. For example, the unused cleanup pass checked candidate paths such as `examples/`, `artifacts/survey/pilo/participants.jsonl`, `.codex`, `g1_slam/.codex`, `g1_slam/assets/g1_nav.xml`, and `artifacts/local-validation/metric-visualizations/data_warnings.txt` before deletion.
 8. After structural moves, run import and test gates that cover both the paper package and the simulator package.
@@ -60,7 +62,7 @@ Research repos accumulate useful evidence and stale scaffolding at the same time
 
 The workable middle ground is to classify files by role:
 
-- Curated evidence stays tracked, especially paper notebooks, survey CSVs, analysis outputs, and selected local-validation artifacts.
+- Curated evidence stays tracked, especially the final paper, de-identified survey CSV, compact result tables, paper analyses, and selected local-validation artifacts.
 - Active code stays close to its purpose, with metrics easy to locate and edit.
 - Historical plans, stale examples, typo data, empty placeholders, and dead compatibility files should be removed or moved out once verified unused.
 - A single guide, `docs/paper-workflow.md`, should explain the current map so future agents do not have to reverse-engineer the repo.
@@ -90,13 +92,13 @@ Before accepting a remote cleanup or conflict-resolution commit, verify that the
 git status --short --branch
 git pull --ff-only origin paper-sub
 git reflog --date=iso -8
-rg --files paper/notebooks docs/solutions | sort
+rg --files paper/analysis paper/results docs/solutions | sort
 ```
 
 Notebook path sanity check:
 
 ```bash
-jq -r '.cells[] | select(.cell_type=="code") | .source | join("")' paper/notebooks/*.ipynb \
+jq -r '.cells[] | select(.cell_type=="code") | .source | join("")' paper/analysis/*.ipynb \
   | rg -n "paper/data|artifacts/local-validation|read_csv|rglob"
 ```
 

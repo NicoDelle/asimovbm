@@ -73,7 +73,7 @@
       },
       "id": "g1_point_to_point_dynamic_npcs",
       "locomotion_mode": "robojudo",
-      "path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_point_to_point_dynamic_npcs.json",
+      "path": "g1_slam/config/episodes/g1_point_to_point_dynamic_npcs.json",
       "policy_id": "g1_robojudo_unitree",
       "policy_path": "policies/g1/policy.onnx",
       "robot_id": "g1",

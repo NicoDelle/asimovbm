@@ -1,110 +1,74 @@
-# Paper Workflow
+# Paper workflow
 
-This is the canonical guide for using the repo for the paper. It keeps the
-current workflow in one place: simulation evidence, objective metrics, human
-survey data, notebooks, and paper-ready outputs.
+This repository contains the code and curated evidence for the ICRA 2026
+AsimovBM paper. The canonical publication is
+[`paper/AsimovBM_ICRA2026.pdf`](../paper/AsimovBM_ICRA2026.pdf); the focused
+reproduction instructions are in [`paper/README.md`](../paper/README.md).
 
-## What To Open First
-
-- Reviewer or collaborator: start with this file, then open
-  `paper/notebooks/paper_results.ipynb`.
-- Paper author: use the commands and asset map below to regenerate or inspect
-  current evidence.
-- Future agent: preserve the assets listed here unless the user explicitly says
-  otherwise.
-
-## Current Paper Assets
-
-```text
-paper/notebooks/survey_results.ipynb
-paper/notebooks/simulation_results.ipynb
-paper/notebooks/paper_results.ipynb
-paper/data/human-survey/raw-responses.csv
-paper/data/human-survey/analysis_outputs/
-artifacts/local-validation/
-artifacts/local-validation/metric-visualizations/
-artifacts/survey/
-```
-
-The `paper/` directory is for paper-facing notebooks and human-survey data.
-Source code stays in `asimovbm/` and `g1_slam/`.
-
-## Workflow Overview
+## Evidence flow
 
 ```text
 g1_slam episode configs
         |
         v
-asimovbm-local runner
-        |
-        v
-artifacts/local-validation/
-        |
-        v
-asimovbm/metrics/ objective scores
-        |
-        v
-paper/notebooks/simulation_results.ipynb
-
-human survey CSV
-        |
-        v
-paper/notebooks/survey_results.ipynb
-        |
-        v
-paper/notebooks/paper_results.ipynb
+asimovbm local runner -----> artifacts/local-validation/ (12 curated traces)
+        |                                      |
+        v                                      v
+asimovbm/metrics/                    paper/analysis/paper_results.ipynb
+                                                   ^
+                                                   |
+paper/data/human-survey/responses.csv -------------+
+                                                   |
+                                                   v
+                                       paper/results/ + paper/assets/
 ```
 
-## Objective Metrics
+The repository identity is “paper plus reproducible benchmark.” Generated
+build debris, alternate poster material, stale paper drafts, and exploratory
+plots are intentionally excluded.
 
-Metric implementation lives here:
+## Canonical paper material
 
-```text
-asimovbm/metrics/
+- Final manuscript: `paper/AsimovBM_ICRA2026.pdf`
+- Published figures: `paper/assets/`
+- Final anonymous survey cohort: `paper/data/human-survey/responses.csv`
+- Published result tables: `paper/results/`
+- Analysis entry points: `paper/analysis/`
+- Objective validation traces: `artifacts/local-validation/`
+
+The survey CSV contains 120 responses and the 17 fields used by the paper:
+one robot-familiarity field and 16 Likert ratings. Google Forms timestamps were
+removed because they are not part of the analysis.
+
+## Objective metrics
+
+Metric implementations live under `asimovbm/metrics/`, with the human-facing
+editing guide in `metrics/README.md` and the formulas in
+`docs/specs/social-navigation-metrics.md`. Metric behavior is covered by
+`tests/metrics/`.
+
+The weight-matrix figure is generated directly from the implemented registry:
+
+```bash
+.venv/bin/python paper/analysis/generate_metric_weight_matrix.py
 ```
 
-Metric editing starts here:
+## Simulation evidence
 
-```text
-metrics/README.md
+The 12 paper runs are organized as four survey blocks (`q1`–`q4`), two
+policies, two viewpoints, and three navigation scenarios. Keep each run's
+manifest, report, episode metrics, metric JSON, and trace together; the traces
+are the raw objective evidence behind the reported axis and feature scores.
+
+Regenerate the metric dashboard:
+
+```bash
+.venv/bin/python tools/plot_local_validation_metrics.py \
+  --root artifacts/local-validation \
+  --output artifacts/local-validation/metric-visualizations
 ```
 
-Metric tests live here:
-
-```text
-tests/metrics/
-```
-
-The metric formulas and weights are specified in:
-
-```text
-docs/specs/social-navigation-metrics.md
-```
-
-Do not move or rewrite metric formulas during repository cleanup. Navigation can
-change; scientific semantics should not change without a separate plan.
-
-## Simulation Evidence
-
-Active episode configs live under:
-
-```text
-g1_slam/config/episodes/
-```
-
-The current paper-facing validation outputs live under:
-
-```text
-artifacts/local-validation/
-```
-
-The generated metric visualization page lives at:
-
-```text
-artifacts/local-validation/metric-visualizations/index.html
-```
-
-Run a simple local validation from the repository root:
+Run a fresh headless validation:
 
 ```bash
 .venv/bin/asimovbm-local \
@@ -114,116 +78,35 @@ Run a simple local validation from the repository root:
   --run-id local-check
 ```
 
-Run a visible RoboJuDo validation when the local RoboJuDo/MuJoCo dependencies
-are installed:
+Policy A is `g1_robojudo_unitree`; Policy B is `g1_robojudo_asap`. Survey
+blocks map as follows:
 
-```bash
-.venv/bin/asimovbm-local \
-  --robot g1 \
-  --iterations 1 \
-  --visible \
-  --trace-backend real \
-  --policy g1_robojudo_unitree \
-  --viewer-speed 1.0 \
-  --camera-view arrival \
-  --episode-steps 900 \
-  --run-id hand-validated-g1-policy-a
-```
-
-Policy mapping for the survey videos:
-
-- Policy A: `g1_robojudo_unitree` / RoboJuDo config `g1`
-- Policy B: `g1_robojudo_asap` / RoboJuDo config `g1_asap_loco`
-
-Survey blocks map to policy and point of view:
-
-| Survey block | Policy | Point of view |
+| Survey block | Policy | Viewpoint |
 |---|---|---|
-| Q1 | A | first person |
-| Q2 | B | first person |
-| Q3 | A | third person |
-| Q4 | B | third person |
+| Q1 | A | First person |
+| Q2 | B | First person |
+| Q3 | A | Third person |
+| Q4 | B | Third person |
 
-Each block represents a bundle of three episodes: open floor, static obstacles,
-and moving people.
+## Paper analyses
 
-## Human Survey Data
-
-The raw survey export is tracked here:
-
-```text
-paper/data/human-survey/raw-responses.csv
-```
-
-Analysis outputs are tracked here:
-
-```text
-paper/data/human-survey/analysis_outputs/
-```
-
-These files are curated paper evidence. Do not delete them as generated junk.
-
-## Notebooks
-
-Open notebooks from `paper/notebooks/`:
-
-- `survey_results.ipynb`: imports and explores human survey data.
-- `simulation_results.ipynb`: imports and explores logged simulation metrics.
-- `paper_results.ipynb`: combines survey and simulation summaries to check
-  whether the benchmark agrees with survey outcomes.
-
-The notebooks can be run from the repository root or from `paper/notebooks/`.
-
-## Web Dashboard
-
-Start the local metrics dashboard and survey app from the repository root:
+Install the optional analysis dependencies:
 
 ```bash
-.venv/bin/python -m asimovbm.web.server \
-  --artifact-root artifacts/local-validation \
-  --survey-root artifacts/survey \
-  --video-root artifacts/survey/videos \
-  --survey-json-root artifacts/survey/json \
-  --study-id pilot \
-  --host 127.0.0.1 \
-  --port 8765
+.venv/bin/python -m pip install -e '.[paper]'
 ```
 
-Then open:
+`paper/analysis/paper_results.ipynb` combines human ratings and validation
+traces. `paper/analysis/simulation_results.ipynb` inspects the trace provenance
+and metric dashboard. Focused scripts reproduce Figures 2, 3, 4, and 6 plus
+the viewpoint statistics; see `paper/README.md` for exact commands.
 
-```text
-http://127.0.0.1:8765
-```
+The compact CSVs in `paper/results/` are the publication-facing outputs. Do
+not add every exploratory notebook export back to the repository.
 
-Use `Runs` for objective validation artifacts and `Prediction vs Survey` for
-survey/prediction comparisons.
+## Verification
 
-## Old-To-New Location Map
-
-```text
-paper_results.ipynb
-  -> paper/notebooks/paper_results.ipynb
-
-survey_results.ipynb
-  -> paper/notebooks/survey_results.ipynb
-
-simulation_results.ipynb
-  -> paper/notebooks/simulation_results.ipynb
-
-survey_results/Human-Robot Interaction Evaluation (Responses) - Form Responses 1.csv
-  -> paper/data/human-survey/raw-responses.csv
-
-survey_results/analysis_outputs/
-  -> paper/data/human-survey/analysis_outputs/
-```
-
-The old `archive/server_client_architecture/` tree, runtime logs, `runs/`
-outputs, and generated package metadata were removed from the active branch.
-They remain recoverable from `paper-sub-backup-2` if needed.
-
-## Tests
-
-Run the relevant cleanup guardrails:
+Run the paper artifact contract and active package suites:
 
 ```bash
 .venv/bin/python -m pytest \
@@ -236,19 +119,20 @@ Run the relevant cleanup guardrails:
   tests/web
 ```
 
-Run the full active suite when the local environment has the optional simulation
-dependencies available:
+Run the simulator-specific suite when its optional dependencies and submodules
+are available:
 
 ```bash
-.venv/bin/python -m pytest
+.venv/bin/python -m pytest g1_slam/tests/test_navigation.py
 ```
 
-## Maintenance Rules
+## Maintenance rules
 
-- Keep `asimovbm/metrics/`, `metrics/README.md`, and `tests/metrics/`
-  discoverable and stable.
-- Keep curated paper data and outputs tracked in git.
-- Keep `artifacts/local-validation/` as the local runner output/evidence root
-  unless a separate cleanup proves a narrower move is safe.
-- Do not change metric formulas, survey scoring semantics, simulation behavior,
-  or scientific conclusions as part of navigation cleanup.
+- Keep the final PDF, published figures, final survey data, result tables, and
+  12 curated validation traces together.
+- Do not commit LaTeX auxiliaries, notebook checkpoints, alternate posters,
+  exploratory plots, or local editor files.
+- Do not change metric formulas, survey scoring, simulation behavior, or paper
+  conclusions as part of repository housekeeping.
+- If the manuscript changes, replace the canonical PDF and update the figure
+  and result maps in the same change.

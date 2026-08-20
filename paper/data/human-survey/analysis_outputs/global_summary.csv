@@ -1,5 +1,0 @@
-condition,condition_label,policy,pov,n,mean,median,q1,q3,percent_negative,percent_neutral,percent_positive,iqr
-q1,Policy A - first person,A,first_person,69,-0.38768115942028986,-0.5,-1.5,1.0,57.971014492753625,7.246376811594203,34.78260869565217,2.5
-q2,Policy B - first person,B,first_person,69,-0.8405797101449275,-1.0,-2.0,0.0,71.01449275362319,7.246376811594203,21.73913043478261,2.0
-q3,Policy A - third person,A,third_person,69,-0.2318840579710145,-0.25,-1.25,0.75,56.52173913043478,2.898550724637681,40.57971014492754,2.0
-q4,Policy B - third person,B,third_person,69,-0.9818840579710145,-1.0,-2.0,-0.25,79.71014492753623,0.0,20.28985507246377,1.75

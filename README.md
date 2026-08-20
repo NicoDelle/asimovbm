@@ -1,18 +1,18 @@
-# ASIMOV Benchmark
+# AsimovBM
 
-Local-first benchmark and paper workspace for Human-Robot Interaction evaluation.
+AsimovBM is a simulation-based benchmark for estimating four human-perception
+scores from robot telemetry: Perceived Dexterity, Perceived Safety, Perceived
+Social Awareness, and Impression.
 
-Start here:
-
-- [Paper workflow guide](docs/paper-workflow.md)
-
-That guide explains where the metrics, simulation evidence, human survey data,
-notebooks, and paper-ready outputs live.
+Read the [ICRA 2026 paper](paper/AsimovBM_ICRA2026.pdf) or start with the
+[reproduction guide](paper/README.md). The broader
+[paper workflow guide](docs/paper-workflow.md) explains how the benchmark code,
+validation traces, survey responses, and published results fit together.
 
 ## Repository Map
 
 ```text
-paper/                         Paper notebooks and human survey data.
+paper/                         Final paper, figures, analyses, and results.
 artifacts/local-validation/    Curated local benchmark outputs and visualizations.
 artifacts/survey/              Survey media/JSON/session artifacts.
 asimovbm/                      Active Python package: runner, metrics, survey, web.
@@ -26,9 +26,9 @@ tests/                         Python tests for active package behavior.
 
 ## Active Entry Points
 
-- Paper analysis: `paper/notebooks/paper_results.ipynb`
-- Human survey exploration: `paper/notebooks/survey_results.ipynb`
-- Simulation metric exploration: `paper/notebooks/simulation_results.ipynb`
+- Paper analysis: `paper/analysis/paper_results.ipynb`
+- Simulation metric exploration: `paper/analysis/simulation_results.ipynb`
+- Published result tables: `paper/results/`
 - Metric editing guide: `metrics/README.md`
 - Objective metric code: `asimovbm/metrics/`
 - Metric tests: `tests/metrics/`
@@ -41,7 +41,7 @@ tests/                         Python tests for active package behavior.
 Run commands from the repository root.
 
 ```bash
-.venv/bin/python -m pip install -e .[dev]
+.venv/bin/python -m pip install -e '.[dev,paper]'
 ```
 
 Run the active tests:
@@ -50,5 +50,9 @@ Run the active tests:
 .venv/bin/python -m pytest
 ```
 
-See [docs/paper-workflow.md](docs/paper-workflow.md) for the current paper
-workflow and validation commands.
+Run the simulator-specific navigation tests when its optional dependencies and
+submodules are available:
+
+```bash
+.venv/bin/python -m pytest g1_slam/tests/test_navigation.py
+```

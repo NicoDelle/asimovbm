@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-
 AXES = [
     "perceived_dexterity",
     "perceived_safety",
@@ -209,7 +208,9 @@ def _load_condition(run_dir: Path, root: Path, warnings: list[str]) -> Condition
 
     axes_payload = report.get("behavioral_metrics", {}).get("axes", {})
     axes = {axis_id: _float_or_none(axes_payload.get(axis_id, {}).get("score")) for axis_id in AXES}
-    axis_statuses = {axis_id: str(axes_payload.get(axis_id, {}).get("status", "")) for axis_id in AXES}
+    axis_statuses = {
+        axis_id: str(axes_payload.get(axis_id, {}).get("status", "")) for axis_id in AXES
+    }
     axis_confidences = {
         axis_id: str(axes_payload.get(axis_id, {}).get("confidence", "")) for axis_id in AXES
     }
@@ -299,7 +300,7 @@ def load_conditions(root: Path) -> tuple[list[Condition], list[str]]:
 
 def _write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
     with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow({field: row.get(field, "") for field in fieldnames})
@@ -396,9 +397,7 @@ def render_heatmap(
 
     for row_index, row_label in enumerate(row_labels):
         y = y0 + row_index * cell_h
-        parts.append(
-            f'<text class="label" x="16" y="{y + 24}">{_svg_text(row_label)}</text>'
-        )
+        parts.append(f'<text class="label" x="16" y="{y + 24}">{_svg_text(row_label)}</text>')
         for col_index, col_label in enumerate(column_labels):
             x = label_w + col_index * cell_w
             value = values.get((row_label, col_label))
@@ -421,7 +420,7 @@ def render_heatmap(
 
     parts.append(
         f'<text class="note" x="16" y="{height - 12}">'
-        f'{_svg_text("Grey cells mean missing or insufficient evidence in the selected artifact.")}</text>'
+        f"{_svg_text('Grey cells mean missing or insufficient evidence in the selected artifact.')}</text>"
     )
     parts.append("</svg>")
     output_path.write_text("\n".join(parts))
@@ -453,7 +452,13 @@ def render_metric_heatmap(conditions: list[Condition], output_path: Path) -> Non
     )
 
 
-def _axis_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
+def _artifact_path(path: Path | None, root: Path) -> str:
+    if path is None:
+        return ""
+    return path.relative_to(root).as_posix()
+
+
+def _axis_rows(conditions: list[Condition], root: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for condition in conditions:
         for axis_id in AXES:
@@ -461,7 +466,7 @@ def _axis_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
                 {
                     "q_bucket": condition.q_bucket,
                     "run_id": condition.run_id,
-                    "run_dir": str(condition.run_dir),
+                    "run_dir": _artifact_path(condition.run_dir, root),
                     "policy": POLICY_LABELS.get(condition.policy_code, condition.policy_code),
                     "policy_code": condition.policy_code,
                     "policy_id": condition.policy_id,
@@ -477,15 +482,17 @@ def _axis_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
     return rows
 
 
-def _metric_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
+def _metric_rows(conditions: list[Condition], root: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for condition in conditions:
-        for metric_id, score in sorted(condition.metrics.items(), key=lambda item: _metric_sort_key(item[0])):
+        for metric_id, score in sorted(
+            condition.metrics.items(), key=lambda item: _metric_sort_key(item[0])
+        ):
             rows.append(
                 {
                     "q_bucket": condition.q_bucket,
                     "run_id": condition.run_id,
-                    "run_dir": str(condition.run_dir),
+                    "run_dir": _artifact_path(condition.run_dir, root),
                     "policy": POLICY_LABELS.get(condition.policy_code, condition.policy_code),
                     "policy_code": condition.policy_code,
                     "policy_id": condition.policy_id,
@@ -495,13 +502,13 @@ def _metric_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
                     "metric": metric_id,
                     "score": score,
                     "status": condition.metric_statuses.get(metric_id, ""),
-                    "selected_csv": str(condition.selected_csv) if condition.selected_csv else "",
+                    "selected_csv": _artifact_path(condition.selected_csv, root),
                 }
             )
     return rows
 
 
-def _summary_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
+def _summary_rows(conditions: list[Condition], root: Path) -> list[dict[str, Any]]:
     metric_ids = sorted(
         {metric_id for condition in conditions for metric_id in condition.metrics},
         key=_metric_sort_key,
@@ -511,7 +518,7 @@ def _summary_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
         row: dict[str, Any] = {
             "q_bucket": condition.q_bucket,
             "run_id": condition.run_id,
-            "run_dir": str(condition.run_dir),
+            "run_dir": _artifact_path(condition.run_dir, root),
             "folder_name": condition.folder_name,
             "policy": POLICY_LABELS.get(condition.policy_code, condition.policy_code),
             "policy_code": condition.policy_code,
@@ -519,7 +526,7 @@ def _summary_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
             "perspective": condition.perspective,
             "episode": condition.episode_label,
             "episode_id": condition.episode_id,
-            "selected_csv": str(condition.selected_csv) if condition.selected_csv else "",
+            "selected_csv": _artifact_path(condition.selected_csv, root),
             "csv_count": condition.csv_count,
             "matching_csv_count": condition.matching_csv_count,
             "ignored_csv_count": condition.ignored_csv_count,
@@ -541,9 +548,13 @@ def _policy_delta_rows(conditions: list[Condition]) -> list[dict[str, Any]]:
         for axis_id, score in condition.axes.items()
     }
     rows: list[dict[str, Any]] = []
-    for episode_id in sorted({condition.episode_id for condition in conditions}, key=lambda item: EPISODE_ORDER.get(item, 99)):
+    for episode_id in sorted(
+        {condition.episode_id for condition in conditions},
+        key=lambda item: EPISODE_ORDER.get(item, 99),
+    ):
         for perspective in sorted(
-            {condition.perspective for condition in conditions}, key=lambda item: PERSPECTIVE_ORDER.get(item, 99)
+            {condition.perspective for condition in conditions},
+            key=lambda item: PERSPECTIVE_ORDER.get(item, 99),
         ):
             for axis_id in AXES:
                 a = by_key.get((episode_id, perspective, "A", axis_id))
@@ -569,7 +580,10 @@ def _perspective_delta_rows(conditions: list[Condition]) -> list[dict[str, Any]]
         for axis_id, score in condition.axes.items()
     }
     rows: list[dict[str, Any]] = []
-    for episode_id in sorted({condition.episode_id for condition in conditions}, key=lambda item: EPISODE_ORDER.get(item, 99)):
+    for episode_id in sorted(
+        {condition.episode_id for condition in conditions},
+        key=lambda item: EPISODE_ORDER.get(item, 99),
+    ):
         for policy_code in ["A", "B"]:
             for axis_id in AXES:
                 arrival = by_key.get((episode_id, policy_code, "arrival", axis_id))
@@ -746,9 +760,9 @@ def build_visualizations(
     if not conditions:
         raise SystemExit(f"No local-validation q*/policy* reports found under {root}")
 
-    axis_rows = _axis_rows(conditions)
-    metric_rows = _metric_rows(conditions)
-    summary_rows = _summary_rows(conditions)
+    axis_rows = _axis_rows(conditions, root)
+    metric_rows = _metric_rows(conditions, root)
+    summary_rows = _summary_rows(conditions, root)
     policy_deltas = _policy_delta_rows(conditions)
     perspective_deltas = _perspective_delta_rows(conditions)
 
@@ -821,12 +835,29 @@ def build_visualizations(
     _write_csv(
         output_dir / "policy_deltas.csv",
         policy_deltas,
-        ["episode", "episode_id", "perspective", "axis", "policy_a", "policy_b", "delta_policy_b_minus_a"],
+        [
+            "episode",
+            "episode_id",
+            "perspective",
+            "axis",
+            "policy_a",
+            "policy_b",
+            "delta_policy_b_minus_a",
+        ],
     )
     _write_csv(
         output_dir / "perspective_deltas.csv",
         perspective_deltas,
-        ["episode", "episode_id", "policy", "policy_code", "axis", "arrival", "bystander", "delta_bystander_minus_arrival"],
+        [
+            "episode",
+            "episode_id",
+            "policy",
+            "policy_code",
+            "axis",
+            "arrival",
+            "bystander",
+            "delta_bystander_minus_arrival",
+        ],
     )
 
     condition_labels = [
@@ -892,7 +923,11 @@ def build_visualizations(
     )
 
     render_metric_heatmap(conditions, output_dir / "feature_metric_heatmap.svg")
-    (output_dir / "data_warnings.txt").write_text("\n".join(warnings) + ("\n" if warnings else ""))
+    warnings_path = output_dir / "data_warnings.txt"
+    if warnings:
+        warnings_path.write_text("\n".join(warnings) + "\n")
+    elif warnings_path.exists():
+        warnings_path.unlink()
     _render_html(output_dir, conditions, warnings, policy_deltas, perspective_deltas)
     return output_dir
 

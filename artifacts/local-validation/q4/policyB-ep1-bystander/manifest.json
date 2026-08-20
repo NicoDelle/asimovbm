@@ -36,7 +36,7 @@
       },
       "id": "g1_point_to_point_open",
       "locomotion_mode": "robojudo",
-      "path": "/home/nico/Code/asimovbm/g1_slam/config/episodes/g1_point_to_point_open.json",
+      "path": "g1_slam/config/episodes/g1_point_to_point_open.json",
       "policy_id": "g1_robojudo_asap",
       "policy_path": "policies/g1/policy.onnx",
       "robot_id": "g1",

@@ -1,5 +1,0 @@
-axis,axis_label,Policy A abs error,Policy B abs error,Mean abs error,Delta_%
-competence_control,Dexterity,2.0,2.3999999999999986,2.1999999999999993,95.6
-safety,Safety,5.0,3.6999999999999957,4.349999999999998,91.2
-awareness,Social Awareness,3.8999999999999986,7.399999999999999,5.649999999999999,88.6
-positive_impression,Impression,4.899999999999999,4.299999999999997,4.599999999999998,90.8
