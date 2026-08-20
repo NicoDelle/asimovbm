@@ -1,0 +1,281 @@
+participant_id,axis,axis_label,diff_A_minus_B_0_100,preference
+1,competence_control,Dexterity,66.66666666666666,A
+2,competence_control,Dexterity,33.33333333333335,A
+3,competence_control,Dexterity,16.666666666666664,A
+5,competence_control,Dexterity,16.666666666666675,A
+6,competence_control,Dexterity,0.0,tie
+8,competence_control,Dexterity,-50.0,B
+14,competence_control,Dexterity,33.333333333333336,A
+16,competence_control,Dexterity,25.000000000000007,A
+17,competence_control,Dexterity,8.333333333333325,A
+18,competence_control,Dexterity,16.666666666666664,A
+19,competence_control,Dexterity,16.666666666666664,A
+21,competence_control,Dexterity,0.0,tie
+22,competence_control,Dexterity,33.33333333333333,A
+23,competence_control,Dexterity,0.0,tie
+25,competence_control,Dexterity,-16.666666666666668,B
+26,competence_control,Dexterity,41.66666666666667,A
+33,competence_control,Dexterity,16.666666666666668,A
+35,competence_control,Dexterity,41.666666666666664,A
+41,competence_control,Dexterity,0.0,tie
+43,competence_control,Dexterity,41.666666666666664,A
+46,competence_control,Dexterity,33.33333333333333,A
+47,competence_control,Dexterity,41.66666666666667,A
+48,competence_control,Dexterity,8.333333333333337,A
+53,competence_control,Dexterity,25.0,A
+54,competence_control,Dexterity,8.333333333333332,A
+55,competence_control,Dexterity,8.333333333333337,A
+56,competence_control,Dexterity,0.0,tie
+57,competence_control,Dexterity,-8.333333333333332,B
+59,competence_control,Dexterity,0.0,tie
+60,competence_control,Dexterity,25.0,A
+61,competence_control,Dexterity,33.333333333333336,A
+62,competence_control,Dexterity,25.0,A
+63,competence_control,Dexterity,41.666666666666664,A
+66,competence_control,Dexterity,8.333333333333334,A
+68,competence_control,Dexterity,8.333333333333332,A
+69,competence_control,Dexterity,16.666666666666668,A
+70,competence_control,Dexterity,16.666666666666664,A
+72,competence_control,Dexterity,41.666666666666664,A
+74,competence_control,Dexterity,-8.333333333333337,B
+75,competence_control,Dexterity,16.666666666666664,A
+76,competence_control,Dexterity,33.333333333333336,A
+77,competence_control,Dexterity,33.33333333333333,A
+78,competence_control,Dexterity,75.0,A
+79,competence_control,Dexterity,25.0,A
+80,competence_control,Dexterity,41.666666666666664,A
+81,competence_control,Dexterity,-33.333333333333336,B
+82,competence_control,Dexterity,25.00000000000001,A
+85,competence_control,Dexterity,0.0,tie
+88,competence_control,Dexterity,16.666666666666668,A
+89,competence_control,Dexterity,-16.666666666666664,B
+90,competence_control,Dexterity,0.0,tie
+91,competence_control,Dexterity,33.333333333333336,A
+92,competence_control,Dexterity,41.666666666666664,A
+94,competence_control,Dexterity,16.666666666666664,A
+95,competence_control,Dexterity,16.666666666666664,A
+97,competence_control,Dexterity,25.000000000000007,A
+98,competence_control,Dexterity,58.33333333333333,A
+100,competence_control,Dexterity,-33.333333333333336,B
+101,competence_control,Dexterity,16.666666666666675,A
+103,competence_control,Dexterity,41.666666666666664,A
+105,competence_control,Dexterity,16.666666666666668,A
+106,competence_control,Dexterity,16.666666666666675,A
+108,competence_control,Dexterity,16.666666666666668,A
+109,competence_control,Dexterity,-33.333333333333336,B
+110,competence_control,Dexterity,8.333333333333325,A
+114,competence_control,Dexterity,-8.333333333333332,B
+115,competence_control,Dexterity,41.66666666666667,A
+118,competence_control,Dexterity,50.0,A
+119,competence_control,Dexterity,0.0,tie
+120,competence_control,Dexterity,33.333333333333336,A
+1,safety,Safety,83.33333333333334,A
+2,safety,Safety,8.333333333333337,A
+3,safety,Safety,8.333333333333332,A
+5,safety,Safety,-16.666666666666664,B
+6,safety,Safety,0.0,tie
+8,safety,Safety,-50.0,B
+14,safety,Safety,0.0,tie
+16,safety,Safety,8.333333333333337,A
+17,safety,Safety,-16.666666666666668,B
+18,safety,Safety,24.999999999999996,A
+19,safety,Safety,-16.666666666666668,B
+21,safety,Safety,-16.666666666666668,B
+22,safety,Safety,16.666666666666668,A
+23,safety,Safety,0.0,tie
+25,safety,Safety,-33.333333333333336,B
+26,safety,Safety,8.333333333333332,A
+33,safety,Safety,16.666666666666664,A
+35,safety,Safety,8.333333333333332,A
+41,safety,Safety,0.0,tie
+43,safety,Safety,0.0,tie
+46,safety,Safety,0.0,tie
+47,safety,Safety,8.333333333333348,A
+48,safety,Safety,0.0,tie
+53,safety,Safety,0.0,tie
+54,safety,Safety,8.333333333333334,A
+55,safety,Safety,0.0,tie
+56,safety,Safety,-8.333333333333325,B
+57,safety,Safety,-16.666666666666664,B
+59,safety,Safety,0.0,tie
+60,safety,Safety,-8.333333333333334,B
+61,safety,Safety,25.0,A
+62,safety,Safety,-66.66666666666667,B
+63,safety,Safety,25.0,A
+66,safety,Safety,0.0,tie
+68,safety,Safety,8.333333333333332,A
+69,safety,Safety,-16.666666666666664,B
+70,safety,Safety,8.333333333333337,A
+72,safety,Safety,33.333333333333336,A
+74,safety,Safety,0.0,tie
+75,safety,Safety,16.666666666666664,A
+76,safety,Safety,-16.666666666666664,B
+77,safety,Safety,-33.333333333333336,B
+78,safety,Safety,75.0,A
+79,safety,Safety,8.333333333333337,A
+80,safety,Safety,0.0,tie
+81,safety,Safety,-50.0,B
+82,safety,Safety,16.666666666666664,A
+85,safety,Safety,-41.666666666666664,B
+88,safety,Safety,25.0,A
+89,safety,Safety,-25.00000000000001,B
+90,safety,Safety,0.0,tie
+91,safety,Safety,33.333333333333336,A
+92,safety,Safety,16.666666666666668,A
+94,safety,Safety,-8.333333333333337,B
+95,safety,Safety,8.333333333333332,A
+97,safety,Safety,8.333333333333337,A
+98,safety,Safety,-58.33333333333333,B
+100,safety,Safety,-33.33333333333333,B
+101,safety,Safety,25.0,A
+103,safety,Safety,50.0,A
+105,safety,Safety,-16.666666666666664,B
+106,safety,Safety,0.0,tie
+108,safety,Safety,0.0,tie
+109,safety,Safety,-33.333333333333336,B
+110,safety,Safety,8.333333333333325,A
+114,safety,Safety,0.0,tie
+115,safety,Safety,58.333333333333336,A
+118,safety,Safety,0.0,tie
+119,safety,Safety,0.0,tie
+120,safety,Safety,8.333333333333332,A
+1,awareness,Social Aware.,16.666666666666664,A
+2,awareness,Social Aware.,8.333333333333337,A
+3,awareness,Social Aware.,16.666666666666668,A
+5,awareness,Social Aware.,-33.333333333333336,B
+6,awareness,Social Aware.,0.0,tie
+8,awareness,Social Aware.,-50.0,B
+14,awareness,Social Aware.,8.333333333333332,A
+16,awareness,Social Aware.,33.33333333333333,A
+17,awareness,Social Aware.,-8.333333333333337,B
+18,awareness,Social Aware.,8.333333333333334,A
+19,awareness,Social Aware.,-33.33333333333333,B
+21,awareness,Social Aware.,-8.333333333333334,B
+22,awareness,Social Aware.,-8.333333333333332,B
+23,awareness,Social Aware.,0.0,tie
+25,awareness,Social Aware.,-33.333333333333336,B
+26,awareness,Social Aware.,25.0,A
+33,awareness,Social Aware.,16.666666666666664,A
+35,awareness,Social Aware.,16.666666666666664,A
+41,awareness,Social Aware.,0.0,tie
+43,awareness,Social Aware.,0.0,tie
+46,awareness,Social Aware.,25.0,A
+47,awareness,Social Aware.,0.0,tie
+48,awareness,Social Aware.,8.333333333333337,A
+53,awareness,Social Aware.,0.0,tie
+54,awareness,Social Aware.,0.0,tie
+55,awareness,Social Aware.,-8.333333333333325,B
+56,awareness,Social Aware.,-8.333333333333337,B
+57,awareness,Social Aware.,-16.666666666666664,B
+59,awareness,Social Aware.,8.333333333333337,A
+60,awareness,Social Aware.,-58.333333333333336,B
+61,awareness,Social Aware.,41.666666666666664,A
+62,awareness,Social Aware.,-66.66666666666667,B
+63,awareness,Social Aware.,16.666666666666664,A
+66,awareness,Social Aware.,0.0,tie
+68,awareness,Social Aware.,8.333333333333334,A
+69,awareness,Social Aware.,0.0,tie
+70,awareness,Social Aware.,-8.333333333333337,B
+72,awareness,Social Aware.,8.333333333333332,A
+74,awareness,Social Aware.,-8.333333333333337,B
+75,awareness,Social Aware.,16.666666666666664,A
+76,awareness,Social Aware.,16.666666666666675,A
+77,awareness,Social Aware.,-24.999999999999993,B
+78,awareness,Social Aware.,16.666666666666664,A
+79,awareness,Social Aware.,-8.333333333333337,B
+80,awareness,Social Aware.,0.0,tie
+81,awareness,Social Aware.,-41.66666666666667,B
+82,awareness,Social Aware.,0.0,tie
+85,awareness,Social Aware.,-33.333333333333336,B
+88,awareness,Social Aware.,-33.33333333333333,B
+89,awareness,Social Aware.,-33.33333333333333,B
+90,awareness,Social Aware.,0.0,tie
+91,awareness,Social Aware.,16.666666666666675,A
+92,awareness,Social Aware.,8.333333333333334,A
+94,awareness,Social Aware.,0.0,tie
+95,awareness,Social Aware.,-16.666666666666664,B
+97,awareness,Social Aware.,-8.333333333333332,B
+98,awareness,Social Aware.,-58.333333333333336,B
+100,awareness,Social Aware.,-41.66666666666667,B
+101,awareness,Social Aware.,16.666666666666664,A
+103,awareness,Social Aware.,50.0,A
+105,awareness,Social Aware.,-41.66666666666667,B
+106,awareness,Social Aware.,-5.551115123125783e-15,B
+108,awareness,Social Aware.,0.0,tie
+109,awareness,Social Aware.,-41.66666666666667,B
+110,awareness,Social Aware.,-16.666666666666675,B
+114,awareness,Social Aware.,-25.0,B
+115,awareness,Social Aware.,58.333333333333336,A
+118,awareness,Social Aware.,0.0,tie
+119,awareness,Social Aware.,0.0,tie
+120,awareness,Social Aware.,8.333333333333334,A
+1,positive_impression,Impression,33.33333333333333,A
+2,positive_impression,Impression,16.666666666666664,A
+3,positive_impression,Impression,25.0,A
+5,positive_impression,Impression,-8.333333333333332,B
+6,positive_impression,Impression,0.0,tie
+8,positive_impression,Impression,-50.0,B
+14,positive_impression,Impression,8.333333333333334,A
+16,positive_impression,Impression,25.000000000000007,A
+17,positive_impression,Impression,25.0,A
+18,positive_impression,Impression,16.666666666666664,A
+19,positive_impression,Impression,-33.33333333333333,B
+21,positive_impression,Impression,-8.333333333333332,B
+22,positive_impression,Impression,8.333333333333337,A
+23,positive_impression,Impression,0.0,tie
+25,positive_impression,Impression,-16.666666666666675,B
+26,positive_impression,Impression,8.333333333333332,A
+33,positive_impression,Impression,16.666666666666664,A
+35,positive_impression,Impression,16.666666666666668,A
+41,positive_impression,Impression,0.0,tie
+43,positive_impression,Impression,0.0,tie
+46,positive_impression,Impression,8.333333333333337,A
+47,positive_impression,Impression,8.333333333333337,A
+48,positive_impression,Impression,0.0,tie
+53,positive_impression,Impression,16.666666666666668,A
+54,positive_impression,Impression,0.0,tie
+55,positive_impression,Impression,-8.333333333333337,B
+56,positive_impression,Impression,-8.333333333333337,B
+57,positive_impression,Impression,-16.666666666666664,B
+59,positive_impression,Impression,0.0,tie
+60,positive_impression,Impression,0.0,tie
+61,positive_impression,Impression,25.0,A
+62,positive_impression,Impression,0.0,tie
+63,positive_impression,Impression,16.666666666666664,A
+66,positive_impression,Impression,16.666666666666664,A
+68,positive_impression,Impression,8.333333333333332,A
+69,positive_impression,Impression,0.0,tie
+70,positive_impression,Impression,-1.1102230246251565e-14,B
+72,positive_impression,Impression,41.66666666666667,A
+74,positive_impression,Impression,8.333333333333325,A
+75,positive_impression,Impression,8.333333333333332,A
+76,positive_impression,Impression,33.333333333333336,A
+77,positive_impression,Impression,25.0,A
+78,positive_impression,Impression,41.66666666666667,A
+79,positive_impression,Impression,16.666666666666675,A
+80,positive_impression,Impression,-8.333333333333337,B
+81,positive_impression,Impression,-33.33333333333333,B
+82,positive_impression,Impression,8.333333333333348,A
+85,positive_impression,Impression,25.0,A
+88,positive_impression,Impression,-8.333333333333332,B
+89,positive_impression,Impression,-25.0,B
+90,positive_impression,Impression,0.0,tie
+91,positive_impression,Impression,25.00000000000001,A
+92,positive_impression,Impression,24.999999999999996,A
+94,positive_impression,Impression,-8.333333333333332,B
+95,positive_impression,Impression,-8.333333333333325,B
+97,positive_impression,Impression,50.0,A
+98,positive_impression,Impression,-16.666666666666664,B
+100,positive_impression,Impression,-16.666666666666675,B
+101,positive_impression,Impression,25.0,A
+103,positive_impression,Impression,33.333333333333336,A
+105,positive_impression,Impression,-8.333333333333337,B
+106,positive_impression,Impression,0.0,tie
+108,positive_impression,Impression,16.666666666666668,A
+109,positive_impression,Impression,0.0,tie
+110,positive_impression,Impression,-1.1102230246251565e-14,B
+114,positive_impression,Impression,-8.333333333333332,B
+115,positive_impression,Impression,75.00000000000001,A
+118,positive_impression,Impression,33.333333333333336,A
+119,positive_impression,Impression,8.333333333333332,A
+120,positive_impression,Impression,33.33333333333333,A

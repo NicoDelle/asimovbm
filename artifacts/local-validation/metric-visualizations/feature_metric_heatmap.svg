@@ -1,0 +1,444 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2234" height="572" viewBox="0 0 2234 572">
+<style>text{font-family:Inter,Arial,sans-serif;}.title{font-size:20px;font-weight:700;fill:#0f172a;}.note{font-size:12px;fill:#475569;}.label{font-size:12px;fill:#0f172a;}.col{font-size:11px;font-weight:700;fill:#334155;}.value{font-size:12px;font-weight:700;}</style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text class="title" x="16" y="28">Normalized Feature Metric Scores</text>
+<text class="note" x="16" y="50">Rows are authoritative run conditions; values come from the selected matching CSV export.</text>
+<text class="col" x="288.0" y="70" text-anchor="middle">task success</text>
+<text class="col" x="404.0" y="70" text-anchor="middle">completion</text>
+<text class="col" x="520.0" y="70" text-anchor="middle">path eff.</text>
+<text class="col" x="636.0" y="70" text-anchor="middle">hesitation</text>
+<text class="col" x="752.0" y="70" text-anchor="middle">SPARC</text>
+<text class="col" x="868.0" y="70" text-anchor="middle">heading jerk</text>
+<text class="col" x="984.0" y="70" text-anchor="middle">stability</text>
+<text class="col" x="1100.0" y="70" text-anchor="middle">legibility</text>
+<text class="col" x="1216.0" y="70" text-anchor="middle">ack clarity</text>
+<text class="col" x="1332.0" y="70" text-anchor="middle">min dist</text>
+<text class="col" x="1448.0" y="70" text-anchor="middle">proxemic dose</text>
+<text class="col" x="1564.0" y="70" text-anchor="middle">speed near p95</text>
+<text class="col" x="1680.0" y="70" text-anchor="middle">approach</text>
+<text class="col" x="1796.0" y="70" text-anchor="middle">impression</text>
+<text class="col" x="1912.0" y="70" text-anchor="middle">dexterity</text>
+<text class="col" x="2028.0" y="70" text-anchor="middle">safety</text>
+<text class="col" x="2144.0" y="70" text-anchor="middle">social</text>
+<text class="label" x="16" y="106">Ep1 open | Policy A | arrival</text>
+<rect x="230" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="520.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="578" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="82" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="106" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="984.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1042" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1274" y="82" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="106" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="82" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="106" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="82" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="106" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="82" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="106" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="82" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="106" text-anchor="middle" fill="#ffffff">0.824</text>
+<rect x="1854" y="82" width="114" height="36" rx="4" fill="#207f78" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="106" text-anchor="middle" fill="#ffffff">0.929</text>
+<rect x="1970" y="82" width="114" height="36" rx="4" fill="#24827b" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="106" text-anchor="middle" fill="#ffffff">0.909</text>
+<rect x="2086" y="82" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="106" text-anchor="middle" fill="#ffffff">1.000</text>
+<text class="label" x="16" y="144">Ep1 open | Policy B | arrival</text>
+<rect x="230" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="120" width="114" height="36" rx="4" fill="#26837c" stroke="#ffffff"/>
+<text class="value" x="520.0" y="144" text-anchor="middle" fill="#ffffff">0.900</text>
+<rect x="578" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="144" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="984.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1042" y="120" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="144" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="120" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="144" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1274" y="120" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="144" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="120" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="144" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="120" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="144" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="120" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="144" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="120" width="114" height="36" rx="4" fill="#6faca8" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="144" text-anchor="middle" fill="#ffffff">0.588</text>
+<rect x="1854" y="120" width="114" height="36" rx="4" fill="#328a83" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="144" text-anchor="middle" fill="#ffffff">0.850</text>
+<rect x="1970" y="120" width="114" height="36" rx="4" fill="#519b96" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="144" text-anchor="middle" fill="#ffffff">0.718</text>
+<rect x="2086" y="120" width="114" height="36" rx="4" fill="#75b0ac" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="144" text-anchor="middle" fill="#ffffff">0.564</text>
+<text class="label" x="16" y="182">Ep2 static | Policy A | arrival</text>
+<rect x="230" y="158" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="182" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="158" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="182" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="158" width="114" height="36" rx="4" fill="#358c85" stroke="#ffffff"/>
+<text class="value" x="520.0" y="182" text-anchor="middle" fill="#ffffff">0.836</text>
+<rect x="578" y="158" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="182" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="158" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="182" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="158" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="182" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="158" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="984.0" y="182" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1042" y="158" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="182" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="158" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="182" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1274" y="158" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="182" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="158" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="182" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="158" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="182" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="158" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="182" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="158" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="182" text-anchor="middle" fill="#ffffff">0.824</text>
+<rect x="1854" y="158" width="114" height="36" rx="4" fill="#22817a" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="182" text-anchor="middle" fill="#ffffff">0.917</text>
+<rect x="1970" y="158" width="114" height="36" rx="4" fill="#28847d" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="182" text-anchor="middle" fill="#ffffff">0.894</text>
+<rect x="2086" y="158" width="114" height="36" rx="4" fill="#127870" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="182" text-anchor="middle" fill="#ffffff">0.988</text>
+<text class="label" x="16" y="220">Ep2 static | Policy B | arrival</text>
+<rect x="230" y="196" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="220" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="196" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="220" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="196" width="114" height="36" rx="4" fill="#479690" stroke="#ffffff"/>
+<text class="value" x="520.0" y="220" text-anchor="middle" fill="#ffffff">0.760</text>
+<rect x="578" y="196" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="220" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="196" width="114" height="36" rx="4" fill="#1b7d76" stroke="#ffffff"/>
+<text class="value" x="752.0" y="220" text-anchor="middle" fill="#ffffff">0.946</text>
+<rect x="810" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="220" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="984.0" y="220" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1042" y="196" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="220" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="196" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="220" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1274" y="196" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="220" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="196" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="220" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="196" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="220" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="196" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="220" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="196" width="114" height="36" rx="4" fill="#8cbdba" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="220" text-anchor="middle" fill="#0f172a">0.464</text>
+<rect x="1854" y="196" width="114" height="36" rx="4" fill="#569e9a" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="220" text-anchor="middle" fill="#ffffff">0.693</text>
+<rect x="1970" y="196" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="220" text-anchor="middle" fill="#0f172a">0.200</text>
+<rect x="2086" y="196" width="114" height="36" rx="4" fill="#77b1ad" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="220" text-anchor="middle" fill="#ffffff">0.554</text>
+<text class="label" x="16" y="258">Ep3 dynamic NPCs | Policy A | arrival</text>
+<rect x="230" y="234" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="258" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="234" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="258" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="234" width="114" height="36" rx="4" fill="#22817a" stroke="#ffffff"/>
+<text class="value" x="520.0" y="258" text-anchor="middle" fill="#ffffff">0.917</text>
+<rect x="578" y="234" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="258" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="234" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="258" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="258" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="984.0" y="258" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1042" y="234" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="258" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="234" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="258" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1274" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="258" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1390" y="234" width="114" height="36" rx="4" fill="#8fbfbc" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="258" text-anchor="middle" fill="#0f172a">0.449</text>
+<rect x="1506" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="258" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1622" y="234" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="258" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1738" y="234" width="114" height="36" rx="4" fill="#81b7b3" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="258" text-anchor="middle" fill="#0f172a">0.511</text>
+<rect x="1854" y="234" width="114" height="36" rx="4" fill="#59a09b" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="258" text-anchor="middle" fill="#ffffff">0.682</text>
+<rect x="1970" y="234" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="258" text-anchor="middle" fill="#0f172a">0.200</text>
+<rect x="2086" y="234" width="114" height="36" rx="4" fill="#7fb5b2" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="258" text-anchor="middle" fill="#0f172a">0.519</text>
+<text class="label" x="16" y="296">Ep3 dynamic NPCs | Policy B | arrival</text>
+<rect x="230" y="272" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="288.0" y="296" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="346" y="272" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="404.0" y="296" text-anchor="middle" fill="#475569">NA</text>
+<rect x="462" y="272" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="520.0" y="296" text-anchor="middle" fill="#475569">NA</text>
+<rect x="578" y="272" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="296" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="272" width="114" height="36" rx="4" fill="#348b84" stroke="#ffffff"/>
+<text class="value" x="752.0" y="296" text-anchor="middle" fill="#ffffff">0.842</text>
+<rect x="810" y="272" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="296" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="272" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="984.0" y="296" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1042" y="272" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="296" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="272" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="296" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1274" y="272" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="296" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1390" y="272" width="114" height="36" rx="4" fill="#ebf3f4" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="296" text-anchor="middle" fill="#0f172a">0.054</text>
+<rect x="1506" y="272" width="114" height="36" rx="4" fill="#589f9a" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="296" text-anchor="middle" fill="#ffffff">0.687</text>
+<rect x="1622" y="272" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="296" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1738" y="272" width="114" height="36" rx="4" fill="#9dc6c4" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="296" text-anchor="middle" fill="#0f172a">0.392</text>
+<rect x="1854" y="272" width="114" height="36" rx="4" fill="#a6ccca" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="296" text-anchor="middle" fill="#0f172a">0.350</text>
+<rect x="1970" y="272" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="296" text-anchor="middle" fill="#0f172a">0.200</text>
+<rect x="2086" y="272" width="114" height="36" rx="4" fill="#8abbb9" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="296" text-anchor="middle" fill="#0f172a">0.474</text>
+<text class="label" x="16" y="334">Ep1 open | Policy A | bystander</text>
+<rect x="230" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="520.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="578" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="310" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="334" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="984.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1042" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1274" y="310" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="334" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="310" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="334" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="310" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="334" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="310" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="334" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="310" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="334" text-anchor="middle" fill="#ffffff">0.824</text>
+<rect x="1854" y="310" width="114" height="36" rx="4" fill="#207f78" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="334" text-anchor="middle" fill="#ffffff">0.929</text>
+<rect x="1970" y="310" width="114" height="36" rx="4" fill="#24827b" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="334" text-anchor="middle" fill="#ffffff">0.909</text>
+<rect x="2086" y="310" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="334" text-anchor="middle" fill="#ffffff">1.000</text>
+<text class="label" x="16" y="372">Ep1 open | Policy B | bystander</text>
+<rect x="230" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="348" width="114" height="36" rx="4" fill="#26837c" stroke="#ffffff"/>
+<text class="value" x="520.0" y="372" text-anchor="middle" fill="#ffffff">0.900</text>
+<rect x="578" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="348" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="372" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="984.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1042" y="348" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="372" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="348" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="372" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1274" y="348" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="372" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="348" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="372" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="348" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="372" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="348" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="372" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="348" width="114" height="36" rx="4" fill="#6faca8" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="372" text-anchor="middle" fill="#ffffff">0.588</text>
+<rect x="1854" y="348" width="114" height="36" rx="4" fill="#328a83" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="372" text-anchor="middle" fill="#ffffff">0.850</text>
+<rect x="1970" y="348" width="114" height="36" rx="4" fill="#519b96" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="372" text-anchor="middle" fill="#ffffff">0.718</text>
+<rect x="2086" y="348" width="114" height="36" rx="4" fill="#75b0ac" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="372" text-anchor="middle" fill="#ffffff">0.564</text>
+<text class="label" x="16" y="410">Ep2 static | Policy A | bystander</text>
+<rect x="230" y="386" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="410" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="386" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="410" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="386" width="114" height="36" rx="4" fill="#358c85" stroke="#ffffff"/>
+<text class="value" x="520.0" y="410" text-anchor="middle" fill="#ffffff">0.836</text>
+<rect x="578" y="386" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="410" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="386" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="410" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="386" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="410" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="386" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="984.0" y="410" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1042" y="386" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="410" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="386" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="410" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1274" y="386" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="410" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="386" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="410" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="386" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="410" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="386" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="410" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="386" width="114" height="36" rx="4" fill="#388d87" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="410" text-anchor="middle" fill="#ffffff">0.824</text>
+<rect x="1854" y="386" width="114" height="36" rx="4" fill="#22817a" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="410" text-anchor="middle" fill="#ffffff">0.917</text>
+<rect x="1970" y="386" width="114" height="36" rx="4" fill="#28847d" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="410" text-anchor="middle" fill="#ffffff">0.894</text>
+<rect x="2086" y="386" width="114" height="36" rx="4" fill="#127870" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="410" text-anchor="middle" fill="#ffffff">0.988</text>
+<text class="label" x="16" y="448">Ep2 static | Policy B | bystander</text>
+<rect x="230" y="424" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="448" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="424" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="448" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="424" width="114" height="36" rx="4" fill="#499791" stroke="#ffffff"/>
+<text class="value" x="520.0" y="448" text-anchor="middle" fill="#ffffff">0.752</text>
+<rect x="578" y="424" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="448" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="424" width="114" height="36" rx="4" fill="#1e7f77" stroke="#ffffff"/>
+<text class="value" x="752.0" y="448" text-anchor="middle" fill="#ffffff">0.935</text>
+<rect x="810" y="424" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="448" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="424" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="984.0" y="448" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1042" y="424" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="448" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="424" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="448" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1274" y="424" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="448" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1390" y="424" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="448" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1506" y="424" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="448" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1622" y="424" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="448" text-anchor="middle" fill="#475569">NA</text>
+<rect x="1738" y="424" width="114" height="36" rx="4" fill="#8cbdba" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="448" text-anchor="middle" fill="#0f172a">0.463</text>
+<rect x="1854" y="424" width="114" height="36" rx="4" fill="#579f9a" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="448" text-anchor="middle" fill="#ffffff">0.692</text>
+<rect x="1970" y="424" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="448" text-anchor="middle" fill="#0f172a">0.200</text>
+<rect x="2086" y="424" width="114" height="36" rx="4" fill="#77b1ad" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="448" text-anchor="middle" fill="#ffffff">0.554</text>
+<text class="label" x="16" y="486">Ep3 dynamic NPCs | Policy A | bystander</text>
+<rect x="230" y="462" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="288.0" y="486" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="346" y="462" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="404.0" y="486" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="462" y="462" width="114" height="36" rx="4" fill="#22817a" stroke="#ffffff"/>
+<text class="value" x="520.0" y="486" text-anchor="middle" fill="#ffffff">0.917</text>
+<rect x="578" y="462" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="486" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="462" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="752.0" y="486" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="810" y="462" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="486" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="462" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="984.0" y="486" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1042" y="462" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="486" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="462" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="486" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1274" y="462" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="486" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1390" y="462" width="114" height="36" rx="4" fill="#8fbfbc" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="486" text-anchor="middle" fill="#0f172a">0.449</text>
+<rect x="1506" y="462" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="486" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1622" y="462" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="486" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1738" y="462" width="114" height="36" rx="4" fill="#81b7b3" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="486" text-anchor="middle" fill="#0f172a">0.511</text>
+<rect x="1854" y="462" width="114" height="36" rx="4" fill="#59a09b" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="486" text-anchor="middle" fill="#ffffff">0.682</text>
+<rect x="1970" y="462" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="486" text-anchor="middle" fill="#0f172a">0.200</text>
+<rect x="2086" y="462" width="114" height="36" rx="4" fill="#7fb5b2" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="486" text-anchor="middle" fill="#0f172a">0.519</text>
+<text class="label" x="16" y="524">Ep3 dynamic NPCs | Policy B | bystander</text>
+<rect x="230" y="500" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="288.0" y="524" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="346" y="500" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="404.0" y="524" text-anchor="middle" fill="#475569">NA</text>
+<rect x="462" y="500" width="114" height="36" rx="4" fill="#e5e7eb" stroke="#ffffff"/>
+<text class="value" x="520.0" y="524" text-anchor="middle" fill="#475569">NA</text>
+<rect x="578" y="500" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="636.0" y="524" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="694" y="500" width="114" height="36" rx="4" fill="#3c8f89" stroke="#ffffff"/>
+<text class="value" x="752.0" y="524" text-anchor="middle" fill="#ffffff">0.808</text>
+<rect x="810" y="500" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="868.0" y="524" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="926" y="500" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="984.0" y="524" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1042" y="500" width="114" height="36" rx="4" fill="#0f766e" stroke="#ffffff"/>
+<text class="value" x="1100.0" y="524" text-anchor="middle" fill="#ffffff">1.000</text>
+<rect x="1158" y="500" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1216.0" y="524" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1274" y="500" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1332.0" y="524" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1390" y="500" width="114" height="36" rx="4" fill="#cce1e1" stroke="#ffffff"/>
+<text class="value" x="1448.0" y="524" text-anchor="middle" fill="#0f172a">0.188</text>
+<rect x="1506" y="500" width="114" height="36" rx="4" fill="#5da29e" stroke="#ffffff"/>
+<text class="value" x="1564.0" y="524" text-anchor="middle" fill="#ffffff">0.663</text>
+<rect x="1622" y="500" width="114" height="36" rx="4" fill="#f8fafc" stroke="#ffffff"/>
+<text class="value" x="1680.0" y="524" text-anchor="middle" fill="#0f172a">0.000</text>
+<rect x="1738" y="500" width="114" height="36" rx="4" fill="#bbd8d7" stroke="#ffffff"/>
+<text class="value" x="1796.0" y="524" text-anchor="middle" fill="#0f172a">0.260</text>
+<rect x="1854" y="500" width="114" height="36" rx="4" fill="#a6ccca" stroke="#ffffff"/>
+<text class="value" x="1912.0" y="524" text-anchor="middle" fill="#0f172a">0.350</text>
+<rect x="1970" y="500" width="114" height="36" rx="4" fill="#c9e0e0" stroke="#ffffff"/>
+<text class="value" x="2028.0" y="524" text-anchor="middle" fill="#0f172a">0.200</text>
+<rect x="2086" y="500" width="114" height="36" rx="4" fill="#b1d2d1" stroke="#ffffff"/>
+<text class="value" x="2144.0" y="524" text-anchor="middle" fill="#0f172a">0.305</text>
+<text class="note" x="16" y="560">Grey cells mean missing or insufficient evidence in the selected artifact.</text>
+</svg>
