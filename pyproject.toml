@@ -1,24 +1,18 @@
 [project]
 name = "asimovbm"
 version = "0.1.0"
-description = "Paper HRI benchmark client and server artifacts."
+description = "Local-first Paper HRI benchmark validation artifacts."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "numpy>=1.26",
+  "pillow>=10.0",
+]
 
 [project.optional-dependencies]
-server = [
-  "fastapi>=0.115",
-  "uvicorn[standard]>=0.32",
-  "pydantic>=2.9",
-  "websockets>=13.0",
-]
-client-transport = [
-  "websockets>=13.0",
-]
 g1-mujoco = [
-  "mujoco>=3.2.0",
-  "numpy>=1.26",
+  "imageio>=2.0",
+  "mujoco>=3.2.0,<3.4.0",
   "onnxruntime>=1.17",
 ]
 dev = [
@@ -26,20 +20,38 @@ dev = [
   "httpx>=0.27",
   "ruff>=0.7",
 ]
+paper = [
+  "jupyter>=1.0",
+  "matplotlib>=3.8",
+  "pandas>=2.2",
+  "scipy>=1.13",
+]
 
 [project.scripts]
-asimovbm-client = "asimovbm_client.cli:main"
-asimovbm-server = "asimovbm_server.cli:main"
+asimovbm-local = "asimovbm.local_runner.cli:main"
+asimovbm-web = "asimovbm.web.server:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+packages = [
+  "asimovbm",
+  "asimovbm.local_runner",
+  "asimovbm.metrics",
+  "asimovbm.reports",
+  "asimovbm.survey",
+  "asimovbm.web",
+  "g1_slam",
+]
+package-dir = {"" = ".", "g1_slam" = "g1_slam/src/g1_slam"}
+
+[tool.setuptools.package-data]
+asimovbm = ["web/static/*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src", "g1_slam/src"]
+pythonpath = [".", "g1_slam/src"]
 testpaths = ["tests"]
 filterwarnings = [
   "ignore::DeprecationWarning",
@@ -48,6 +60,7 @@ filterwarnings = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = ["g1_slam/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]

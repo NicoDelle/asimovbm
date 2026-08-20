@@ -1,116 +1,58 @@
-# Asimov Benchmark
+# AsimovBM
 
-Paper HRI benchmark artifacts. Two packages:
+AsimovBM is a simulation-based benchmark for estimating four human-perception
+scores from robot telemetry: Perceived Dexterity, Perceived Safety, Perceived
+Social Awareness, and Impression.
 
-- `asimovbm_client`: headless Python client. Runs participant policy code
-  locally and exchanges step/action messages with the benchmark server.
-- `asimovbm_server`: FastAPI/Uvicorn server. Owns authoritative simulation,
-  package validation, episode state, telemetry, metrics, and reports.
+Read the [ICRA 2026 paper](paper/AsimovBM_ICRA2026.pdf) or start with the
+[reproduction guide](paper/README.md). The broader
+[paper workflow guide](docs/paper-workflow.md) explains how the benchmark code,
+validation traces, survey responses, and published results fit together.
 
-Shared message contract lives in `asimovbm_protocol`.
+## Repository Map
 
-## Install
+```text
+paper/                         Final paper, figures, analyses, and results.
+artifacts/local-validation/    Curated local benchmark outputs and visualizations.
+artifacts/survey/              Survey media/JSON/session artifacts.
+asimovbm/                      Active Python package: runner, metrics, survey, web.
+asimovbm/metrics/              Editable objective HRI metric implementations.
+metrics/                       Human-facing metric editing guide.
+g1_slam/                       Active robot episode configs and simulation package.
+docs/specs/                    Metric specification.
+docs/solutions/                Searchable notes from solved repo problems.
+tests/                         Python tests for active package behavior.
+```
 
-Editable install with extras:
+## Active Entry Points
+
+- Paper analysis: `paper/analysis/paper_results.ipynb`
+- Simulation metric exploration: `paper/analysis/simulation_results.ipynb`
+- Published result tables: `paper/results/`
+- Metric editing guide: `metrics/README.md`
+- Objective metric code: `asimovbm/metrics/`
+- Metric tests: `tests/metrics/`
+- Solved-problem notes: `docs/solutions/`
+- Local runner: `asimovbm/local_runner/`
+- Web dashboard and survey app: `asimovbm/web/`
+
+## Quick Setup
+
+Run commands from the repository root.
 
 ```bash
-pip install -e .[server,client-transport,dev]
+.venv/bin/python -m pip install -e '.[dev,paper]'
 ```
 
-Optional extras:
-
-- `server`: FastAPI, Uvicorn, Pydantic, websockets (server runtime).
-- `client-transport`: websockets sync client (real client transport).
-- `g1-mujoco`: MuJoCo and ONNX runtime for optional `g1_slam` visualization
-  and locomotion paths. Pure-Python `g1_slam` smoke needs no extras.
-- `dev`: pytest, httpx, ruff.
-
-## Demos
-
-Four demo labels, each proves a different layer:
-
-| Demo | Proves |
-|---|---|
-| Fake protocol demo | Client message lifecycle and compatibility. |
-| Server transport demo | WebSocket transport carries the same lifecycle. |
-| `g1_slam` batch smoke | Real navigation telemetry ingestion. |
-| `g1_slam` policy-in-loop smoke | One real server/client/simulation step. |
-
-Full social-navigation benchmark validity requires metric calibration and
-social-tier scenarios beyond this repo's current scope.
-
-### Fake protocol demo
+Run the active tests:
 
 ```bash
-python -m asimovbm_client.cli \
-  --server fake://local \
-  --run-token demo-run \
-  --robot-package examples/robot_packages/minimal \
-  --transformer examples.policies.sample_policy:SampleTransformer \
-  --policy examples.policies.sample_policy:SamplePolicy \
-  --diagnostics
+.venv/bin/python -m pytest
 ```
 
-The fake backend is executable documentation. It does not simulate physics,
-render scenes, compute calibrated scores, or validate packages with backend
-authority.
-
-### Server
-
-Run the local development server:
+Run the simulator-specific navigation tests when its optional dependencies and
+submodules are available:
 
 ```bash
-asimovbm-server --host 127.0.0.1 --port 8765
-```
-
-Then point the client at it:
-
-```bash
-asimovbm-client \
-  --server ws://127.0.0.1:8765 \
-  --run-token <run-token-from-bootstrap> \
-  --robot-package examples/robot_packages/minimal \
-  --transformer examples.policies.sample_policy:SampleTransformer \
-  --policy examples.policies.sample_policy:SamplePolicy
-```
-
-## Trust Boundary
-
-Participant transformer code, policy code, model weights, and ML dependencies
-run locally. The client sends robot package metadata, actions, and technical
-telemetry to the server. The server sends raw named sensor streams and
-structured task events, not precomputed policy observations or hidden scores.
-
-Technical failures (setup/import, package validation rejection, policy
-exception, invalid action, timeout, disconnect, protocol mismatch) are
-distinct from behavioral metric outcomes.
-
-## Protocol
-
-Shared messages live in `asimovbm_protocol`. The client also re-exports them
-from `asimovbm_client.protocol` for backwards compatibility. Protocol version
-identifier: `asimovbm.client.v0`.
-
-See `docs/protocol/client-server-api.md` and
-`docs/protocol/message-lifecycle.md`.
-
-## Tests
-
-```bash
-pytest
-```
-
-`pytest` picks up both `src/` and `g1_slam/src/` via `pyproject.toml`'s
-`pythonpath` setting, so package imports work without manual `PYTHONPATH`.
-
-## Layout
-
-```
-src/asimovbm_client/    # Existing headless client.
-src/asimovbm_protocol/  # Shared message contract.
-src/asimovbm_server/    # FastAPI server, simulation adapters, metrics, reports.
-g1_slam/                # Pure-Python navigation demo + optional MuJoCo paths.
-docs/                   # Protocol, client, server, and metric specs.
-examples/               # Sample policies and robot packages.
-tests/                  # Unit and integration tests.
+.venv/bin/python -m pytest g1_slam/tests/test_navigation.py
 ```

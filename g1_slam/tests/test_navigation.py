@@ -1,13 +1,34 @@
 import unittest
-from tempfile import TemporaryDirectory
+import sys
 from pathlib import Path
+from types import SimpleNamespace
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
-from g1_slam.config import load_navigation_config
+from g1_slam.__main__ import DEFAULT_GO2_POLICY_PATH, _fallback_missing_default_go2_policy
+from g1_slam.config import LocomotionConfig, load_navigation_config, visualization_for_camera_view
+from g1_slam.controller import PurePursuitConfig
+from g1_slam.dynamic_obstacles import (
+    make_default_dynamic_cylinders,
+    make_default_dynamic_obstacles,
+    make_default_npcs,
+    make_dynamic_cylinder_world,
+)
 from g1_slam.geometry import Pose2D
 from g1_slam.lidar import simulate_lidar
+from g1_slam.locomotion import _is_git_lfs_pointer
 from g1_slam.mapping import GridSpec, OccupancyGrid
-from g1_slam.mujoco_runner import _official_g1_scene_xml, _robot_spec
+from g1_slam.mujoco_runner import _official_g1_scene_xml, _official_go2_scene_xml, _robot_spec
 from g1_slam.planner import AStarPlanner
+from g1_slam.robojudo_backend import (
+    DEFAULT_ROBOJUDO_CONFIG,
+    RoboJuDoBackend,
+    RoboJuDoBackendConfig,
+    _robojudo_navigation_scene_tail,
+    _trace_entities,
+    _world_with_dynamic_obstacles,
+    run_robojudo_navigation,
+)
 from g1_slam.simulation import run_navigation
 from g1_slam.world import RectObstacle, World2D, default_world
 
@@ -17,17 +38,237 @@ class NavigationTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "navigation.json"
             path.write_text(
-                '{"start": {"x": 1.0, "y": 2.0, "yaw": 0.5}, "goal": {"x": 3.0, "y": 4.0}, "steps": 77}',
+                """{
+                    "start": {"x": 1.0, "y": 2.0, "yaw": 0.5},
+                    "goal": {"x": 3.0, "y": 4.0},
+                    "steps": 77,
+                    "world": {
+                        "x_min": -1.0,
+                        "y_min": -2.0,
+                        "x_max": 5.0,
+                        "y_max": 6.0,
+                        "obstacles": [
+                            {"x_min": 0.0, "y_min": 0.1, "x_max": 0.2, "y_max": 0.3}
+                        ]
+                    },
+                    "dynamic_obstacles": {
+                        "mode": "npcs",
+                        "seed": 42,
+                        "count": 3,
+                        "npc_policy": "social_patrol"
+                    },
+                    "controller": {
+                        "start_delay_s": 1.5
+                    },
+                    "locomotion": {
+                        "mode": "robojudo",
+                        "policy_path": "policies/g1/policy.onnx",
+                        "robojudo_config": "g1"
+                    },
+                    "visualization": {
+                        "camera": {
+                            "fixed": true,
+                            "lookat": {"x": 1.0, "y": 2.0, "z": 1.2},
+                            "distance": 3.5,
+                            "azimuth": 90.0,
+                            "elevation": -8.0
+                        },
+                        "camera_views": {
+                            "arrival": {
+                                "fixed": true,
+                                "lookat": {"x": 3.0, "y": 4.0, "z": 1.2},
+                                "distance": 2.5,
+                                "azimuth": 45.0,
+                                "elevation": -10.0
+                            }
+                        },
+                        "show_trajectory": true,
+                        "trajectory_interval_steps": 12
+                    }
+                }""",
                 encoding="utf-8",
             )
             config = load_navigation_config(path)
         self.assertEqual(config.start, Pose2D(1.0, 2.0, 0.5))
         self.assertEqual(config.goal, (3.0, 4.0))
         self.assertEqual(config.steps, 77)
+        self.assertIsNotNone(config.world)
+        self.assertEqual(config.world.obstacles, (RectObstacle(0.0, 0.1, 0.2, 0.3),))
+        self.assertEqual(config.dynamic_obstacles.mode, "npcs")
+        self.assertFalse(config.dynamic_obstacles.blue_cylinders)
+        self.assertEqual(config.dynamic_obstacles.blue_cylinder_seed, 42)
+        self.assertEqual(config.dynamic_obstacles.blue_cylinder_count, 3)
+        self.assertEqual(config.dynamic_obstacles.npc_policy, "social_patrol")
+        self.assertEqual(config.controller.start_delay_s, 1.5)
+        self.assertEqual(config.locomotion.mode, "robojudo")
+        self.assertEqual(config.locomotion.robojudo_config, "g1")
+        self.assertEqual(config.visualization.camera_lookat, (1.0, 2.0, 1.2))
+        self.assertEqual(config.visualization.camera_distance, 3.5)
+        self.assertTrue(config.visualization.fixed_camera)
+        self.assertEqual(config.visualization.camera_views["arrival"].lookat, (3.0, 4.0, 1.2))
+        self.assertTrue(config.visualization.show_trajectory)
+        self.assertEqual(config.visualization.trajectory_interval_steps, 12)
+
+    def test_default_go2_policy_placeholder_falls_back_to_kinematic_locomotion(self):
+        config = LocomotionConfig(
+            mode="policy",
+            policy_path=DEFAULT_GO2_POLICY_PATH,
+            robojudo_config="g1_asap_loco",
+            observation_size=None,
+            observation_profile="dias_ai_master_go2_velocity_flat",
+            action_scale=0.5,
+            kp=50.0,
+            kd=3.5,
+        )
+
+        with patch.object(Path, "exists", return_value=False):
+            fallback = _fallback_missing_default_go2_policy(
+                config,
+                robot="official_go2",
+                explicit_policy_path=False,
+            )
+
+        self.assertEqual(fallback.mode, "kinematic")
+        self.assertEqual(fallback.policy_path, DEFAULT_GO2_POLICY_PATH)
+
+    def test_explicit_missing_go2_policy_does_not_fall_back(self):
+        config = LocomotionConfig(
+            mode="policy",
+            policy_path=DEFAULT_GO2_POLICY_PATH,
+            robojudo_config="g1_asap_loco",
+            observation_size=None,
+            observation_profile="dias_ai_master_go2_velocity_flat",
+            action_scale=0.5,
+            kp=50.0,
+            kd=3.5,
+        )
+
+        with patch.object(Path, "exists", return_value=False):
+            fallback = _fallback_missing_default_go2_policy(
+                config,
+                robot="official_go2",
+                explicit_policy_path=True,
+            )
+
+        self.assertEqual(fallback.mode, "policy")
+
+    def test_episode_configs_load(self):
+        config_dir = Path(__file__).resolve().parents[1] / "config" / "episodes"
+        config_paths = sorted(config_dir.glob("*.json"))
+        self.assertEqual(len(config_paths), 6)
+        self.assertEqual(
+            [path.stem for path in config_paths],
+            [
+                "g1_point_to_point_dynamic_npcs",
+                "g1_point_to_point_open",
+                "g1_point_to_point_static_obstacles",
+                "go2_point_to_point_dynamic_npcs",
+                "go2_point_to_point_open",
+                "go2_point_to_point_static_obstacles",
+            ],
+        )
+        configs = {path.stem: load_navigation_config(path) for path in config_paths}
+
+        self.assertEqual(configs["g1_point_to_point_open"].world.obstacles, ())
+        self.assertEqual(configs["g1_point_to_point_open"].dynamic_obstacles.mode, "none")
+        self.assertEqual(configs["g1_point_to_point_open"].world.x_min, -8.0)
+        self.assertEqual(configs["g1_point_to_point_open"].world.x_max, 8.0)
+        self.assertEqual(configs["g1_point_to_point_open"].controller.start_delay_s, 1.0)
+        self.assertEqual(configs["g1_point_to_point_open"].locomotion.robojudo_config, "g1_asap_loco")
+        self.assertEqual(
+            len(configs["g1_point_to_point_static_obstacles"].world.obstacles),
+            2,
+        )
+        self.assertEqual(
+            configs["g1_point_to_point_static_obstacles"].dynamic_obstacles.mode,
+            "none",
+        )
+        self.assertEqual(configs["g1_point_to_point_static_obstacles"].controller.start_delay_s, 1.0)
+        self.assertEqual(configs["g1_point_to_point_dynamic_npcs"].world.obstacles, ())
+        self.assertEqual(
+            configs["g1_point_to_point_dynamic_npcs"].dynamic_obstacles.mode,
+            "npcs",
+        )
+        self.assertEqual(
+            configs["g1_point_to_point_dynamic_npcs"].dynamic_obstacles.blue_cylinder_count,
+            2,
+        )
+        self.assertEqual(
+            tuple(obstacle.center for obstacle in configs["g1_point_to_point_dynamic_npcs"].dynamic_obstacles.obstacles),
+            ((-1.0, -1.6), (2.0, -1.6)),
+        )
+        self.assertEqual(configs["g1_point_to_point_dynamic_npcs"].controller.start_delay_s, 1.0)
+        self.assertEqual(configs["go2_point_to_point_open"].world.obstacles, ())
+        self.assertEqual(configs["go2_point_to_point_open"].dynamic_obstacles.mode, "none")
+        self.assertEqual(configs["go2_point_to_point_open"].world.x_min, -8.0)
+        self.assertEqual(configs["go2_point_to_point_open"].locomotion.mode, "policy")
+        self.assertEqual(
+            len(configs["go2_point_to_point_static_obstacles"].world.obstacles),
+            2,
+        )
+        self.assertEqual(
+            configs["go2_point_to_point_static_obstacles"].dynamic_obstacles.mode,
+            "none",
+        )
+        self.assertEqual(configs["go2_point_to_point_dynamic_npcs"].world.obstacles, ())
+        self.assertEqual(
+            configs["go2_point_to_point_dynamic_npcs"].dynamic_obstacles.mode,
+            "npcs",
+        )
+        self.assertEqual(
+            configs["go2_point_to_point_dynamic_npcs"].dynamic_obstacles.blue_cylinder_count,
+            3,
+        )
+        self.assertEqual(configs["go2_point_to_point_open"].locomotion.mode, "policy")
+        self.assertEqual(
+            configs["go2_point_to_point_open"].locomotion.policy_path,
+            DEFAULT_GO2_POLICY_PATH,
+        )
+        self.assertEqual(configs["go2_point_to_point_open"].locomotion.observation_size, 45)
+        self.assertEqual(
+            configs["go2_point_to_point_open"].locomotion.observation_profile,
+            "dias_ai_master_go2_velocity_flat",
+        )
+        self.assertEqual(configs["go2_point_to_point_open"].locomotion.action_scale, 0.5)
+        for config in configs.values():
+            self.assertEqual(config.controller.start_delay_s, 1.0)
+            self.assertTrue(config.visualization.fixed_camera)
+            self.assertIn("arrival", config.visualization.camera_views)
+            self.assertIn("bystander", config.visualization.camera_views)
+            self.assertFalse(config.visualization.show_trajectory)
+            if config.locomotion.mode == "robojudo":
+                self.assertEqual(config.locomotion.robojudo_config, "g1_asap_loco")
+            if config.locomotion.mode == "policy":
+                self.assertEqual(config.locomotion.policy_path, DEFAULT_GO2_POLICY_PATH)
+
+    def test_camera_view_presets_select_named_json_cameras(self):
+        config = load_navigation_config(
+            Path(__file__).resolve().parents[1] / "config" / "episodes" / "g1_point_to_point_open.json"
+        )
+
+        arrival = visualization_for_camera_view(
+            config.visualization,
+            camera_view="arrival",
+        )
+        bystander = visualization_for_camera_view(
+            config.visualization,
+            camera_view="bystander",
+        )
+
+        self.assertTrue(arrival.fixed_camera)
+        self.assertEqual(arrival.camera_lookat, config.visualization.camera_views["arrival"].lookat)
+        self.assertEqual(arrival.camera_azimuth, config.visualization.camera_views["arrival"].azimuth)
+        self.assertEqual(bystander.camera_lookat, config.visualization.camera_views["bystander"].lookat)
+        self.assertEqual(bystander.camera_distance, config.visualization.camera_views["bystander"].distance)
 
     def test_robot_spec_supports_official_g1(self):
         spec = _robot_spec("official_g1")
         self.assertEqual(spec.default_model_path.name, "g1_nav_generated.xml")
+        self.assertFalse(spec.use_physics_step)
+
+    def test_robot_spec_supports_official_go2(self):
+        spec = _robot_spec("official_go2")
+        self.assertEqual(spec.default_model_path.name, "go2_nav_generated.xml")
         self.assertFalse(spec.use_physics_step)
 
     def test_official_g1_scene_keeps_navigation_world(self):
@@ -35,6 +276,190 @@ class NavigationTests(unittest.TestCase):
         self.assertIn('<include file="g1_29dof.xml"/>', xml)
         self.assertIn('name="goal"', xml)
         self.assertIn('name="obs_0"', xml)
+
+    def test_official_go2_scene_keeps_navigation_world_and_dynamic_cylinders(self):
+        cylinders = make_default_dynamic_cylinders(seed=7)[:2]
+        xml = _official_go2_scene_xml(default_world(), cylinders)
+        self.assertIn('<include file="go2.xml"/>', xml)
+        self.assertIn('name="goal"', xml)
+        self.assertIn('name="obs_0"', xml)
+        self.assertIn('name="blue_cylinder_0"', xml)
+        self.assertIn('mocap="true"', xml)
+
+    def test_robojudo_navigation_scene_can_include_dynamic_blue_cylinders(self):
+        world = make_dynamic_cylinder_world()
+        cylinders = make_default_dynamic_cylinders(seed=7)
+        xml = _robojudo_navigation_scene_tail(world, cylinders)
+        self.assertIn('name="blue_cylinder_0"', xml)
+        self.assertIn('name="blue_cylinder_2"', xml)
+        self.assertIn('mocap="true"', xml)
+        self.assertIn('nav_dynamic_cylinder_mat', xml)
+        self.assertNotIn('name="obs_0"', xml)
+
+    def test_robojudo_navigation_scene_can_include_npcs(self):
+        world = make_dynamic_cylinder_world()
+        npcs = make_default_npcs(seed=7, world=world)
+        xml = _robojudo_navigation_scene_tail(world, npcs)
+        self.assertIn('name="person_npc_0"', xml)
+        self.assertIn('name="person_npc_2"', xml)
+        self.assertIn('type="capsule"', xml)
+        self.assertIn('nav_npc_clothes_mat', xml)
+
+    def test_robojudo_repo_path_adds_bundled_mujoco_viewer(self):
+        with TemporaryDirectory() as tmp:
+            repo_path = Path(tmp) / "RoboJuDo"
+            viewer_path = repo_path / "third_party" / "mujoco_viewer"
+            viewer_path.mkdir(parents=True)
+            repo_path = repo_path.resolve()
+            viewer_path = viewer_path.resolve()
+            original_sys_path = list(sys.path)
+            try:
+                sys.path[:] = [
+                    entry
+                    for entry in sys.path
+                    if entry not in {repo_path.as_posix(), viewer_path.as_posix()}
+                ]
+                resolved = RoboJuDoBackend._install_repo_path(repo_path)
+                self.assertEqual(resolved, repo_path)
+                self.assertIn(repo_path.as_posix(), sys.path)
+                self.assertIn(viewer_path.as_posix(), sys.path)
+            finally:
+                sys.path[:] = original_sys_path
+
+    def test_robojudo_backend_defaults_to_unitree_g1_policy_config(self):
+        self.assertEqual(DEFAULT_ROBOJUDO_CONFIG, "g1")
+        self.assertEqual(RoboJuDoBackendConfig().config_name, "g1")
+
+    def test_robojudo_viewer_compat_accepts_robojudo_typo_keyword(self):
+        class FakeViewer:
+            def __init__(self, model, data, *, width=None):
+                self.model = model
+                self.data = data
+                self.width = width
+
+        original_module = sys.modules.get("mujoco_viewer")
+        sys.modules["mujoco_viewer"] = SimpleNamespace(MujocoViewer=FakeViewer)
+        try:
+            RoboJuDoBackend._install_mujoco_viewer_compat()
+            viewer = FakeViewer("model", "data", width=1200, diable_key_callbacks=True)
+        finally:
+            if original_module is None:
+                sys.modules.pop("mujoco_viewer", None)
+            else:
+                sys.modules["mujoco_viewer"] = original_module
+
+        self.assertEqual(viewer.model, "model")
+        self.assertEqual(viewer.data, "data")
+        self.assertEqual(viewer.width, 1200)
+        self.assertTrue(getattr(FakeViewer, "_g1_slam_marker_compat", False))
+
+    def test_dynamic_obstacles_extend_lidar_world_over_time(self):
+        world = default_world()
+        obstacles = make_default_dynamic_obstacles("npcs", seed=7, world=world)
+        world_at_start = _world_with_dynamic_obstacles(world, obstacles, sim_time=0.0)
+        world_later = _world_with_dynamic_obstacles(world, obstacles, sim_time=3.0)
+        self.assertEqual(len(world_at_start.obstacles), len(world.obstacles) + len(obstacles))
+        self.assertNotEqual(world_at_start.obstacles[-1], world_later.obstacles[-1])
+
+    def test_configured_dynamic_obstacles_keep_manual_spacing(self):
+        config = load_navigation_config(
+            Path(__file__).resolve().parents[1]
+            / "config"
+            / "episodes"
+            / "g1_point_to_point_dynamic_npcs.json"
+        )
+
+        obstacles = make_default_dynamic_obstacles(
+            config.dynamic_obstacles.mode,
+            seed=config.dynamic_obstacles.blue_cylinder_seed,
+            count=config.dynamic_obstacles.blue_cylinder_count,
+            world=config.world,
+            npc_policy=config.dynamic_obstacles.npc_policy,
+            obstacles=config.dynamic_obstacles.obstacles,
+        )
+
+        self.assertEqual(len(obstacles), 2)
+        self.assertEqual([obstacle.center for obstacle in obstacles], [(-1.0, -1.6), (2.0, -1.6)])
+        self.assertEqual([obstacle.name for obstacle in obstacles], ["person_npc_0", "person_npc_1"])
+
+    def test_robojudo_trace_entities_include_dynamic_obstacles(self):
+        world = make_dynamic_cylinder_world()
+        obstacles = make_default_dynamic_obstacles("npcs", seed=7, count=1, world=world)
+
+        entities = _trace_entities(world, obstacles, sim_time=0.0)
+
+        self.assertEqual(len(entities), 1)
+        self.assertEqual(entities[0]["id"], "person_npc_0")
+        self.assertEqual(entities[0]["kind"], "dynamic_obstacle")
+        self.assertEqual(entities[0]["type"], "bystander")
+        self.assertEqual(entities[0]["role"], "bystander")
+        self.assertIn("pose", entities[0])
+        self.assertIn("velocity", entities[0])
+
+    def test_robojudo_navigation_records_trace_with_configured_dynamic_obstacles(self):
+        class FakePipeline:
+            dt = 0.02
+
+        world = World2D(-1.0, -1.0, 2.0, 1.0, ())
+        start = Pose2D(0.0, 0.0, 0.0)
+        goal = (1.0, 0.0)
+
+        with (
+            patch.object(RoboJuDoBackend, "_install_repo_path", return_value=Path("RoboJuDo")),
+            patch.object(RoboJuDoBackend, "_install_mujoco_viewer_compat"),
+            patch.object(RoboJuDoBackend, "_install_headless_mujoco_viewer"),
+            patch.object(RoboJuDoBackend, "_install_virtual_joystick_controller"),
+            patch.object(RoboJuDoBackend, "_build_pipeline", return_value=FakePipeline()),
+            patch.object(RoboJuDoBackend, "reset"),
+            patch.object(RoboJuDoBackend, "reborn"),
+            patch.object(RoboJuDoBackend, "set_goal_marker"),
+            patch.object(RoboJuDoBackend, "set_dynamic_obstacles"),
+            patch.object(RoboJuDoBackend, "configure_viewer"),
+            patch.object(RoboJuDoBackend, "add_episode_markers"),
+            patch.object(RoboJuDoBackend, "pose", return_value=start),
+            patch.object(RoboJuDoBackend, "step", return_value=Pose2D(0.05, 0.0, 0.0)),
+        ):
+            result = run_robojudo_navigation(
+                world,
+                start=start,
+                goal=goal,
+                steps=1,
+                controller_config=PurePursuitConfig(start_delay_s=1.0),
+                backend_config=RoboJuDoBackendConfig(dynamic_obstacle_mode="none"),
+                render=False,
+            )
+
+        self.assertEqual(result["step_count"], 1)
+        self.assertEqual(result["metadata"]["trace_source"], "robojudo_loop")
+        self.assertTrue(result["metadata"]["real_backend_verified"])
+        self.assertEqual(result["steps"][0]["command"], {"linear": 0.0, "yaw_rate": 0.0})
+        self.assertEqual(result["steps"][0]["dt_s"], 0.02)
+        self.assertEqual(result["steps"][0]["robot_velocity"], {"vx": 2.5, "vy": 0.0, "yaw_rate": 0.0})
+        self.assertEqual(result["steps"][0]["action"], {"linear": 0.0, "yaw_rate": 0.0})
+        self.assertEqual(result["steps"][0]["collisions"], [])
+        self.assertEqual(result["steps"][0]["contacts"], [])
+        self.assertEqual(result["steps"][0]["qpos"], [])
+        self.assertEqual(result["steps"][0]["qvel"], [])
+        self.assertEqual(result["steps"][0]["status"], "running")
+        self.assertEqual(result["steps"][0]["entities"], [])
+
+    def test_dynamic_obstacle_patrols_do_not_cross_static_obstacles(self):
+        world = World2D(
+            -5.2,
+            -3.0,
+            5.5,
+            3.0,
+            (
+                RectObstacle(-1.2, -2.1, -0.7, 0.5),
+                RectObstacle(1.4, -0.5, 1.9, 2.0),
+            ),
+        )
+        obstacles = make_default_dynamic_obstacles("npcs", seed=11, count=3, world=world)
+        for obstacle in obstacles:
+            for index in range(64):
+                sim_time = obstacle.period_s * index / 64
+                x, y = obstacle.xy_at(sim_time)
+                self.assertFalse(world.is_occupied(x, y, margin=obstacle.radius + 0.10))
 
     def test_lidar_hits_obstacle_ahead(self):
         world = World2D(-2, -2, 4, 2, (RectObstacle(1.0, -0.4, 1.2, 0.4),))
@@ -55,6 +480,18 @@ class NavigationTests(unittest.TestCase):
     def test_navigation_reaches_default_goal(self):
         result = run_navigation(default_world(), steps=1200)
         self.assertTrue(result.reached_goal)
+
+    def test_git_lfs_pointer_policy_detection(self):
+        with TemporaryDirectory() as tmp:
+            pointer = Path(tmp) / "policy.onnx"
+            pointer.write_text(
+                "version https://git-lfs.github.com/spec/v1\n"
+                "oid sha256:fbb8b61b12f2cd44dfc889f33566a8be2438124efee88b60c700b9605a94187a\n"
+                "size 14196\n",
+                encoding="utf-8",
+            )
+
+            self.assertTrue(_is_git_lfs_pointer(pointer))
 
 
 if __name__ == "__main__":

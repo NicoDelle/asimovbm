@@ -1,0 +1,439 @@
+"""Local webserver for metrics dashboard and video survey collection."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import mimetypes
+from dataclasses import dataclass, field
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qs, unquote, urlsplit
+
+from asimovbm.survey import design_payload
+from asimovbm.survey.analysis import aggregate_video_scores
+from asimovbm.survey.comparison import compare_predictions_with_survey
+from asimovbm.survey.export import participants_csv_text, write_participants_csv
+from asimovbm.survey.prediction import load_video_predictions
+from asimovbm.survey.storage import SurveyStorageError, SurveyStore
+from asimovbm.survey.video_manifest import (
+    VideoManifestError,
+    discover_sim_output_manifest,
+    load_video_manifest,
+)
+
+from .artifact_index import list_runs, load_run
+
+
+@dataclass(frozen=True)
+class WebConfig:
+    artifact_root: Path = Path("artifacts/local-validation")
+    survey_root: Path = Path("artifacts/survey")
+    video_root: Path = Path("artifacts/survey/videos")
+    survey_json_root: Path = Path("artifacts/survey/json")
+    study_id: str = "pilot"
+    video_manifest_path: Path | None = None
+    host: str = "127.0.0.1"
+    port: int = 8765
+    include_q5: bool = False
+    include_go2: bool = False
+    survey_quota_per_group: int = 30
+
+
+@dataclass(frozen=True)
+class WebResponse:
+    status: int
+    body: bytes
+    content_type: str
+    headers: dict[str, str] = field(default_factory=dict)
+
+
+class WebApp:
+    def __init__(self, config: WebConfig) -> None:
+        self.config = config
+
+    def handle_request(
+        self,
+        method: str,
+        raw_path: str,
+        body: bytes = b"",
+        headers: Any | None = None,
+    ) -> WebResponse:
+        parsed = urlsplit(raw_path)
+        path = parsed.path
+        query = parse_qs(parsed.query)
+        try:
+            if method == "GET":
+                return self._handle_get(path, query, headers=headers)
+            if method == "POST":
+                return self._handle_post(path, body)
+        except (FileNotFoundError, KeyError, SurveyStorageError, VideoManifestError, ValueError) as exc:
+            status = 404 if isinstance(exc, FileNotFoundError | KeyError) else 400
+            return _json_response({"error": str(exc)}, status=status)
+        return _json_response({"error": "method not allowed"}, status=405)
+
+    def _handle_get(
+        self,
+        path: str,
+        query: dict[str, list[str]],
+        *,
+        headers: Any | None,
+    ) -> WebResponse:
+        if path in {"/", "/survey"}:
+            return _static_response("index.html")
+        if path.startswith("/static/"):
+            return _static_response(unquote(path.removeprefix("/static/")))
+        if path == "/api/runs":
+            return _json_response({"runs": list_runs(self.config.artifact_root)})
+        if path.startswith("/api/runs/"):
+            run_id = unquote(path.removeprefix("/api/runs/"))
+            return _json_response(load_run(self.config.artifact_root, run_id))
+        if path == "/api/survey/design":
+            return _json_response(
+                design_payload(
+                    include_q5=self.config.include_q5,
+                    include_go2=self.config.include_go2,
+                )
+            )
+        if path == "/api/survey/videos":
+            group_id = _single_query_default(query, "group", "")
+            manifest = self._video_manifest()
+            videos = (
+                manifest.videos_for_group(group_id)
+                if group_id
+                else tuple(sorted(manifest.videos, key=lambda video: (video.episode_order, video.video_id)))
+            )
+            return _json_response(
+                {
+                    "study_id": manifest.study_id,
+                    "group_id": group_id or None,
+                    "videos": [video.to_dict() for video in videos],
+                }
+            )
+        if path == "/api/survey/analysis":
+            store = self._store()
+            weight_preset = _single_query_default(query, "weight_preset", "equal")
+            return _json_response(
+                {
+                    "study_id": self.config.study_id,
+                    "aggregate": aggregate_video_scores(
+                        store.responses(),
+                        weight_preset=weight_preset,
+                    ),
+                }
+            )
+        if path == "/api/survey/predictions":
+            manifest = self._video_manifest()
+            return _json_response(
+                {
+                    "study_id": manifest.study_id,
+                    "predictions": load_video_predictions(
+                        manifest.videos,
+                        artifact_root=self.config.artifact_root,
+                        source_roots=self._prediction_roots(),
+                    ),
+                }
+            )
+        if path == "/api/survey/comparison":
+            store = self._store()
+            manifest = self._video_manifest()
+            weight_preset = _single_query_default(query, "weight_preset", "equal")
+            predictions = load_video_predictions(
+                manifest.videos,
+                artifact_root=self.config.artifact_root,
+                source_roots=self._prediction_roots(),
+            )
+            return _json_response(
+                {
+                    "study_id": manifest.study_id,
+                    "comparison": compare_predictions_with_survey(
+                        manifest.videos,
+                        predictions=predictions,
+                        responses=store.responses(),
+                        weight_preset=weight_preset,
+                    ),
+                }
+            )
+        if path == "/api/survey/participants.csv":
+            store = self._store()
+            write_participants_csv(store)
+            return WebResponse(
+                status=200,
+                body=participants_csv_text(
+                    store.participants(),
+                    store.responses(),
+                ).encode("utf-8"),
+                content_type="text/csv; charset=utf-8",
+                headers={
+                    "Content-Disposition": 'attachment; filename="participants.csv"'
+                },
+            )
+        if path.startswith("/videos/"):
+            return _file_response(
+                _safe_child(self.config.video_root, unquote(path.removeprefix("/videos/"))),
+                range_header=_header(headers, "Range"),
+            )
+        return _json_response({"error": "not found"}, status=404)
+
+    def _handle_post(self, path: str, body: bytes) -> WebResponse:
+        payload = _decode_json(body)
+        store = self._store()
+        if path == "/api/survey/participants":
+            manifest = self._video_manifest()
+            group_id = str(payload.get("group_id", ""))
+            if not group_id:
+                group_id = store.next_quota_group(
+                    self._eligible_group_ids(manifest),
+                    quota_per_group=self.config.survey_quota_per_group,
+                )
+            videos = manifest.videos_for_group(group_id)
+            record = store.start_participant(
+                group_id=group_id,
+                participant_id=payload.get("participant_id"),
+                assigned_video_ids=tuple(video.video_id for video in videos),
+                metadata=payload.get("metadata", {}),
+            )
+            return _json_response(
+                {
+                    "participant": record,
+                    "videos": [video.to_dict() for video in videos],
+                },
+                status=201,
+            )
+        if path == "/api/survey/responses":
+            record = store.append_response(
+                payload,
+                manifest=self._video_manifest(),
+                include_q5=self.config.include_q5,
+            )
+            return _json_response({"response": record}, status=201)
+        return _json_response({"error": "not found"}, status=404)
+
+    def _store(self) -> SurveyStore:
+        return SurveyStore(self.config.survey_root, self.config.study_id)
+
+    def _video_manifest(self):
+        if self.config.video_manifest_path is None:
+            return discover_sim_output_manifest(
+                study_id=self.config.study_id,
+                video_root=self.config.video_root,
+                json_root=self.config.survey_json_root,
+                include_go2=self.config.include_go2,
+            )
+        return load_video_manifest(
+            self.config.video_manifest_path,
+            video_root=self.config.video_root,
+            artifact_root=self.config.artifact_root,
+            prediction_roots=self._prediction_roots(),
+        )
+
+    def _prediction_roots(self) -> dict[str, Path]:
+        return {
+            "artifact_root": self.config.artifact_root,
+            "survey_json_root": self.config.survey_json_root,
+        }
+
+    def _eligible_group_ids(self, manifest) -> tuple[str, ...]:
+        group_ids: list[str] = []
+        for video in manifest.videos:
+            for group_id in video.group_ids:
+                if group_id not in group_ids:
+                    group_ids.append(group_id)
+        return tuple(
+            group_id
+            for group_id in group_ids
+            if manifest.videos_for_group(group_id)
+        )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="asimovbm-web")
+    parser.add_argument("--artifact-root", type=Path, default=Path("artifacts/local-validation"))
+    parser.add_argument("--survey-root", type=Path, default=Path("artifacts/survey"))
+    parser.add_argument("--video-root", type=Path, default=Path("artifacts/survey/videos"))
+    parser.add_argument("--survey-json-root", type=Path, default=Path("artifacts/survey/json"))
+    parser.add_argument("--video-manifest", type=Path)
+    parser.add_argument("--study-id", default="pilot")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--include-q5", action="store_true")
+    parser.add_argument("--include-go2", action="store_true")
+    parser.add_argument("--survey-quota-per-group", type=int, default=30)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    config = WebConfig(
+        artifact_root=args.artifact_root,
+        survey_root=args.survey_root,
+        video_root=args.video_root,
+        survey_json_root=args.survey_json_root,
+        study_id=args.study_id,
+        video_manifest_path=args.video_manifest,
+        host=args.host,
+        port=args.port,
+        include_q5=args.include_q5,
+        include_go2=args.include_go2,
+        survey_quota_per_group=args.survey_quota_per_group,
+    )
+    if config.video_manifest_path is not None and not config.video_manifest_path.exists():
+        raise SystemExit(f"video manifest does not exist: {config.video_manifest_path}")
+    serve(config)
+    return 0
+
+
+def serve(config: WebConfig) -> None:
+    app = WebApp(config)
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:  # noqa: N802
+            self._send(app.handle_request("GET", self.path, headers=self.headers))
+
+        def do_POST(self) -> None:  # noqa: N802
+            length = int(self.headers.get("Content-Length") or 0)
+            body = self.rfile.read(length) if length else b""
+            self._send(app.handle_request("POST", self.path, body))
+
+        def log_message(self, format: str, *args: Any) -> None:
+            return
+
+        def _send(self, response: WebResponse) -> None:
+            self.send_response(response.status)
+            self.send_header("Content-Type", response.content_type)
+            self.send_header("Content-Length", str(len(response.body)))
+            for name, value in response.headers.items():
+                self.send_header(name, value)
+            self.end_headers()
+            self.wfile.write(response.body)
+
+    server = ThreadingHTTPServer((config.host, config.port), Handler)
+    print(f"asimovbm webserver: http://{config.host}:{config.port}")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+
+
+def _json_response(payload: dict[str, Any], *, status: int = 200) -> WebResponse:
+    return WebResponse(
+        status=status,
+        body=(json.dumps(payload, sort_keys=True) + "\n").encode("utf-8"),
+        content_type="application/json; charset=utf-8",
+    )
+
+
+def _static_response(name: str) -> WebResponse:
+    if "/" in name or name.startswith("."):
+        return _json_response({"error": "invalid static path"}, status=400)
+    return _file_response(Path(__file__).with_name("static") / name)
+
+
+def _file_response(path: Path, *, range_header: str | None = None) -> WebResponse:
+    if not path.exists() or not path.is_file():
+        raise FileNotFoundError(path.as_posix())
+    content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    size = path.stat().st_size
+    if range_header:
+        byte_range = _parse_range_header(range_header, size)
+        if byte_range is None:
+            return WebResponse(
+                status=416,
+                body=b"",
+                content_type=content_type,
+                headers={
+                    "Accept-Ranges": "bytes",
+                    "Content-Range": f"bytes */{size}",
+                },
+            )
+        start, end = byte_range
+        with path.open("rb") as handle:
+            handle.seek(start)
+            body = handle.read(end - start + 1)
+        return WebResponse(
+            status=206,
+            body=body,
+            content_type=content_type,
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Range": f"bytes {start}-{end}/{size}",
+            },
+        )
+    return WebResponse(
+        status=200,
+        body=path.read_bytes(),
+        content_type=content_type,
+        headers={"Accept-Ranges": "bytes"},
+    )
+
+
+def _parse_range_header(value: str, size: int) -> tuple[int, int] | None:
+    if size < 1 or not value.startswith("bytes=") or "," in value:
+        return None
+    start_text, separator, end_text = value.removeprefix("bytes=").partition("-")
+    if separator != "-":
+        return None
+    try:
+        if start_text == "":
+            suffix_length = int(end_text)
+            if suffix_length <= 0:
+                return None
+            start = max(0, size - suffix_length)
+            end = size - 1
+        else:
+            start = int(start_text)
+            end = int(end_text) if end_text else size - 1
+    except ValueError:
+        return None
+    if start < 0 or end < start or start >= size:
+        return None
+    return start, min(end, size - 1)
+
+
+def _decode_json(body: bytes) -> dict[str, Any]:
+    try:
+        payload = json.loads(body.decode("utf-8") or "{}")
+    except json.JSONDecodeError as exc:
+        raise ValueError("request body must be JSON") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("request body must be a JSON object")
+    return payload
+
+
+def _single_query(query: dict[str, list[str]], name: str) -> str:
+    values = query.get(name)
+    if not values or values[0] == "":
+        raise ValueError(f"missing query parameter: {name}")
+    return values[0]
+
+
+def _single_query_default(query: dict[str, list[str]], name: str, default: str) -> str:
+    values = query.get(name)
+    if not values or values[0] == "":
+        return default
+    return values[0]
+
+
+def _header(headers: Any | None, name: str) -> str | None:
+    if headers is None:
+        return None
+    value = headers.get(name)
+    return str(value) if value is not None else None
+
+
+def _safe_child(root: Path, child: str | Path) -> Path:
+    root_resolved = root.resolve()
+    candidate = Path(child)
+    if not candidate.is_absolute():
+        candidate = root_resolved / candidate
+    candidate_resolved = candidate.resolve(strict=False)
+    if candidate_resolved != root_resolved and root_resolved not in candidate_resolved.parents:
+        raise ValueError("path escapes configured root")
+    return candidate_resolved
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Local Validation Metric Comparisons</title>
+  <style>
+    body {
+      margin: 32px;
+      font-family: Inter, Arial, sans-serif;
+      color: #0f172a;
+      background: #f8fafc;
+    }
+    main { max-width: 1180px; margin: 0 auto; }
+    h1 { font-size: 30px; margin-bottom: 8px; }
+    h2 { margin-top: 32px; font-size: 20px; }
+    p, li { color: #475569; line-height: 1.5; }
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 18px;
+      margin: 18px 0;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: white;
+    }
+    th, td {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: #334155; font-size: 12px; text-transform: uppercase; letter-spacing: 0.02em; }
+    code { background: #e2e8f0; padding: 2px 5px; border-radius: 4px; }
+    .links a { margin-right: 16px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Local Validation Metric Comparisons</h1>
+  <p>
+    Axis scores come from each run's authoritative <code>report.json</code>.
+    Low-level feature metric scores come from the latest CSV row that matches the
+    manifest episode for that folder. Because these are deterministic validation
+    artifacts rather than independent participant samples, the comparison uses
+    paired within-episode deltas instead of p-values.
+  </p>
+
+  <div class="card links">
+    <strong>Data exports:</strong>
+    <a href="condition_summary.csv">condition_summary.csv</a>
+    <a href="axis_scores.csv">axis_scores.csv</a>
+    <a href="metric_scores.csv">metric_scores.csv</a>
+    <a href="policy_deltas.csv">policy_deltas.csv</a>
+    <a href="perspective_deltas.csv">perspective_deltas.csv</a>
+  </div>
+
+  <h2>Axis Score Overview</h2>
+  <div class="card"><img src="axis_score_heatmap.svg" alt="Axis score heatmap"></div>
+
+  <h2>Policy Comparison</h2>
+  <p>Positive cells mean Policy B scored higher than Policy A for the same episode and perspective.</p>
+  <div class="card"><img src="policy_delta_heatmap.svg" alt="Policy delta heatmap"></div>
+  <div class="card">
+    <h3>Largest policy deltas</h3>
+    <table><thead><tr><th>episode</th><th>perspective</th><th>axis</th><th>policy_a</th><th>policy_b</th><th>delta_policy_b_minus_a</th></tr></thead><tbody><tr><td>Ep2 static</td><td>arrival</td><td>perceived_safety</td><td>0.894</td><td>0.200</td><td>-0.694</td></tr><tr><td>Ep2 static</td><td>bystander</td><td>perceived_safety</td><td>0.894</td><td>0.200</td><td>-0.694</td></tr><tr><td>Ep1 open</td><td>bystander</td><td>perceived_social_awareness</td><td>1.000</td><td>0.564</td><td>-0.436</td></tr><tr><td>Ep1 open</td><td>arrival</td><td>perceived_social_awareness</td><td>1.000</td><td>0.564</td><td>-0.436</td></tr><tr><td>Ep2 static</td><td>bystander</td><td>perceived_social_awareness</td><td>0.988</td><td>0.554</td><td>-0.435</td></tr><tr><td>Ep2 static</td><td>arrival</td><td>perceived_social_awareness</td><td>0.988</td><td>0.554</td><td>-0.434</td></tr><tr><td>Ep2 static</td><td>bystander</td><td>impression</td><td>0.824</td><td>0.463</td><td>-0.361</td></tr><tr><td>Ep2 static</td><td>arrival</td><td>impression</td><td>0.824</td><td>0.464</td><td>-0.359</td></tr></tbody></table>
+  </div>
+
+  <h2>Perspective Comparison</h2>
+  <p>Positive cells mean the bystander perspective scored higher than arrival for the same episode and policy.</p>
+  <div class="card"><img src="perspective_delta_heatmap.svg" alt="Perspective delta heatmap"></div>
+  <div class="card">
+    <h3>Largest perspective deltas</h3>
+    <table><thead><tr><th>episode</th><th>policy</th><th>axis</th><th>arrival</th><th>bystander</th><th>delta_bystander_minus_arrival</th></tr></thead><tbody><tr><td>Ep3 dynamic NPCs</td><td>Policy B</td><td>perceived_social_awareness</td><td>0.474</td><td>0.305</td><td>-0.169</td></tr><tr><td>Ep3 dynamic NPCs</td><td>Policy B</td><td>impression</td><td>0.392</td><td>0.260</td><td>-0.132</td></tr><tr><td>Ep2 static</td><td>Policy B</td><td>perceived_dexterity</td><td>0.693</td><td>0.692</td><td>-0.001</td></tr><tr><td>Ep2 static</td><td>Policy B</td><td>impression</td><td>0.464</td><td>0.463</td><td>-0.001</td></tr><tr><td>Ep2 static</td><td>Policy B</td><td>perceived_social_awareness</td><td>0.554</td><td>0.554</td><td>-0.001</td></tr><tr><td>Ep1 open</td><td>Policy B</td><td>perceived_safety</td><td>0.718</td><td>0.718</td><td>-0.000</td></tr><tr><td>Ep1 open</td><td>Policy B</td><td>perceived_social_awareness</td><td>0.564</td><td>0.564</td><td>-0.000</td></tr><tr><td>Ep1 open</td><td>Policy B</td><td>perceived_dexterity</td><td>0.850</td><td>0.850</td><td>-0.000</td></tr></tbody></table>
+  </div>
+
+  <h2>Feature Metric Scores</h2>
+  <div class="card"><img src="feature_metric_heatmap.svg" alt="Feature metric heatmap"></div>
+
+  <h2>Included Conditions</h2>
+  <div class="card">
+    <table><thead><tr><th>run</th><th>episode</th><th>policy</th><th>perspective</th><th>selected_csv</th><th>csv_rows</th><th>ignored</th></tr></thead><tbody><tr><td>policyA-ep1-arrival</td><td>Ep1 open</td><td>Policy A</td><td>arrival</td><td>episode-metrics-000.csv</td><td>1</td><td>0</td></tr><tr><td>policyB-ep1-arrival</td><td>Ep1 open</td><td>Policy B</td><td>arrival</td><td>episode-metrics-000.csv</td><td>1</td><td>0</td></tr><tr><td>policyA-ep2-arrival</td><td>Ep2 static</td><td>Policy A</td><td>arrival</td><td>episode-metrics-001.csv</td><td>1</td><td>0</td></tr><tr><td>policyB-ep2-arrival</td><td>Ep2 static</td><td>Policy B</td><td>arrival</td><td>episode-metrics-001.csv</td><td>1</td><td>0</td></tr><tr><td>policyA-ep3-arrival</td><td>Ep3 dynamic NPCs</td><td>Policy A</td><td>arrival</td><td>episode-metrics-002.csv</td><td>1</td><td>0</td></tr><tr><td>policyB-ep3-arrival</td><td>Ep3 dynamic NPCs</td><td>Policy B</td><td>arrival</td><td>episode-metrics-002.csv</td><td>1</td><td>0</td></tr><tr><td>policyA-ep1-bystander</td><td>Ep1 open</td><td>Policy A</td><td>bystander</td><td>episode-metrics-000.csv</td><td>1</td><td>0</td></tr><tr><td>policyB-ep1-bystander</td><td>Ep1 open</td><td>Policy B</td><td>bystander</td><td>episode-metrics-000.csv</td><td>1</td><td>0</td></tr><tr><td>policyA-ep2-bystander</td><td>Ep2 static</td><td>Policy A</td><td>bystander</td><td>episode-metrics-001.csv</td><td>1</td><td>0</td></tr><tr><td>policyB-ep2-bystander</td><td>Ep2 static</td><td>Policy B</td><td>bystander</td><td>episode-metrics-001.csv</td><td>1</td><td>0</td></tr><tr><td>policyA-ep3-bystander</td><td>Ep3 dynamic NPCs</td><td>Policy A</td><td>bystander</td><td>episode-metrics-002.csv</td><td>1</td><td>0</td></tr><tr><td>policyB-ep3-bystander</td><td>Ep3 dynamic NPCs</td><td>Policy B</td><td>bystander</td><td>episode-metrics-002.csv</td><td>1</td><td>0</td></tr></tbody></table>
+  </div>
+
+  <h2>Data Notes</h2>
+  <div class="card">
+    <ul><li>No data warnings.</li></ul>
+  </div>
+</main>
+</body>
+</html>

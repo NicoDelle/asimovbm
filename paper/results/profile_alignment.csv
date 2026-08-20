@@ -1,0 +1,17 @@
+series,policy,source,axis,score_0_100,n_units,aggregation_unit,ci_low_0_100,ci_high_0_100,ci_level_percent,bootstrap_unit,axis_order,axis_label
+Policy A Auto,A,Auto,competence_control,56.2,6,episode_condition,,,,,0,Dexterity
+Policy A Auto,A,Auto,safety,43.0,6,episode_condition,,,,,1,Safety
+Policy A Auto,A,Auto,awareness,38.4,6,episode_condition,,,,,2,Social Aware.
+Policy A Auto,A,Auto,positive_impression,53.1,6,episode_condition,,,,,3,Impression
+Policy A Human,A,Human,competence_control,54.2,70,participant,48.8,59.4,95.0,participant,0,Dexterity
+Policy A Human,A,Human,safety,38.0,70,participant,32.7,43.5,95.0,participant,1,Safety
+Policy A Human,A,Human,awareness,34.5,70,participant,29.6,39.4,95.0,participant,2,Social Aware.
+Policy A Human,A,Human,positive_impression,48.2,70,participant,43.2,53.1,95.0,participant,3,Impression
+Policy B Auto,B,Auto,competence_control,34.0,6,episode_condition,,,,,0,Dexterity
+Policy B Auto,B,Auto,safety,33.2,6,episode_condition,,,,,1,Safety
+Policy B Auto,B,Auto,awareness,31.4,6,episode_condition,,,,,2,Social Aware.
+Policy B Auto,B,Auto,positive_impression,36.2,6,episode_condition,,,,,3,Impression
+Policy B Human,B,Human,competence_control,36.4,70,participant,31.7,41.1,95.0,participant,0,Dexterity
+Policy B Human,B,Human,safety,36.9,70,participant,31.4,42.3,95.0,participant,1,Safety
+Policy B Human,B,Human,awareness,38.8,70,participant,33.0,44.8,95.0,participant,2,Social Aware.
+Policy B Human,B,Human,positive_impression,40.5,70,participant,35.6,45.5,95.0,participant,3,Impression

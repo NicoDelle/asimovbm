@@ -1,0 +1,5 @@
+axis,axis_label,contrast,n,mean_likert,ci_low_likert,ci_high_likert,sign_flip_p_two_sided
+competence_control,Dexterity,first_minus_third_mean_across_policies,70,-0.03571428571428571,-0.32857142857142857,0.25,0.8464357678211609
+safety,Safety,first_minus_third_mean_across_policies,70,0.06428571428571428,-0.21428571428571427,0.35,0.6911315443422783
+awareness,Social Awareness,first_minus_third_mean_across_policies,69,0.2246376811594203,-0.057971014492753624,0.5144927536231884,0.15579922100389498
+positive_impression,Impression,first_minus_third_mean_across_policies,70,0.15,-0.07857142857142857,0.39285714285714285,0.2445087774561127

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Asimov Benchmark</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Asimov Benchmark</h1>
+        <p>Local metric artifacts and video survey collection</p>
+      </div>
+      <nav>
+        <a href="#metrics">Metrics</a>
+        <a href="#survey">Survey</a>
+        <a href="#comparison">Comparison</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="metrics" class="panel">
+        <div class="panel-heading">
+          <h2>Runs</h2>
+          <button id="refresh-runs" type="button">Refresh</button>
+        </div>
+        <div id="run-list" class="run-list"></div>
+        <div id="run-detail" class="detail"></div>
+      </section>
+
+      <section id="survey" class="panel">
+        <div class="panel-heading">
+          <h2>Survey</h2>
+        </div>
+        <div id="survey-status" class="detail"></div>
+        <div id="survey-videos" class="survey-videos"></div>
+        <form id="survey-form" class="survey-form"></form>
+      </section>
+
+      <section id="comparison" class="panel">
+        <div class="panel-heading">
+          <h2>Prediction vs Survey</h2>
+          <div class="toolbar">
+            <select id="comparison-weight" aria-label="Global score weights"></select>
+            <a class="button-link" href="/api/survey/participants.csv">Export CSV</a>
+          </div>
+        </div>
+        <div id="comparison-status" class="detail"></div>
+        <div id="comparison-summary" class="summary-grid"></div>
+        <div id="comparison-groups" class="summary-grid"></div>
+        <div id="comparison-inspector" class="comparison-inspector"></div>
+        <div id="comparison-table" class="table-wrap"></div>
+      </section>
+    </main>
+
+    <script src="/static/metrics.js"></script>
+    <script src="/static/survey.js"></script>
+    <script src="/static/comparison.js"></script>
+  </body>
+</html>

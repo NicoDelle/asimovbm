@@ -18,6 +18,7 @@ class PurePursuitConfig:
     goal_tolerance: float = 0.28
     max_linear_speed: float = 0.65
     max_yaw_rate: float = 1.4
+    start_delay_s: float = 0.0
 
 
 class PurePursuitController:
@@ -44,4 +45,3 @@ class PurePursuitController:
         speed_scale = max(0.15, 1.0 - abs(heading_error) / 1.7)
         linear = self.config.max_linear_speed * speed_scale
         return VelocityCommand(linear, yaw_rate)
-

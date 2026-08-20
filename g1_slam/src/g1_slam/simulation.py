@@ -3,12 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .controller import PurePursuitConfig, PurePursuitController
+from .controller import PurePursuitConfig, PurePursuitController, VelocityCommand
 from .geometry import Pose2D, distance_xy
 from .lidar import simulate_lidar
 from .mapping import GridSpec, OccupancyGrid
 from .planner import AStarPlanner
 from .world import World2D
+
+DEFAULT_START_POSE = Pose2D(-4.2, -3.2, 0.0)
 
 
 @dataclass(frozen=True)
@@ -30,7 +32,7 @@ def make_grid_for_world(world: World2D, resolution: float = 0.10) -> OccupancyGr
 def run_navigation(
     world: World2D,
     *,
-    start: Pose2D = Pose2D(-4.2, -3.2, 0.0),
+    start: Pose2D | None = None,
     goal: tuple[float, float] = (6.2, 3.1),
     steps: int = 900,
     dt: float = 0.08,
@@ -38,7 +40,7 @@ def run_navigation(
     grid: OccupancyGrid | None = None,
     controller_config: PurePursuitConfig | None = None,
 ) -> SimulationResult:
-    pose = start
+    pose = start or DEFAULT_START_POSE
     grid = grid or make_grid_for_world(world)
     planner = AStarPlanner(grid)
     controller = PurePursuitController(controller_config)
@@ -52,7 +54,11 @@ def run_navigation(
             path = planner.plan(pose, goal)
             controller.reset()
 
-        command = controller.command(pose, path, goal)
+        sim_time = step * dt
+        if sim_time < controller.config.start_delay_s:
+            command = VelocityCommand(0.0, 0.0)
+        else:
+            command = controller.command(pose, path, goal)
         candidate = pose.moved(command.linear, command.yaw_rate, dt)
         if world.collides(candidate, robot_radius):
             candidate = pose.moved(0.0, 0.9, dt)

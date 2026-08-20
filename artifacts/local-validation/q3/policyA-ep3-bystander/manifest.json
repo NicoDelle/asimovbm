@@ -1,0 +1,163 @@
+{
+  "backend_proof": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "episode_id": "g1_point_to_point_dynamic_npcs",
+      "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
+      "iteration": 0,
+      "proof_status": "verified_in_this_run",
+      "real_backend_verified": true,
+      "reason": null,
+      "robot_selector": "official_g1",
+      "trace_source": "robojudo_loop"
+    }
+  ],
+  "camera_view": "bystander",
+  "canonical_episode_ids": [
+    "g1_point_to_point_dynamic_npcs"
+  ],
+  "created_at": "2026-05-14T19:26:53.244184+00:00",
+  "episodes": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "checksum_sha256": "542933559d0f3acc29104be32559ab747456914bac250c0dc1287a8d9a5ea679",
+      "controller": {
+        "start_delay_s": 1.0
+      },
+      "description": "The humanoid walks from point A to point B while SLAM tracks moving pedestrian NPC obstacles.",
+      "dynamic_obstacles": {
+        "count": 2,
+        "mode": "npcs",
+        "npc_policy": "social_patrol",
+        "obstacles": [
+          {
+            "amplitude_m": 0.9,
+            "axis": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "center": {
+              "x": -1.0,
+              "y": -1.6
+            },
+            "half_height": 0.85,
+            "name": "person_npc_0",
+            "period_s": 16.0,
+            "phase_rad": 0.0,
+            "policy": "social_patrol",
+            "radius": 0.28
+          },
+          {
+            "amplitude_m": 0.9,
+            "axis": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "center": {
+              "x": 2.0,
+              "y": -1.6
+            },
+            "half_height": 0.85,
+            "name": "person_npc_1",
+            "period_s": 16.0,
+            "phase_rad": 3.14159,
+            "policy": "social_patrol",
+            "radius": 0.28
+          }
+        ],
+        "seed": 11
+      },
+      "goal": {
+        "x": 5.0,
+        "y": -1.6
+      },
+      "id": "g1_point_to_point_dynamic_npcs",
+      "locomotion_mode": "robojudo",
+      "path": "g1_slam/config/episodes/g1_point_to_point_dynamic_npcs.json",
+      "policy_id": "g1_robojudo_unitree",
+      "policy_path": "policies/g1/policy.onnx",
+      "robot_id": "g1",
+      "robot_selector": "official_g1",
+      "start": {
+        "x": -4.0,
+        "y": -1.6,
+        "yaw": 0.35
+      },
+      "steps": 1500,
+      "title": "G1 point-to-point motion with dynamic NPCs",
+      "visualization": {
+        "camera": {
+          "azimuth": 90.0,
+          "distance": 9.0,
+          "elevation": -10.0,
+          "fixed": true,
+          "lookat": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.25
+          }
+        },
+        "camera_views": {
+          "arrival": {
+            "azimuth": 180.0,
+            "distance": 0.4,
+            "elevation": -8.0,
+            "fixed": true,
+            "lookat": {
+              "x": 5.0,
+              "y": -1.6,
+              "z": 1.25
+            }
+          },
+          "bystander": {
+            "azimuth": 90.0,
+            "distance": 9.0,
+            "elevation": -10.0,
+            "fixed": true,
+            "lookat": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.25
+            }
+          }
+        },
+        "show_trajectory": false,
+        "trajectory_interval_steps": 20
+      }
+    }
+  ],
+  "iterations": 1,
+  "metadata": {},
+  "metrics_csv_path": "episode-metrics-002.csv",
+  "policy_id": "g1_robojudo_unitree",
+  "policy_path": null,
+  "records": [
+    {
+      "canonical_backend_id": "g1_robojudo",
+      "collision_count": 4,
+      "episode_id": "g1_point_to_point_dynamic_npcs",
+      "execution_backend_id": "g1_robojudo_mujoco_trace_v1",
+      "iteration": 0,
+      "metrics_path": "g1_point_to_point_dynamic_npcs/iteration-000/metrics.json",
+      "real_backend_verified": true,
+      "technical_valid": true,
+      "terminal_status": "success",
+      "trace_path": "g1_point_to_point_dynamic_npcs/iteration-000/trace.json",
+      "trace_source": "robojudo_loop",
+      "viewer_mode": "headless"
+    }
+  ],
+  "report_path": "report.json",
+  "robot_id": "g1",
+  "route_y_offset_m": null,
+  "run_id": "policyA-ep3-bystander",
+  "schema_version": "asimovbm.local_validation.v1",
+  "selected_episode_ids": [
+    "g1_point_to_point_dynamic_npcs"
+  ],
+  "start_delay_s": null,
+  "start_x_offset_m": null,
+  "trace_backend": "real",
+  "viewer_mode": "headless",
+  "viewer_speed": 4.0
+}

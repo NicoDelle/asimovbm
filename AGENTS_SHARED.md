@@ -22,15 +22,29 @@ implementation direction, inspect the available project context. If a local
 `AGENTS.md` exists, check it for private workspace links and local lookup
 instructions before relying only on repository files.
 
+During the final MVP rush, always inspect `final-rush-choices.md` before
+changing episodic validation, scenario interfaces, observation boundaries,
+metric computation, or aggregation behavior.
+
+When replacing smoke episodic-validation scaffolding with actual episode packs,
+MuJoCo scenarios, robot adapters, metric implementations, or aggregation logic,
+update `final-rush-choices.md` and the active plan so future agents know which
+launcher command and defaults are canonical.
+
 ## Suggested Lookup Order
 
 1. Read the local repository for current files and artifacts.
-2. Inspect canonical project planning material when available.
-3. Inspect relevant metric or document pages before changing derived benchmark
+2. Search `docs/solutions/` for documented solutions to past problems. Entries
+   are organized by category with YAML frontmatter such as `module`, `tags`,
+   and `problem_type`.
+3. Inspect `final-rush-choices.md` for current final-rush implementation
+   decisions.
+4. Inspect canonical project planning material when available.
+5. Inspect relevant metric or document pages before changing derived benchmark
    content.
-4. Inspect brainstorms, diagrams, or visual reasoning boards when
+6. Inspect brainstorms, diagrams, or visual reasoning boards when
    reconstructing decisions or updating benchmark scope.
-5. Only then update files, definitions, or implementation plans.
+7. Only then update files, definitions, or implementation plans.
 
 ## Benchmark Content
 
@@ -52,3 +66,11 @@ adding or changing benchmark claims, requirements, or metric definitions.
 - Prefer project-grounded changes over inventing new benchmark scope.
 - Keep local-only instructions, private links, absolute paths, credentials, and
   machine-specific notes in untracked local files such as `AGENTS.md`.
+
+## Sim Episode Runner
+
+- Use the repo venv: never run Python package commands outside `.venv`.
+- Visual G1 suite: `.venv/bin/asimovbm-server sim-episodes --episode-robot g1 --render --trace-root artifacts/sim-traces/g1`
+- Visual Go2 suite: `.venv/bin/asimovbm-server sim-episodes --episode-robot go2 --render --trace-root artifacts/sim-traces/go2`
+- One episode: add `--episodes lateral_static_dynamic_obstacles`.
+- Traces use `asimovbm.sim_trace.v1` and are written under `--trace-root`.

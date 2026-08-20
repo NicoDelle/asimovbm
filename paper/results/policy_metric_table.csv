@@ -1,0 +1,6 @@
+Metric,axis,Policy A Human Mean,Policy A Human CI Low,Policy A Human CI High,Policy A Human N,Policy A Auto,Policy B Human Mean,Policy B Human CI Low,Policy B Human CI High,Policy B Human N,Policy B Auto,Human Delta A-B,Auto Delta A-B,Delta_%,Policy A Human CI Half Width,Policy B Human CI Half Width
+Dexterity,competence_control,54.2,48.9,59.3,70,56.2,36.4,31.8,41.1,70,34.0,17.7,22.2,95.6,5.2,4.6
+Safety,safety,38.0,32.6,43.3,70,43.0,36.9,31.7,42.4,70,33.2,1.1,9.8,91.2,5.4,5.4
+Social Aware.,awareness,34.5,29.6,39.4,70,38.4,38.8,33.0,44.8,70,31.4,-4.3,7.1,88.6,4.9,5.9
+Impression,positive_impression,48.2,43.3,53.1,70,53.1,40.5,35.6,45.5,70,36.2,7.7,16.9,90.8,4.9,4.9
+AsimovBM,AsimovBM,43.7,39.0,48.3,70,47.7,38.2,33.4,42.9,70,33.7,5.6,14.0,91.6,4.6,4.7

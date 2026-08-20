@@ -1,0 +1,9 @@
+policy,axis,axis_label,contrast,n,mean_likert,ci_low_likert,ci_high_likert,sign_flip_p_two_sided
+A,competence_control,Dexterity,first_minus_third_within_policy,70,-0.21428571428571427,-0.5428571428571428,0.12857142857142856,0.25163374183129084
+B,competence_control,Dexterity,first_minus_third_within_policy,70,0.14285714285714285,-0.2571428571428571,0.5428571428571428,0.5308723456382718
+A,safety,Safety,first_minus_third_within_policy,70,-0.24285714285714285,-0.6,0.1,0.20591397043014784
+B,safety,Safety,first_minus_third_within_policy,70,0.37142857142857144,-0.02857142857142857,0.7571428571428571,0.08307958460207698
+A,awareness,Social Awareness,first_minus_third_within_policy,70,-0.11428571428571428,-0.5142857142857142,0.2857142857142857,0.6307068464657677
+B,awareness,Social Awareness,first_minus_third_within_policy,69,0.5507246376811594,0.2028985507246377,0.927536231884058,0.005154974225128874
+A,positive_impression,Impression,first_minus_third_within_policy,70,0.1,-0.18571428571428572,0.38571428571428573,0.5642721786391068
+B,positive_impression,Impression,first_minus_third_within_policy,70,0.2,-0.12857142857142856,0.5285714285714286,0.27193364033179834

@@ -1,0 +1,2 @@
+dataset,scope,n_total,n_daily_contact,n_no_daily_contact,n_blank_familiarity,n_complete_16_ratings,n_complete_daily_contact,n_complete_no_daily_contact,n_complete_blank_familiarity
+responses.csv,all responses,120,23,95,2,119,22,95,2

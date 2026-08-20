@@ -1,0 +1,49 @@
+q_bucket,run_id,run_dir,policy,policy_code,policy_id,perspective,episode,episode_id,axis,score,status,confidence
+q1,policyA-ep1-arrival,q1/policyA-ep1-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep1 open,g1_point_to_point_open,perceived_dexterity,0.9285714285714285,computed,partial
+q1,policyA-ep1-arrival,q1/policyA-ep1-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep1 open,g1_point_to_point_open,perceived_safety,0.9090909090909091,computed,partial
+q1,policyA-ep1-arrival,q1/policyA-ep1-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep1 open,g1_point_to_point_open,perceived_social_awareness,1.0,computed,partial
+q1,policyA-ep1-arrival,q1/policyA-ep1-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep1 open,g1_point_to_point_open,impression,0.8235294117647058,computed,partial
+q2,policyB-ep1-arrival,q2/policyB-ep1-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep1 open,g1_point_to_point_open,perceived_dexterity,0.8500042855913845,computed,partial
+q2,policyB-ep1-arrival,q2/policyB-ep1-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep1 open,g1_point_to_point_open,perceived_safety,0.7181872725708531,computed,partial
+q2,policyB-ep1-arrival,q2/policyB-ep1-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep1 open,g1_point_to_point_open,perceived_social_awareness,0.5642899998770989,computed,partial
+q2,policyB-ep1-arrival,q2/policyB-ep1-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep1 open,g1_point_to_point_open,impression,0.5882352941176471,computed,partial
+q1,policyA-ep2-arrival,q1/policyA-ep2-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep2 static,g1_point_to_point_static_obstacles,perceived_dexterity,0.9168426455191155,computed,partial
+q1,policyA-ep2-arrival,q1/policyA-ep2-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep2 static,g1_point_to_point_static_obstacles,perceived_safety,0.894163367024329,computed,partial
+q1,policyA-ep2-arrival,q1/policyA-ep2-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep2 static,g1_point_to_point_static_obstacles,perceived_social_awareness,0.988271216947687,computed,partial
+q1,policyA-ep2-arrival,q1/policyA-ep2-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep2 static,g1_point_to_point_static_obstacles,impression,0.8235294117647058,computed,partial
+q2,policyB-ep2-arrival,q2/policyB-ep2-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep2 static,g1_point_to_point_static_obstacles,perceived_dexterity,0.6933458537802468,computed,partial
+q2,policyB-ep2-arrival,q2/policyB-ep2-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep2 static,g1_point_to_point_static_obstacles,perceived_safety,0.2,computed,partial
+q2,policyB-ep2-arrival,q2/policyB-ep2-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep2 static,g1_point_to_point_static_obstacles,perceived_social_awareness,0.5543168703515196,computed,partial
+q2,policyB-ep2-arrival,q2/policyB-ep2-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep2 static,g1_point_to_point_static_obstacles,impression,0.46428303152966843,computed,partial
+q1,policyA-ep3-arrival,q1/policyA-ep3-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_dexterity,0.6823303939406671,computed,partial
+q1,policyA-ep3-arrival,q1/policyA-ep3-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_safety,0.2,computed,sufficient
+q1,policyA-ep3-arrival,q1/policyA-ep3-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_social_awareness,0.5190591300688585,computed,sufficient
+q1,policyA-ep3-arrival,q1/policyA-ep3-arrival,Policy A,A,g1_robojudo_unitree,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,impression,0.5109285397321679,computed,partial
+q2,policyB-ep3-arrival,q2/policyB-ep3-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_dexterity,0.35,computed,partial
+q2,policyB-ep3-arrival,q2/policyB-ep3-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_safety,0.2,computed,sufficient
+q2,policyB-ep3-arrival,q2/policyB-ep3-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_social_awareness,0.47413041770999853,computed,sufficient
+q2,policyB-ep3-arrival,q2/policyB-ep3-arrival,Policy B,B,g1_robojudo_asap,arrival,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,impression,0.39213971499661066,computed,partial
+q3,policyA-ep1-bystander,q3/policyA-ep1-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep1 open,g1_point_to_point_open,perceived_dexterity,0.9285714285714285,computed,partial
+q3,policyA-ep1-bystander,q3/policyA-ep1-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep1 open,g1_point_to_point_open,perceived_safety,0.9090909090909091,computed,partial
+q3,policyA-ep1-bystander,q3/policyA-ep1-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep1 open,g1_point_to_point_open,perceived_social_awareness,1.0,computed,partial
+q3,policyA-ep1-bystander,q3/policyA-ep1-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep1 open,g1_point_to_point_open,impression,0.8235294117647058,computed,partial
+q4,policyB-ep1-bystander,q4/policyB-ep1-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep1 open,g1_point_to_point_open,perceived_dexterity,0.849992678966302,computed,partial
+q4,policyB-ep1-bystander,q4/policyB-ep1-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep1 open,g1_point_to_point_open,perceived_safety,0.7181725005025663,computed,partial
+q4,policyB-ep1-bystander,q4/policyB-ep1-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep1 open,g1_point_to_point_open,perceived_social_awareness,0.5642783932520163,computed,partial
+q4,policyB-ep1-bystander,q4/policyB-ep1-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep1 open,g1_point_to_point_open,impression,0.5882352941176471,computed,partial
+q3,policyA-ep2-bystander,q3/policyA-ep2-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep2 static,g1_point_to_point_static_obstacles,perceived_dexterity,0.9168426455191155,computed,partial
+q3,policyA-ep2-bystander,q3/policyA-ep2-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep2 static,g1_point_to_point_static_obstacles,perceived_safety,0.894163367024329,computed,partial
+q3,policyA-ep2-bystander,q3/policyA-ep2-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep2 static,g1_point_to_point_static_obstacles,perceived_social_awareness,0.988271216947687,computed,partial
+q3,policyA-ep2-bystander,q3/policyA-ep2-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep2 static,g1_point_to_point_static_obstacles,impression,0.8235294117647058,computed,partial
+q4,policyB-ep2-bystander,q4/policyB-ep2-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep2 static,g1_point_to_point_static_obstacles,perceived_dexterity,0.6918925625045473,computed,partial
+q4,policyB-ep2-bystander,q4/policyB-ep2-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep2 static,g1_point_to_point_static_obstacles,perceived_safety,0.2,computed,partial
+q4,policyB-ep2-bystander,q4/policyB-ep2-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep2 static,g1_point_to_point_static_obstacles,perceived_social_awareness,0.5536921003773438,computed,partial
+q4,policyB-ep2-bystander,q4/policyB-ep2-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep2 static,g1_point_to_point_static_obstacles,impression,0.4629184082095117,computed,partial
+q3,policyA-ep3-bystander,q3/policyA-ep3-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_dexterity,0.6823303939406671,computed,partial
+q3,policyA-ep3-bystander,q3/policyA-ep3-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_safety,0.2,computed,sufficient
+q3,policyA-ep3-bystander,q3/policyA-ep3-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_social_awareness,0.5190591300688585,computed,sufficient
+q3,policyA-ep3-bystander,q3/policyA-ep3-bystander,Policy A,A,g1_robojudo_unitree,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,impression,0.5109285397321679,computed,partial
+q4,policyB-ep3-bystander,q4/policyB-ep3-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_dexterity,0.35,computed,partial
+q4,policyB-ep3-bystander,q4/policyB-ep3-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_safety,0.2,computed,sufficient
+q4,policyB-ep3-bystander,q4/policyB-ep3-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,perceived_social_awareness,0.30492668873104356,computed,sufficient
+q4,policyB-ep3-bystander,q4/policyB-ep3-bystander,Policy B,B,g1_robojudo_asap,bystander,Ep3 dynamic NPCs,g1_point_to_point_dynamic_npcs,impression,0.2603569964096092,computed,partial
