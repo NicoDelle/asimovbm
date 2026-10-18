@@ -11,12 +11,21 @@ This guide covers the six new point-to-point episodes:
 - Three environment variants for each robot: open floor, static obstacles, and
   dynamic NPC pedestrians.
 
-Run every command from the G1 SLAM package root:
+First follow the [real-backend prerequisites](../paper-workflow.md#fresh-real-policy-runs)
+from the repository root. Then activate that same root environment and change
+into the G1 SLAM package directory:
 
 ```bash
-cd ~/palingenesys/asimovbm/g1_slam
-conda activate asimovbm
+source .venv/bin/activate
+cd g1_slam
 ```
+
+The twelve G1 commands below cover the three scenarios, two policies and two
+camera views. They run fresh simulations; they do not recover the original
+survey videos or guarantee identical trajectories. For videos directly from
+released telemetry, use the [replay gallery](../../artifacts/reconstructed-videos/index.html)
+and [replay instructions](../../paper/README.md#view-or-regenerate-episode-videos).
+The local-runner alternative in the prerequisite guide also saves metric traces.
 
 ## Camera Views
 
