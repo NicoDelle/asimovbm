@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .backends import LocalTraceBackendError
 from .catalog import (
     DEFAULT_EPISODE_IDS,
     DEFAULT_POLICY_BY_ROBOT,
@@ -12,7 +13,6 @@ from .catalog import (
     ROBOT_IDS,
     EpisodeCatalogError,
 )
-from .backends import LocalTraceBackendError
 from .runner import LocalRunConfig, run_local_validation
 
 
