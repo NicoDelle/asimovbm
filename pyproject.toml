@@ -44,11 +44,20 @@ packages = [
   "asimovbm.survey",
   "asimovbm.web",
   "g1_slam",
+  "g1_slam.episode_configs",
 ]
-package-dir = {"" = ".", "g1_slam" = "g1_slam/src/g1_slam"}
+package-dir = {"" = ".", "g1_slam" = "g1_slam/src/g1_slam", "g1_slam.episode_configs" = "g1_slam/config/episodes"}
 
 [tool.setuptools.package-data]
 asimovbm = ["web/static/*"]
+"g1_slam.episode_configs" = [
+  "g1_point_to_point_open.json",
+  "g1_point_to_point_static_obstacles.json",
+  "g1_point_to_point_dynamic_npcs.json",
+  "go2_point_to_point_open.json",
+  "go2_point_to_point_static_obstacles.json",
+  "go2_point_to_point_dynamic_npcs.json",
+]
 
 [tool.pytest.ini_options]
 pythonpath = [".", "g1_slam/src"]

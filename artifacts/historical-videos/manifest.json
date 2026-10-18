@@ -1,0 +1,58 @@
+{
+  "schema": "asimovbm.historical_media_recovery.v1",
+  "source_commit": "703e72b4c4fe644456ee7f4c7b8795fdee660295",
+  "removed_in_commit": "d3f24b22f1d6375dce0df004d733c41e1b00ef1a",
+  "source_directory": "artifacts/survey/videos",
+  "study_stimulus_identity_verified": false,
+  "method": "Unmodified Git blob recovery, latest committed version before deletion",
+  "clips": [
+    {
+      "video": "policy_a/arrival/g1_point_to_point_dynamic_npcs.mp4",
+      "original_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_dynamic_npcs.mp4",
+      "git_blob": "e6f69229bf9240f91be5065976f61581c60b1306",
+      "sha256": "203cea52717076472e295cb9c0d41cc3163ca82bad36eb8dfef5b0e145bb58fd",
+      "bytes": 7386958,
+      "duration_s": 19.833333
+    },
+    {
+      "video": "policy_a/arrival/g1_point_to_point_open.mp4",
+      "original_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_open.mp4",
+      "git_blob": "20bfa58aa5c12d487ff6385f9cb1cf692ced7ef3",
+      "sha256": "476b30f3627a09ab17727282c37c48097063f7250a078156ece58cfd7b4ce273",
+      "bytes": 661717,
+      "duration_s": 19.5
+    },
+    {
+      "video": "policy_a/arrival/g1_point_to_point_static_obstacles.mp4",
+      "original_path": "artifacts/survey/videos/policy_a/arrival/g1_point_to_point_static_obstacles.mp4",
+      "git_blob": "d8b431d07bc2cbad505d5252f79fe0ab581390f2",
+      "sha256": "e1d272c26f6b83e81c9eef90d42472a47997034f95aa659fccbd6b355e081273",
+      "bytes": 533211,
+      "duration_s": 16.708333
+    },
+    {
+      "video": "policy_a/bystander/g1_point_to_point_dynamic_npcs.mp4",
+      "original_path": "artifacts/survey/videos/policy_a/bystander/g1_point_to_point_dynamic_npcs.mp4",
+      "git_blob": "0c8f8a3a9d7f8ab38212ef4820d123daf113dde1",
+      "sha256": "ccdd7251a8385cd6d4317d3669094712b2d84f150e860a995d2ae789ad3533a9",
+      "bytes": 4971625,
+      "duration_s": 19.833333
+    },
+    {
+      "video": "policy_a/bystander/g1_point_to_point_open.mp4",
+      "original_path": "artifacts/survey/videos/policy_a/bystander/g1_point_to_point_open.mp4",
+      "git_blob": "94c9466d9c3ac22b11bfb527429a3e77a1962319",
+      "sha256": "816158c2c10a642fdb48a9e27c4de77c7938ff7cc393fdb85014a9f2ab3bf1b3",
+      "bytes": 488575,
+      "duration_s": 19.5
+    },
+    {
+      "video": "policy_a/bystander/g1_point_to_point_static_obstacles.mp4",
+      "original_path": "artifacts/survey/videos/policy_a/bystander/g1_point_to_point_static_obstacles.mp4",
+      "git_blob": "9d12091fde3eb6b07b01e5ea460d46516709c219",
+      "sha256": "be7ee7cbb193c728b49a57ec92736c92e62ed3c6ea4ee9e566877339fc9db9a2",
+      "bytes": 365312,
+      "duration_s": 16.708333
+    }
+  ]
+}

@@ -5,7 +5,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from g1_slam.controller import PurePursuitConfig
 from g1_slam.geometry import Pose2D
 from g1_slam.world import World2D

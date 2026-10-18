@@ -101,8 +101,7 @@ class G1RoboJuDoRealTraceBackend:
                 check=False,
                 cwd=_g1_slam_working_directory(spec),
                 timeout=timeout_s,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
             )
         except subprocess.TimeoutExpired as exc:

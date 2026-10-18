@@ -11,6 +11,7 @@ import hashlib
 import json
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
@@ -205,8 +206,14 @@ class EpisodeCatalog:
 
 
 def load_default_catalog(config_dir: Path | str | None = None) -> EpisodeCatalog:
-    root = _repo_root()
-    directory = Path(config_dir) if config_dir is not None else root / "g1_slam" / "config" / "episodes"
+    if config_dir is not None:
+        directory = Path(config_dir)
+    else:
+        directory = _repo_root() / "g1_slam" / "config" / "episodes"
+        if not directory.is_dir():
+            # Wheels install the original JSON bytes as package data. Keep the
+            # checkout location above for source runs and their existing manifests.
+            directory = Path(str(files("g1_slam").joinpath("episode_configs")))
     specs = tuple(_load_episode_spec(directory / f"{episode_id}.json") for episode_id in DEFAULT_EPISODE_IDS)
     return EpisodeCatalog(specs)
 

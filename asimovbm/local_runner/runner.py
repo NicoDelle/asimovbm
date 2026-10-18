@@ -46,7 +46,6 @@ from .survey_export import (
 )
 from .traces import LocalRunRecord
 
-
 G1_SURVEY_POLICY_ID_BY_PROFILE: dict[str, str] = {
     "g1_robojudo_unitree": "policy_a",
     "g1_robojudo_asap": "policy_b",
